@@ -1,0 +1,34 @@
+@keyframes shake {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+  100% { transform: translateX(0); }
+}
+
+.animate-shake {
+  animation: shake 0.5s infinite alternate;
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  45% { opacity: 0.7; }
+  55% { opacity: 0.9; }
+  60% { opacity: 0.6; }
+  80% { opacity: 1; }
+}
+
+.flicker {
+  animation: flicker 1.2s infinite alternate;
+  color: #f87171;
+  text-shadow: 0 0 8px #f87171, 0 0 16px #fbbf24;
+}
+
+.flames {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 8px;
+  animation: shake 0.3s infinite alternate;
+  filter: drop-shadow(0 0 8px #f87171);
+} 
