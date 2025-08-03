@@ -10,6 +10,7 @@ import { carThemes } from "../../data/carThemes";
 import { cayman_gt4rs } from "../../data";
 import Footer from "../../components/Footer";
 import Navbar from "../../components/Navbar";
+import { useEffect } from "react";
 
 export default function Cayman_GT4RS() {
   const selectedTheme = carThemes.caymanGT4;
@@ -23,6 +24,10 @@ export default function Cayman_GT4RS() {
   const featureSlides = selectedData.carouselSlides.filter(slide =>
     [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18].includes(slide.id)
   );
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return <div className={`${selectedTheme.bgPattern}`}>
     <Navbar theme={selectedTheme} />

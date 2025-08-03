@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { spyder_918 } from '../../data/modelsData/spyder_918';
 import { carThemes } from '../../data/carThemes';
 import Navbar from '../../components/Navbar';
@@ -14,13 +14,17 @@ export default function Spyder_918() {
   const selectedData = spyder_918;
   const selectedTheme = carThemes.spyder918;
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <div className={`${selectedTheme.bgPattern}`}>
       <Navbar theme={selectedTheme} />
       <Hero data={selectedData.hero} theme={selectedTheme} />
       <HybridTech theme={selectedTheme} />
       <Performance data={selectedData.performanceSpecs} theme={selectedTheme} image={selectedData.performanceImage} />
-      <Features data={selectedData.detailedSpecs} theme={selectedTheme}/>
+      <Features data={selectedData.detailedSpecs} theme={selectedTheme} />
       <Highlights data={selectedData.highlights} theme={selectedTheme} />
       <Carousel data={selectedData.carouselSlides} theme={selectedTheme} heading={selectedData.carouselHeading} description={selectedData.carouselDescription} />
       <Footer fullName={selectedData.fullName} name={selectedData.name} theme={selectedTheme} />

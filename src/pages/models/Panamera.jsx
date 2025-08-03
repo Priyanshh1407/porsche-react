@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { carThemes } from '../../data/carThemes';
 import { panamera } from '../../data/modelsData/panamera'
 import Navbar from '../../components/Navbar';
@@ -13,6 +13,10 @@ import InteriorComforts from "../../components/InteriorComforts";
 export default function Panamera() {
   const selectedTheme = carThemes.panamera;
   const selectedData = panamera;
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div className={`${selectedTheme.bgPattern}`}>

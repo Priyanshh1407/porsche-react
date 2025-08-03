@@ -9,10 +9,15 @@ import { carThemes } from "../../data/carThemes";
 import { macan } from "../../data";
 import Footer from "../../components/Footer";
 import Navbar from "../../components/Navbar";
+import { useEffect } from "react";
 
 export default function Macan() {
     const selectedTheme = carThemes.macanGTS;
     const selectedData = macan;
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
 
     return <div className={`${selectedTheme.bgPattern}`}>
         <Navbar theme={selectedTheme} />

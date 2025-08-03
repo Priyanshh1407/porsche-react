@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { carThemes } from '../../data/carThemes';
 import { cayenne } from '../../data/modelsData/cayenne'
 import Navbar from '../../components/Navbar';
@@ -13,6 +13,10 @@ import CayenneOffroad from "../../components/CayenneOffroad";
 export default function Cayenne() {
   const selectedTheme = carThemes.cayenne;
   const selectedData = cayenne;
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div className={`${selectedTheme.bgPattern}`}>

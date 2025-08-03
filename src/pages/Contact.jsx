@@ -1,29 +1,49 @@
-import React from 'react';
-import { Phone, Mail, MapPin } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Phone, Mail, MapPin, ChevronLeft } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { carThemes } from '../data/carThemes';
+import showroom from "../assets/home/showroom..jpeg";
+import { useNavigate } from 'react-router-dom';
 
 const Contact = () => {
     const selectedTheme = carThemes.home;
+    const navigate = useNavigate();
 
     const handleSendMessage = () => {
         alert('Message sent! We will contact you soon.');
     };
 
+    const handleBack = () => {
+        // Simply navigate to home page instead of using browser history
+        navigate('/');
+    };
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
     return (
         <div className="min-h-screen bg-black text-white">
             <Navbar theme={selectedTheme} />
-            
+
             <div className="relative h-96 overflow-hidden">
                 <img
-                    src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=1920&h=600&fit=crop&q=80"
+                    src={showroom}
                     alt="Porsche Showroom"
                     className="w-full h-full object-cover opacity-40"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent" />
                 <div className="absolute inset-0 flex items-center">
                     <div className="max-w-7xl mx-auto px-8">
+                        <button 
+                            onClick={handleBack}
+                            className="flex items-center gap-2 text-white hover:text-red-500 transition-colors mb-8"
+                            type="button"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                            <span>Back</span>
+                        </button>
                         <h1 className="text-6xl font-light mb-4 animate-fade-in">Contact Us</h1>
                         <p className="text-xl text-gray-300 animate-fade-in-delay">Ready to begin your Porsche journey?</p>
                     </div>
@@ -63,7 +83,10 @@ const Contact = () => {
                             <p className="text-gray-300 mb-6">
                                 Experience the thrill of Porsche performance firsthand. Book your personalized test drive today.
                             </p>
-                            <button className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-full transition-colors">
+                            <button 
+                                className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-full transition-colors"
+                                type="button"
+                            >
                                 Book Test Drive
                             </button>
                         </div>
@@ -106,6 +129,7 @@ const Contact = () => {
                             <button
                                 onClick={handleSendMessage}
                                 className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg transition-colors"
+                                type="button"
                             >
                                 Send Message
                             </button>
@@ -114,7 +138,7 @@ const Contact = () => {
                 </div>
             </div>
 
-            <style jsx>{`
+            <style>{`
                 @keyframes fade-in {
                     from { opacity: 0; transform: translateY(20px); }
                     to { opacity: 1; transform: translateY(0); }

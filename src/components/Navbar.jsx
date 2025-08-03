@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, Menu, X } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Navbar = ({theme}) => {
   const [isModelsOpen, setIsModelsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const navigate = useNavigate();
 
   // Handle scroll effect
   useEffect(() => {
@@ -20,40 +22,46 @@ const Navbar = ({theme}) => {
     {
       category: "Sports Cars",
       models: [
-        { name: "911", description: "The iconic sports car" },
-        { name: "718 Boxster", description: "Convertible roadster" },
-        { name: "718 Cayman", description: "Mid-engine coupe" }
+        { name: "911", description: "The iconic sports car", route: "/models/911" },
+        { name: "718 Boxster", description: "Convertible roadster", route: "/models/718-boxster" },
+        { name: "718 Cayman", description: "Mid-engine coupe", route: "/models/718-cayman" }
       ]
     },
     {
       category: "GT Cars",
       models: [
-        { name: "911 GT3", description: "Track-focused performance" },
-        { name: "911 GT3 RS", description: "Ultimate track weapon" },
-        { name: "911 GT2 RS", description: "Most powerful 911" }
+        { name: "911 GT3", description: "Track-focused performance", route: "/models/911-gt3" },
+        { name: "911 GT3 RS", description: "Ultimate track weapon", route: "/models/911-gt3-rs" },
+        { name: "911 GT2 RS", description: "Most powerful 911", route: "/models/911-gt2-rs" }
       ]
     },
     {
       category: "SUVs",
       models: [
-        { name: "Macan", description: "Compact luxury SUV" },
-        { name: "Cayenne", description: "Full-size luxury SUV" }
+        { name: "Macan", description: "Compact luxury SUV", route: "/models/macan" },
+        { name: "Cayenne", description: "Full-size luxury SUV", route: "/models/cayenne" }
       ]
     },
     {
       category: "Electric",
       models: [
-        { name: "Taycan", description: "Pure electric performance" },
-        { name: "Taycan Cross Turismo", description: "Electric versatility" }
+        { name: "Taycan", description: "Pure electric performance", route: "/models/taycan" },
+        { name: "Taycan Cross Turismo", description: "Electric versatility", route: "/models/taycan-cross-turismo" }
       ]
     },
     {
       category: "Sedans",
       models: [
-        { name: "Panamera", description: "Luxury sports sedan" }
+        { name: "Panamera", description: "Luxury sports sedan", route: "/models/panamera" }
       ]
     }
   ];
+
+  const handleNavigation = (path) => {
+    navigate(path);
+    setIsMobileMenuOpen(false);
+    setIsModelsOpen(false);
+  };
 
   return (
     <>
@@ -66,40 +74,58 @@ const Navbar = ({theme}) => {
             
             {/* Logo */}
             <div className="flex-shrink-0">
-              <div className="text-2xl font-bold text-white tracking-wider">
+              <button 
+                onClick={() => handleNavigation('/')}
+                className="text-2xl font-bold text-white tracking-wider hover:text-red-400 transition-colors duration-300"
+              >
                 PORSCHE
-              </div>
+              </button>
             </div>
 
             {/* Desktop Menu */}
             <div className="hidden lg:flex items-center space-x-8">
               
-              {/* Models Dropdown */}
-              <a href="/models" className={`text-white ${theme.navHover} transition-colors duration-300 font-medium`}>
+              {/* Models Link */}
+              <button 
+                onClick={() => handleNavigation('/models')}
+                className={`text-white ${theme.navHover} transition-colors duration-300 font-medium`}
+              >
                 All Models
-              </a>
+              </button>
 
               {/* Other Nav Items */}
-              <a href="/configurator" className={`text-white ${theme.navHover} transition-colors duration-300 font-medium`}>
+              <button 
+                onClick={() => handleNavigation('/configurator')}
+                className={`text-white ${theme.navHover} transition-colors duration-300 font-medium`}
+              >
                 Build & Price
-              </a>
-              <a href="/experience" className={`text-white ${theme.navHover} transition-colors duration-300 font-medium`}>
+              </button>
+              <button 
+                onClick={() => handleNavigation('/experience')}
+                className={`text-white ${theme.navHover} transition-colors duration-300 font-medium`}
+              >
                 Experience
-              </a>
-              <a href="/services" className={`text-white ${theme.navHover} transition-colors duration-300 font-medium`}>
+              </button>
+              <button 
+                onClick={() => handleNavigation('/services')}
+                className={`text-white ${theme.navHover} transition-colors duration-300 font-medium`}
+              >
                 Services
-              </a>
-              <a href="/about" className={`text-white ${theme.navHover} transition-colors duration-300 font-medium`}>
+              </button>
+              <button 
+                onClick={() => handleNavigation('/about')}
+                className={`text-white ${theme.navHover} transition-colors duration-300 font-medium`}
+              >
                 About
-              </a>
+              </button>
 
               {/* CTA Button */}
-              <a 
-                href="/contact" 
+              <button 
+                onClick={() => handleNavigation('/contact')}
                 className={`px-6 py-2 bg-transparent ${theme.navActive} font-semibold ${theme.buttonHover} hover:text-black transition-all duration-300 rounded-lg`}
               >
                 Contact
-              </a>
+              </button>
             </div>
 
             {/* Mobile Menu Button */}
@@ -140,13 +166,13 @@ const Navbar = ({theme}) => {
                         {category.category}
                       </h4>
                       {category.models.map((model, modelIndex) => (
-                        <a
+                        <button
                           key={modelIndex}
-                          href={`/models/${model.name.toLowerCase().replace(/\s+/g, '-')}`}
-                          className="block text-gray-300 hover:text-white transition-colors duration-200 py-1"
+                          onClick={() => handleNavigation(model.route)}
+                          className="block text-gray-300 hover:text-white transition-colors duration-200 py-1 text-left w-full"
                         >
                           {model.name}
-                        </a>
+                        </button>
                       ))}
                     </div>
                   ))}
@@ -155,24 +181,36 @@ const Navbar = ({theme}) => {
             </div>
 
             {/* Other Mobile Nav Items */}
-            <a href="/configurator" className={`block text-white ${theme.navHover} transition-colors duration-300 font-medium py-2`}>
+            <button 
+              onClick={() => handleNavigation('/configurator')}
+              className={`block text-white ${theme.navHover} transition-colors duration-300 font-medium py-2 text-left w-full`}
+            >
               Build & Price
-            </a>
-            <a href="/experience" className={`block text-white ${theme.navHover} transition-colors duration-300 font-medium py-2`}>
+            </button>
+            <button 
+              onClick={() => handleNavigation('/experience')}
+              className={`block text-white ${theme.navHover} transition-colors duration-300 font-medium py-2 text-left w-full`}
+            >
               Experience
-            </a>
-            <a href="/services" className={`block text-white ${theme.navHover} transition-colors duration-300 font-medium py-2`}>
+            </button>
+            <button 
+              onClick={() => handleNavigation('/services')}
+              className={`block text-white ${theme.navHover} transition-colors duration-300 font-medium py-2 text-left w-full`}
+            >
               Services
-            </a>
-            <a href="/about" className={`block text-white ${theme.navHover} transition-colors duration-300 font-medium py-2`}>
+            </button>
+            <button 
+              onClick={() => handleNavigation('/about')}
+              className={`block text-white ${theme.navHover} transition-colors duration-300 font-medium py-2 text-left w-full`}
+            >
               About
-            </a>
-            <a 
-              href="/contact" 
+            </button>
+            <button 
+              onClick={() => handleNavigation('/contact')}
               className={`inline-block px-6 py-2 bg-transparent ${theme.navActive} font-semibold hover:bg-yellow-400 hover:text-black transition-all duration-300 rounded-lg mt-4`}
             >
               Contact
-            </a>
+            </button>
           </div>
         </div>
       </nav>

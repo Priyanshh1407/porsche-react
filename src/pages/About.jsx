@@ -1,16 +1,27 @@
-import React from 'react';
-import { Trophy } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { ChevronLeft, Trophy } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { carThemes } from '../data/carThemes';
+import about from "../assets/home/about.jpg";
+import { useNavigate } from 'react-router-dom';
 
 const About = () => {
     const selectedTheme = carThemes.home;
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
+    const handleBack = () => {
+        navigate(-1);
+    };
 
     return (
         <div className="min-h-screen bg-black text-white">
             <Navbar theme={selectedTheme} />
-            
+
             <div className="relative h-96 overflow-hidden">
                 <img
                     src="https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1920&h=600&fit=crop&q=80"
@@ -20,10 +31,23 @@ const About = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent" />
                 <div className="absolute inset-0 flex items-center">
                     <div className="max-w-7xl mx-auto px-8">
+                        <button 
+                            onClick={handleBack}
+                            className="flex items-center gap-2 text-white hover:text-red-500 transition-colors mb-8"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                            <span>Back</span>
+                        </button>
                         <h1 className="text-6xl font-light mb-4 animate-fade-in">About Porsche</h1>
                         <p className="text-xl text-gray-300 animate-fade-in-delay">Engineering dreams since 1931</p>
                     </div>
                 </div>
+            </div>
+
+            <div>
+                <button>
+                    <ChevronLeft className='w-4 h-4' />
+                </button>
             </div>
 
             <div className="max-w-7xl mx-auto px-8 py-16">
@@ -57,7 +81,7 @@ const About = () => {
                     </div>
                     <div className="relative">
                         <img
-                            src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&h=600&fit=crop&q=80"
+                            src={about}
                             alt="Porsche Factory"
                             className="w-full rounded-lg shadow-2xl"
                         />

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { carThemes } from '../../data/carThemes'
 import { gt2rs_911 } from '../../data/modelsData/gt2rs_911';
 import Navbar from '../../components/Navbar';
@@ -13,6 +13,10 @@ import WarningBanner from "../../components/WarningBanner";
 export default function GT2RS_911() {
   const selectedTheme = carThemes.gt2rs;
   const selectedData = gt2rs_911;
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div className={`${selectedTheme.bgPattern}`}>

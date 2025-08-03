@@ -9,10 +9,15 @@ import { carThemes } from "../../data/carThemes";
 import { gt3rs } from "../../data";
 import Footer from "../../components/Footer";
 import Navbar from "../../components/Navbar";
+import { useEffect } from "react";
 
 export default function GT3RS() {
     const selectedTheme = carThemes.gt3rs;
     const selectedData = gt3rs;
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
 
     return <div className="bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800">
         <Navbar theme={selectedTheme} />

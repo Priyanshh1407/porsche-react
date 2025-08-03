@@ -9,10 +9,16 @@ import Features from '../../components/Features';
 import Carousel from '../../components/Carousel';
 import Footer from '../../components/Footer';
 import LegacySection from '../../components/LegacySection';
+import { useEffect } from 'react'
 
 export default function CarreraGT() {
   const selectedTheme = carThemes.carreraGT;
   const selectedData = carreraGT;
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <div className={`${selectedTheme.bgPattern}`}>
       <Navbar theme={selectedTheme} />

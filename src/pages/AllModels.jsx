@@ -17,172 +17,172 @@ const AllModels = () => {
   const categories = ['All', 'Track', 'Performance', 'Electric', 'SUV', 'Luxury', 'Convertible', 'Hypercar', 'Classic'];
 
   const models = [
-  {
-    id: 1,
-    name: "911 GT3 RS",
-    tagline: "Track-Bred Beast",
-    power: "518 HP",
-    torque: "465 Nm",
-    acceleration: "3.2s",
-    topSpeed: "296 km/h",
-    price: "$223,800",
-    image: "🏎️",
-    color: "from-yellow-400 to-orange-500", // GT3 RS theme
-    category: "Track",
-    description: "Pure racing DNA meets street legal engineering. The GT3 RS delivers uncompromising track performance with every component optimized for speed.",
-    features: ["Naturally Aspirated Flat-6", "Rear-Axle Steering", "PASM Dampers", "Ceramic Brakes"]
-  },
-  {
-    id: 2,
-    name: "918 Spyder",
-    tagline: "Hybrid Hypercar",
-    power: "887 HP",
-    torque: "1280 Nm",
-    acceleration: "2.6s",
-    topSpeed: "345 km/h",
-    price: "$845,000",
-    image: "⚡",
-    color: "from-orange-400 via-amber-500 to-red-500", // 918 Spyder theme
-    categories: ["Hypercar", "Classic", "Convertible"],
-    description: "Revolutionary hybrid technology meets motorsport heritage. The 918 Spyder redefines what's possible in automotive engineering.",
-    features: ["V8 + Electric Motors", "All-Wheel Drive", "Carbon Fiber Body", "Active Aerodynamics"]
-  },
-  {
-    id: 3,
-    name: "911 Turbo S",
-    tagline: "Turbocharged Terror",
-    power: "650 HP",
-    torque: "800 Nm",
-    acceleration: "2.7s",
-    topSpeed: "330 km/h",
-    price: "$207,000",
-    image: "💨",
-    color: "from-gray-300 via-gray-400 to-gray-500", // Turbo S theme
-    category: "Performance",
-    description: "Twin-turbo fury unleashed. The Turbo S combines devastating power with everyday usability in the ultimate grand tourer.",
-    features: ["Twin-Turbo Flat-6", "PDK Transmission", "Sport Chrono", "Dynamic Boost"]
-  },
-  {
-    id: 4,
-    name: "Carrera GT",
-    tagline: "Racing Legend",
-    power: "612 HP",
-    torque: "590 Nm",
-    acceleration: "3.9s",
-    topSpeed: "330 km/h",
-    price: "$448,000",
-    image: "🏁",
-    color: "from-amber-500 via-yellow-600 to-orange-600", // Carrera GT theme
-    category: "Classic",
-    description: "The purest expression of racing technology in road car form. A naturally aspirated V10 masterpiece that redefined supercars.",
-    features: ["V10 Engine", "Carbon Fiber Monocoque", "Ceramic Clutch", "Push-Rod Suspension"]
-  },
-  {
-    id: 5,
-    name: "Taycan",
-    tagline: "Electric Soul",
-    power: "761 HP",
-    torque: "1050 Nm",
-    acceleration: "2.8s",
-    topSpeed: "260 km/h",
-    price: "$185,000",
-    image: "⚡",
-    color: "from-cyan-500 via-blue-600 to-cyan-700", // Taycan theme
-    category: "Electric",
-    description: "Zero emissions, maximum emotions. The Taycan proves that electric vehicles can deliver soul-stirring performance with Porsche DNA.",
-    features: ["Dual Electric Motors", "800V Architecture", "All-Wheel Drive", "Air Suspension"]
-  },
-  {
-    id: 6,
-    name: "Cayenne",
-    tagline: "SUV Supercar",
-    power: "631 HP",
-    torque: "850 Nm",
-    acceleration: "3.3s",
-    topSpeed: "300 km/h",
-    price: "$182,000",
-    image: "🚙",
-    color: "from-emerald-500 via-teal-600 to-emerald-700", // Cayenne theme
-    categories: ["SUV", "Luxury"],
-    description: "When practicality meets performance. The Cayenne Turbo GT defies physics with supercar acceleration in an SUV package.",
-    features: ["Twin-Turbo V8", "Sport Exhaust", "PDCC Chassis", "All-Terrain Capability"]
-  },
-  {
-    id: 7,
-    name: "Panamera",
-    tagline: "Grand Tourer",
-    power: "630 HP",
-    torque: "820 Nm",
-    acceleration: "3.1s",
-    topSpeed: "315 km/h",
-    price: "$204,000",
-    image: "🏆",
-    color: "from-amber-600 via-yellow-600 to-amber-800", // Panamera theme
-    category: "Luxury",
-    description: "Four doors, infinite possibilities. The Panamera Turbo S combines luxury sedan comfort with supercar performance.",
-    features: ["Twin-Turbo V8", "4-Door Design", "Air Suspension", "Sport Turismo"]
-  },
-  {
-    id: 8,
-    name: "718 Cayman GT4",
-    tagline: "Mid-Engine Marvel",
-    power: "420 HP",
-    torque: "420 Nm",
-    acceleration: "4.4s",
-    topSpeed: "304 km/h",
-    price: "$101,000",
-    image: "🎯",
-    color: "from-slate-500 via-gray-600 to-slate-700", // Cayman GT4 theme
-    categories: ["Performance", "Track"],
-    description: "Perfect balance achieved. The Cayman GT4 delivers pure driving pleasure with its mid-engine layout and track-focused setup.",
-    features: ["Naturally Aspirated Flat-6", "Manual Transmission", "PASM Suspension", "Sport Bucket Seats"]
-  },
-  {
-    id: 9,
-    name: "911 GT2 RS",
-    tagline: "Widow Maker",
-    power: "700 HP",
-    torque: "750 Nm",
-    acceleration: "2.8s",
-    topSpeed: "340 km/h",
-    price: "$293,000",
-    image: "💀",
-    color: "from-red-600 via-orange-700 to-red-800", // GT2 RS theme
-    categories: ["Track", "Performance"],
-    description: "The most powerful 911 ever built. The GT2 RS is a rear-wheel drive missile that demands respect and rewards skill.",
-    features: ["Twin-Turbo Flat-6", "Rear-Wheel Drive", "Roll Cage", "Magnesium Wheels"]
-  },
-  {
-    id: 10,
-    name: "Macan GTS",
-    tagline: "Compact Rocket",
-    power: "380 HP",
-    torque: "520 Nm",
-    acceleration: "5.0s",
-    topSpeed: "272 km/h",
-    price: "$69,000",
-    image: "🎪",
-    color: "from-purple-500 via-pink-600 to-purple-700", // Macan GTS theme
-    category: "SUV",
-    description: "Small but mighty. The Macan GTS proves that size doesn't matter when you have the heart of a sports car.",
-    features: ["Twin-Turbo V6", "All-Wheel Drive", "Sport Exhaust", "Adaptive Dampers"]
-  },
-  {
-    id: 11,
-    name: "718 Boxster S",
-    tagline: "Open-Air Thrills",
-    power: "350 HP",
-    torque: "420 Nm",
-    acceleration: "4.4s",
-    topSpeed: "285 km/h",
-    price: "$73,000",
-    image: "🌊",
-    color: "from-blue-500 via-sky-500 to-blue-600", // Boxster S theme
-    category: "Convertible",
-    description: "Pure freedom on four wheels. The Boxster S combines the joy of open-top driving with precise handling and turbocharged power.",
-    features: ["Turbo Flat-4", "Convertible Soft Top", "Mid-Engine Layout", "PDK Transmission"]
-  }
-];
+    {
+      id: 1,
+      name: "911 GT3 RS",
+      tagline: "Track-Bred Beast",
+      power: "518 HP",
+      torque: "465 Nm",
+      acceleration: "3.2s",
+      topSpeed: "296 km/h",
+      price: "$223,800",
+      image: "🏎️",
+      color: "from-yellow-400 to-orange-500", // GT3 RS theme
+      category: "Track",
+      description: "Pure racing DNA meets street legal engineering. The GT3 RS delivers uncompromising track performance with every component optimized for speed.",
+      features: ["Naturally Aspirated Flat-6", "Rear-Axle Steering", "PASM Dampers", "Ceramic Brakes"]
+    },
+    {
+      id: 2,
+      name: "918 Spyder",
+      tagline: "Hybrid Hypercar",
+      power: "887 HP",
+      torque: "1280 Nm",
+      acceleration: "2.6s",
+      topSpeed: "345 km/h",
+      price: "$845,000",
+      image: "⚡",
+      color: "from-orange-400 via-amber-500 to-red-500", // 918 Spyder theme
+      categories: ["Hypercar", "Classic", "Convertible"],
+      description: "Revolutionary hybrid technology meets motorsport heritage. The 918 Spyder redefines what's possible in automotive engineering.",
+      features: ["V8 + Electric Motors", "All-Wheel Drive", "Carbon Fiber Body", "Active Aerodynamics"]
+    },
+    {
+      id: 3,
+      name: "911 Turbo S",
+      tagline: "Turbocharged Terror",
+      power: "650 HP",
+      torque: "800 Nm",
+      acceleration: "2.7s",
+      topSpeed: "330 km/h",
+      price: "$207,000",
+      image: "💨",
+      color: "from-gray-300 via-gray-400 to-gray-500", // Turbo S theme
+      category: "Performance",
+      description: "Twin-turbo fury unleashed. The Turbo S combines devastating power with everyday usability in the ultimate grand tourer.",
+      features: ["Twin-Turbo Flat-6", "PDK Transmission", "Sport Chrono", "Dynamic Boost"]
+    },
+    {
+      id: 4,
+      name: "Carrera GT",
+      tagline: "Racing Legend",
+      power: "612 HP",
+      torque: "590 Nm",
+      acceleration: "3.9s",
+      topSpeed: "330 km/h",
+      price: "$448,000",
+      image: "🏁",
+      color: "from-amber-500 via-yellow-600 to-orange-600", // Carrera GT theme
+      category: "Classic",
+      description: "The purest expression of racing technology in road car form. A naturally aspirated V10 masterpiece that redefined supercars.",
+      features: ["V10 Engine", "Carbon Fiber Monocoque", "Ceramic Clutch", "Push-Rod Suspension"]
+    },
+    {
+      id: 5,
+      name: "Taycan",
+      tagline: "Electric Soul",
+      power: "761 HP",
+      torque: "1050 Nm",
+      acceleration: "2.8s",
+      topSpeed: "260 km/h",
+      price: "$185,000",
+      image: "⚡",
+      color: "from-cyan-500 via-blue-600 to-cyan-700", // Taycan theme
+      category: "Electric",
+      description: "Zero emissions, maximum emotions. The Taycan proves that electric vehicles can deliver soul-stirring performance with Porsche DNA.",
+      features: ["Dual Electric Motors", "800V Architecture", "All-Wheel Drive", "Air Suspension"]
+    },
+    {
+      id: 6,
+      name: "Cayenne",
+      tagline: "SUV Supercar",
+      power: "631 HP",
+      torque: "850 Nm",
+      acceleration: "3.3s",
+      topSpeed: "300 km/h",
+      price: "$182,000",
+      image: "🚙",
+      color: "from-emerald-500 via-teal-600 to-emerald-700", // Cayenne theme
+      categories: ["SUV", "Luxury"],
+      description: "When practicality meets performance. The Cayenne Turbo GT defies physics with supercar acceleration in an SUV package.",
+      features: ["Twin-Turbo V8", "Sport Exhaust", "PDCC Chassis", "All-Terrain Capability"]
+    },
+    {
+      id: 7,
+      name: "Panamera",
+      tagline: "Grand Tourer",
+      power: "630 HP",
+      torque: "820 Nm",
+      acceleration: "3.1s",
+      topSpeed: "315 km/h",
+      price: "$204,000",
+      image: "🏆",
+      color: "from-amber-600 via-yellow-600 to-amber-800", // Panamera theme
+      category: "Luxury",
+      description: "Four doors, infinite possibilities. The Panamera Turbo S combines luxury sedan comfort with supercar performance.",
+      features: ["Twin-Turbo V8", "4-Door Design", "Air Suspension", "Sport Turismo"]
+    },
+    {
+      id: 8,
+      name: "718 Cayman GT4",
+      tagline: "Mid-Engine Marvel",
+      power: "420 HP",
+      torque: "420 Nm",
+      acceleration: "4.4s",
+      topSpeed: "304 km/h",
+      price: "$101,000",
+      image: "🎯",
+      color: "from-slate-500 via-gray-600 to-slate-700", // Cayman GT4 theme
+      categories: ["Performance", "Track"],
+      description: "Perfect balance achieved. The Cayman GT4 delivers pure driving pleasure with its mid-engine layout and track-focused setup.",
+      features: ["Naturally Aspirated Flat-6", "Manual Transmission", "PASM Suspension", "Sport Bucket Seats"]
+    },
+    {
+      id: 9,
+      name: "911 GT2 RS",
+      tagline: "Widow Maker",
+      power: "700 HP",
+      torque: "750 Nm",
+      acceleration: "2.8s",
+      topSpeed: "340 km/h",
+      price: "$293,000",
+      image: "💀",
+      color: "from-red-600 via-orange-700 to-red-800", // GT2 RS theme
+      categories: ["Track", "Performance"],
+      description: "The most powerful 911 ever built. The GT2 RS is a rear-wheel drive missile that demands respect and rewards skill.",
+      features: ["Twin-Turbo Flat-6", "Rear-Wheel Drive", "Roll Cage", "Magnesium Wheels"]
+    },
+    {
+      id: 10,
+      name: "Macan GTS",
+      tagline: "Compact Rocket",
+      power: "380 HP",
+      torque: "520 Nm",
+      acceleration: "5.0s",
+      topSpeed: "272 km/h",
+      price: "$69,000",
+      image: "🎪",
+      color: "from-purple-500 via-pink-600 to-purple-700", // Macan GTS theme
+      category: "SUV",
+      description: "Small but mighty. The Macan GTS proves that size doesn't matter when you have the heart of a sports car.",
+      features: ["Twin-Turbo V6", "All-Wheel Drive", "Sport Exhaust", "Adaptive Dampers"]
+    },
+    {
+      id: 11,
+      name: "718 Boxster S",
+      tagline: "Open-Air Thrills",
+      power: "350 HP",
+      torque: "420 Nm",
+      acceleration: "4.4s",
+      topSpeed: "285 km/h",
+      price: "$73,000",
+      image: "🌊",
+      color: "from-blue-500 via-sky-500 to-blue-600", // Boxster S theme
+      category: "Convertible",
+      description: "Pure freedom on four wheels. The Boxster S combines the joy of open-top driving with precise handling and turbocharged power.",
+      features: ["Turbo Flat-4", "Convertible Soft Top", "Mid-Engine Layout", "PDK Transmission"]
+    }
+  ];
 
   const filteredModels = selectedCategory === 'All'
     ? models
@@ -195,6 +195,10 @@ const AllModels = () => {
       }
       return false;
     });
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
