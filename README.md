@@ -35,10 +35,10 @@ A dual personality — sophisticated daily driver turning into a nighttime weapo
 <br>
 ![Turbo S Hero](porsche-react-master/public/screenshots/turbo_3d.png)
 
-### 4. The Iconic 918 Spyder
-An "Open Sky" theme highlighting the legendary hypercar on a hyper-realistic, reflective showroom floor.
+### 4. The Grand Touring Cayenne
+A warm, sunset-lit "Adventure" theme with volumetric sparkles, rich amber gradients, and a cinematic vignette.
 <br>
-![918 Spyder Hero](porsche-react-master/public/screenshots/spyder_3d.png)
+![Cayenne Hero](porsche-react-master/public/screenshots/cayenne_3d.png)
 
 ---
 
