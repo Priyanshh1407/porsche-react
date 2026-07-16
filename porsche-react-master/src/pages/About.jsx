@@ -1,0 +1,124 @@
+import React, { useEffect, useState } from 'react';
+import { ChevronLeft, Trophy } from 'lucide-react';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import { carThemes } from '../data/carThemes';
+import about from "../assets/home/about.jpg";
+import { useNavigate } from 'react-router-dom';
+
+const About = () => {
+    const selectedTheme = carThemes.home;
+    const navigate = useNavigate();
+    const [animateElements, setAnimateElements] = useState(false);
+
+    // Animation effect
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setAnimateElements(true);
+        }, 100);
+        return () => clearTimeout(timer);
+    }, []);
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
+    const handleBack = () => {
+        navigate(-1);
+    };
+
+    return (
+        <div className="min-h-screen bg-black text-white">
+            <Navbar theme={selectedTheme} />
+
+            <div className="relative h-96 overflow-hidden">
+                <img
+                    src="https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1920&h=600&fit=crop&q=80"
+                    alt="Porsche Heritage"
+                    className="w-full h-full object-cover opacity-50"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent" />
+                <div className="absolute inset-0 flex items-center">
+                    <div className="max-w-7xl mx-auto px-8">
+                        <button 
+                            onClick={handleBack}
+                            className={`flex items-center gap-2 text-white hover:text-red-500 transition-colors mb-8 animate-float-up ${animateElements ? 'animate' : ''}`}
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                            <span>Back</span>
+                        </button>
+                        <h1 className={`text-6xl font-light mb-4 animate-float-up-delay-1 ${animateElements ? 'animate' : ''}`}>About Porsche</h1>
+                        <p className={`text-xl text-gray-300 animate-float-up-delay-2 ${animateElements ? 'animate' : ''}`}>Engineering dreams since 1931</p>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <button>
+                    <ChevronLeft className='w-4 h-4' />
+                </button>
+            </div>
+
+            <div className="max-w-7xl mx-auto px-8 py-16">
+                <div className="grid lg:grid-cols-2 gap-16 items-center">
+                    <div className={`space-y-8 animate-float-up ${animateElements ? 'animate' : ''}`}>
+                        <h2 className="text-4xl font-light">Our Legacy</h2>
+                        <p className="text-gray-300 text-lg leading-relaxed">
+                            Since Ferdinand Porsche founded our company in 1931, we have been driven by one unwavering mission:
+                            to build extraordinary sports cars that deliver pure driving pleasure. From the legendary 356 to today's
+                            revolutionary Taycan, we continue to push the boundaries of automotive engineering.
+                        </p>
+                        <p className="text-gray-300 text-lg leading-relaxed">
+                            Our commitment to innovation, performance, and craftsmanship has made Porsche synonymous with
+                            automotive excellence. Every vehicle we create embodies the perfect balance of tradition and innovation,
+                            heritage and future-forward thinking.
+                        </p>
+                        <div className={`grid grid-cols-3 gap-8 pt-8 animate-float-up-delay-3 ${animateElements ? 'animate' : ''}`}>
+                            <div className="text-center">
+                                <div className="text-3xl font-light text-red-500 mb-2">90+</div>
+                                <div className="text-gray-400">Years of Excellence</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-3xl font-light text-red-500 mb-2">19</div>
+                                <div className="text-gray-400">Le Mans Victories</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-3xl font-light text-red-500 mb-2">1M+</div>
+                                <div className="text-gray-400">Cars Delivered</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className={`relative animate-float-up-delay-2 ${animateElements ? 'animate' : ''}`}>
+                        <img
+                            src={about}
+                            alt="Porsche Factory"
+                            className="w-full rounded-lg shadow-2xl"
+                        />
+                        <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-red-600 rounded-full flex items-center justify-center">
+                            <Trophy className="w-16 h-16 text-white" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <style jsx>{`
+                @keyframes fade-in {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+
+                .animate-fade-in {
+                    animation: fade-in 1s ease-out;
+                }
+                
+                .animate-fade-in-delay {
+                    animation: fade-in 1s ease-out 0.3s both;
+                }
+            `}</style>
+
+            <Footer theme={selectedTheme} />
+        </div>
+    );
+};
+
+export default About;

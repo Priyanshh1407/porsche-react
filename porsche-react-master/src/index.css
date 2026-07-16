@@ -1,0 +1,325 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Racing+Sans+One&display=swap');
+
+/* Porsche Admin Dashboard - Clean & Simple Design */
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222.2 84% 4.9%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222.2 84% 4.9%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
+  --radius: 0.5rem;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
+}
+
+/* Custom button styles */
+.btn-primary {
+  @apply bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all;
+}
+
+.btn-secondary {
+  @apply bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 transition-colors;
+}
+
+/* Card styles */
+.card-hover {
+  @apply hover:shadow-md transition-shadow duration-200;
+}
+
+/* Loading spinner */
+.loading-spinner {
+  @apply animate-spin rounded-full border-2 border-blue-600 border-t-transparent;
+}
+
+/* Floating Animation Classes */
+.animate-float-up {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-float-up.animate {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.animate-float-up-delay-1 {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
+}
+
+.animate-float-up-delay-1.animate {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.animate-float-up-delay-2 {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.2s;
+}
+
+.animate-float-up-delay-2.animate {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.animate-float-up-delay-3 {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.3s;
+}
+
+.animate-float-up-delay-3.animate {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.animate-float-up-delay-4 {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.4s;
+}
+
+.animate-float-up-delay-4.animate {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.animate-float-up-delay-5 {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.5s;
+}
+
+.animate-float-up-delay-5.animate {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Staggered card animations */
+.animate-card-stagger {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-card-stagger.animate {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.animate-card-stagger:nth-child(1) {
+  transition-delay: 0.1s;
+}
+
+.animate-card-stagger:nth-child(2) {
+  transition-delay: 0.2s;
+}
+
+.animate-card-stagger:nth-child(3) {
+  transition-delay: 0.3s;
+}
+
+.animate-card-stagger:nth-child(4) {
+  transition-delay: 0.4s;
+}
+
+.animate-card-stagger:nth-child(5) {
+  transition-delay: 0.5s;
+}
+
+.animate-card-stagger:nth-child(6) {
+  transition-delay: 0.6s;
+}
+
+/* Table row animations */
+.animate-table-row {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-table-row.animate {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.animate-table-row:nth-child(1) {
+  transition-delay: 0.1s;
+}
+
+.animate-table-row:nth-child(2) {
+  transition-delay: 0.15s;
+}
+
+.animate-table-row:nth-child(3) {
+  transition-delay: 0.2s;
+}
+
+.animate-table-row:nth-child(4) {
+  transition-delay: 0.25s;
+}
+
+.animate-table-row:nth-child(5) {
+  transition-delay: 0.3s;
+}
+
+/* Login form animations */
+.animate-login-form {
+  opacity: 0;
+  transform: translateY(50px) scale(0.95);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-login-form.animate {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Chart animations */
+.animate-chart {
+  opacity: 0;
+  transform: translateY(30px) scale(0.9);
+  transition: all 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-chart.animate {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Custom Scrollbar for 3D Experience */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 12px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(2, 6, 23, 0.4);
+    border-left: 1px solid rgba(45, 212, 191, 0.1);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, rgba(34, 211, 238, 0.8), rgba(16, 185, 129, 0.8));
+    border-radius: 8px;
+    border: 2px solid rgba(2, 6, 23, 1);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(to bottom, rgba(6, 182, 212, 1), rgba(5, 150, 105, 1));
+}
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(34, 211, 238, 0.8) rgba(2, 6, 23, 0.4);
+}
+
+/* =========================================
+   PORSCHE 3D PAGES: ATMOSPHERIC EFFECTS
+========================================= */
+
+/* GT3 RS: Track Embers */
+@keyframes floatUpAndFade {
+  0% { transform: translateY(0) scale(1); opacity: 0; }
+  20% { opacity: 0.8; }
+  80% { opacity: 0.6; transform: translateY(-50vh) scale(0.5); }
+  100% { transform: translateY(-100vh) scale(0); opacity: 0; }
+}
+.ember-particle {
+  position: absolute;
+  bottom: -20px;
+  width: 4px;
+  height: 4px;
+  background: #ff6b00;
+  border-radius: 50%;
+  box-shadow: 0 0 10px 2px rgba(255, 107, 0, 0.8);
+  animation: floatUpAndFade 4s infinite linear;
+  z-index: 1;
+}
+
+/* Cayenne: Mountain Fog */
+@keyframes fogDrift {
+  0% { transform: translateX(-10%) translateY(0); opacity: 0.2; }
+  50% { transform: translateX(5%) translateY(-10px); opacity: 0.5; }
+  100% { transform: translateX(20%) translateY(0); opacity: 0.2; }
+}
+.fog-layer {
+  position: absolute;
+  bottom: 0;
+  left: -20%;
+  width: 140%;
+  height: 40vh;
+  background: radial-gradient(ellipse at bottom, rgba(148, 163, 184, 0.15) 0%, transparent 70%);
+  filter: blur(20px);
+  animation: fogDrift 20s infinite alternate ease-in-out;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Taycan: Electric Arcs */
+@keyframes energyPulse {
+  0%, 100% { opacity: 0.3; transform: scaleY(1); }
+  50% { opacity: 0.8; transform: scaleY(1.2); box-shadow: 0 0 20px 5px rgba(139, 92, 246, 0.6); }
+  55% { opacity: 0.2; transform: scaleY(0.9); }
+  60% { opacity: 1; transform: scaleY(1.5); box-shadow: 0 0 30px 10px rgba(45, 212, 191, 0.8); }
+}
+.electric-arc {
+  position: absolute;
+  background: linear-gradient(to bottom, transparent, rgba(45, 212, 191, 0.8), rgba(139, 92, 246, 0.8), transparent);
+  width: 2px;
+  height: 30vh;
+  animation: energyPulse 4s infinite;
+  z-index: 1;
+}
+
+/* 911 Turbo: Museum God Rays */
+@keyframes godRays {
+  0% { opacity: 0.3; transform: rotate(-15deg) translateY(0); }
+  50% { opacity: 0.6; transform: rotate(-15deg) translateY(-20px); }
+  100% { opacity: 0.3; transform: rotate(-15deg) translateY(0); }
+}
+.god-ray {
+  position: absolute;
+  top: -20%;
+  left: 0;
+  width: 150%;
+  height: 40vh;
+  background: linear-gradient(to bottom, rgba(212, 165, 116, 0.15), transparent);
+  transform-origin: top left;
+  animation: godRays 10s infinite alternate ease-in-out;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 918 Spyder: Bio/DNA Heartbeat */
+@keyframes heartbeatGlow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  20% { opacity: 0.8; transform: scale(1.05); }
+  35% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.1); }
+}
+.heartbeat-pulse {
+  animation: heartbeatGlow 3s infinite;
+}
