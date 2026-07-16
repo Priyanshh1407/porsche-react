@@ -23,22 +23,22 @@ Here is a glimpse of the experiences built into the platform:
 ### 1. The Heritage & Track Ready GT3 RS
 A dark, aggressive "Nocturnal Track" theme featuring bright red underglow, harsh bloom on the taillights, and track-focused aesthetic.
 <br>
-![GT3 RS Hero](porsche-react-master/src/assets/home/911.webp)
+![GT3 RS Hero](porsche-react-master/public/screenshots/gt3rs_3d.png)
 
 ### 2. The Futuristic Taycan 
 A glassmorphic, holographic UI showcasing the electric soul of the Taycan, complete with zooming wireframe animations and charging port highlights.
 <br>
-![Taycan Hero](porsche-react-master/src/assets/home/taycan.avif)
+![Taycan Hero](porsche-react-master/public/screenshots/taycan_3d.png)
 
-### 3. The Grand Touring Cayenne
-A warm, sunset-lit "Adventure" theme with volumetric sparkles, rich amber gradients, and a cinematic vignette.
+### 3. The 911 Turbo S
+A dual personality — sophisticated daily driver turning into a nighttime weapon with dynamic lighting and environments.
 <br>
-![Cayenne Hero](porsche-react-master/src/assets/home/cayenne.avif)
+![Turbo S Hero](porsche-react-master/public/screenshots/turbo_3d.png)
 
 ### 4. The Iconic 918 Spyder
 An "Open Sky" theme highlighting the legendary hypercar on a hyper-realistic, reflective showroom floor.
 <br>
-![918 Spyder Hero](porsche-react-master/src/assets/home/Spyder918.webp)
+![918 Spyder Hero](porsche-react-master/public/screenshots/spyder_3d.png)
 
 ---
 
