@@ -16,11 +16,7 @@ async function takeScreenshots() {
     const page = await browser.newPage();
     
     const pages = [
-        { name: 'home', url: 'http://localhost:3000/' },
-        { name: 'gt3rs_3d', url: 'http://localhost:3000/models/911%20GT3%20RS' },
-        { name: 'taycan_3d', url: 'http://localhost:3000/models/Taycan' },
-        { name: 'spyder_3d', url: 'http://localhost:3000/models/918%20Spyder' },
-        { name: 'turbo_3d', url: 'http://localhost:3000/models/911%20Turbo%20S' }
+        { name: 'cayenne_3d', url: 'http://localhost:3000/models/Cayenne' }
     ];
 
     for (let p of pages) {
@@ -28,14 +24,13 @@ async function takeScreenshots() {
         await page.goto(p.url, { waitUntil: 'networkidle2', timeout: 60000 });
         
         // Wait for the 3D model to load
-        await new Promise(r => setTimeout(r, 6000));
+        await new Promise(r => setTimeout(r, 8000)); // slightly longer wait to ensure model is fully loaded
         
         await page.screenshot({ 
             path: path.join(screenshotDir, `${p.name}.png`),
             fullPage: false 
         });
         
-        // Scroll down a bit and take another for the 3D pages
         if (p.name.includes('3d')) {
             await page.evaluate(() => {
                 const scrollContainer = document.getElementById('scroll-container') || window;
