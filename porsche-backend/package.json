@@ -10,7 +10,16 @@
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
     "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
-    "logs": "tail -f logs/$(date +%Y-%m-%d).log"
+    "logs": "tail -f logs/$(date +%Y-%m-%d).log",
+    "test:db:up": "docker compose -f ../docker-compose.yml up -d --wait test-db",
+    "test:db:down": "docker compose -f ../docker-compose.yml down"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "setupFiles": [
+      "<rootDir>/tests/test-env.cjs"
+    ],
+    "globalSetup": "<rootDir>/tests/global-setup.cjs"
   },
   "keywords": [
     "porsche",

@@ -1,0 +1,19 @@
+# Throwaway Postgres for backend tests only. Data lives in a tmpfs, so every
+# `docker compose down` / restart starts empty. Never point this at real data.
+#   docker compose up -d test-db
+services:
+  test-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: porsche_test
+      POSTGRES_PASSWORD: porsche_test
+      POSTGRES_DB: porsche_test
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U porsche_test -d porsche_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
