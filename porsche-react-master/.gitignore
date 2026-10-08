@@ -11,6 +11,9 @@
 # production
 /build
 
+# fresh captures from scripts/capture-stages.cjs --compare (the baseline lives in docs/stage-baseline)
+/stage-captures
+
 # misc
 .DS_Store
 .env.local
