@@ -35,6 +35,14 @@
     "server": "node server.js",
     "dev": "concurrently \"npm run server\" \"npm start\""
   },
+  "jest": {
+    "moduleNameMapper": {
+      "^react-router-dom$": "<rootDir>/node_modules/react-router-dom/dist/index.js",
+      "^react-router/dom$": "<rootDir>/node_modules/react-router/dist/development/dom-export.js",
+      "^react-router$": "<rootDir>/node_modules/react-router/dist/development/index.js",
+      "^gsap/ScrollTrigger$": "<rootDir>/node_modules/gsap/dist/ScrollTrigger.js"
+    }
+  },
   "eslintConfig": {
     "extends": [
       "react-app",
