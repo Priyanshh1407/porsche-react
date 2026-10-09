@@ -74,11 +74,41 @@ describe('SEC-01: admin login fails open when admin env vars are missing', () =>
         process.env.ADMIN_PASSWORD = saved.password;
     });
 
-    test.failing('rejects an empty login body instead of issuing an admin token', async () => {
+    // Fixed in Phase 1: kept as regression tests. The essential property: no token is ever issued.
+    test('an empty login body gets no admin token (400)', async () => {
         const res = await request(app).post('/api/admin/login').send({});
 
+        expect(res.statusCode).toBe(400);
+        expect(res.body.token).toBeUndefined();
+    });
+
+    test('a login while admin credentials are unset gets no admin token (503)', async () => {
+        const res = await request(app).post('/api/admin/login').send({ email: 'anyone@x.com', password: 'anything' });
+
+        expect(res.statusCode).toBe(503);
+        expect(res.body.token).toBeUndefined();
+    });
+});
+
+describe('SEC-01: login with credentials configured', () => {
+    const login = (body) => request(app).post('/api/admin/login').send(body);
+
+    test('rejects a wrong password with 401 and no token', async () => {
+        const res = await login({ email: process.env.ADMIN_EMAIL, password: 'wrong-password' });
         expect(res.statusCode).toBe(401);
         expect(res.body.token).toBeUndefined();
+    });
+
+    test('rejects non-string credentials with 400', async () => {
+        const res = await login({ email: { $ne: '' }, password: ['x'] });
+        expect(res.statusCode).toBe(400);
+        expect(res.body.token).toBeUndefined();
+    });
+
+    test('accepts the configured credentials (email case-insensitive)', async () => {
+        const res = await login({ email: process.env.ADMIN_EMAIL.toUpperCase(), password: process.env.ADMIN_PASSWORD });
+        expect(res.statusCode).toBe(200);
+        expect(typeof res.body.token).toBe('string');
     });
 });
 

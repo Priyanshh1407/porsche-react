@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import express from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
@@ -9,17 +10,46 @@ import { authenticateAdmin } from "../middleware/auth.js";
 
 const router = express.Router();
 
+// Constant-time string comparison. Hashing first gives timingSafeEqual equal-length inputs,
+// so neither the length nor the matching prefix of the secret leaks through response time.
+const safeEqual = (a, b) => {
+    const digest = (value) => crypto.createHash('sha256').update(String(value)).digest();
+    return crypto.timingSafeEqual(digest(a), digest(b));
+};
+
 // POST /api/admin/login - Admin login
 router.post('/login', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password } = req.body ?? {};
 
-        // Simple admin check (in production, use proper user management)
-        if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
+        if (typeof email !== 'string' || typeof password !== 'string' || !email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email and password are required'
+            });
+        }
+
+        // Fail closed (SEC-01): with the variables unset, `undefined === undefined` used to
+        // grant admin access. Startup validation should prevent this; this is the second line.
+        const adminEmail = process.env.ADMIN_EMAIL;
+        const adminPassword = process.env.ADMIN_PASSWORD;
+        if (!adminEmail || !adminPassword) {
+            console.error('Admin login attempted but ADMIN_EMAIL / ADMIN_PASSWORD are not configured.');
+            return res.status(503).json({
+                success: false,
+                message: 'Admin login is not available'
+            });
+        }
+
+        // Evaluate both comparisons (no short-circuit) so timing doesn't reveal which one failed.
+        const emailMatches = safeEqual(email.trim().toLowerCase(), adminEmail.trim().toLowerCase());
+        const passwordMatches = safeEqual(password, adminPassword);
+
+        if (emailMatches && passwordMatches) {
             const token = jwt.sign(
-                { email: email, role: 'admin' },
+                { email: adminEmail, role: 'admin' },
                 process.env.JWT_SECRET,
-                { expiresIn: '24h' }
+                { algorithm: 'HS256', expiresIn: '24h' }
             );
 
             res.json({
@@ -34,7 +64,8 @@ router.post('/login', async (req, res) => {
             });
         }
     } catch (error) {
-        res.status(400).json({
+        console.error('Admin login error:', error);
+        res.status(500).json({
             success: false,
             message: 'Login failed'
         });

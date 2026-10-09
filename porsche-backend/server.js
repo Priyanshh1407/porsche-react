@@ -4,10 +4,19 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 import prisma from "./prisma/client.js";
+import { validateEnv } from "./config/env.js";
 
 dotenv.config();
 
-//Routes 
+// Fail closed on missing configuration (SEC-01).
+try {
+    validateEnv().forEach((warning) => console.warn(`⚠️  ${warning}`));
+} catch (err) {
+    console.error(`❌ ${err.message}`);
+    process.exit(1);
+}
+
+//Routes
 import contactRoutes from "./routes/contact.js";
 import adminRoutes from "./routes/admin.js";
 
