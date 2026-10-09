@@ -119,6 +119,10 @@ async function start() {
             console.log('Database connection closed');
             process.exit(0);
         });
+        // close() only drops connections that are idle right now. A request still in flight leaves
+        // a keep-alive connection behind when it finishes, which would hold shutdown open for the
+        // 5 s keep-alive timeout; sweep those as they become idle.
+        setInterval(() => server.closeIdleConnections(), 250).unref();
         // Don't hang forever on keep-alive connections.
         setTimeout(() => process.exit(1), 10000).unref();
     };
