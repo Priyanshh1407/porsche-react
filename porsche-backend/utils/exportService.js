@@ -1,5 +1,45 @@
 import prisma from '../prisma/client.js';
 
+// SEC-04: CSV export must survive any value an admin or visitor typed.
+const CSV_HEADERS = [
+    'ID', 'First Name', 'Last Name', 'Email', 'Phone', 'Inquiry Type', 'Model Interest', 'Message',
+    'Status', 'Preferred Contact Method', 'Preferred Contact Time', 'Created At', 'Updated At', 'Notes'
+];
+
+// Spreadsheet apps execute cells that start with these characters as formulas (CSV injection).
+const FORMULA_PREFIX = /^[=+\-@\t\r]/;
+
+/**
+ * One RFC 4180 cell: always quoted, embedded quotes doubled, so commas and newlines stay inside
+ * the cell. Values that would start a formula get a leading apostrophe so they display as text.
+ */
+export function csvCell(value) {
+    let text = value === null || value === undefined ? '' : String(value);
+    if (FORMULA_PREFIX.test(text)) text = `'${text}`;
+    return `"${text.replace(/"/g, '""')}"`;
+}
+
+/** Contacts -> CSV text (header row + one row per contact, CRLF line endings). */
+export function toCsv(contacts) {
+    const rows = contacts.map((contact) => [
+        contact.id,
+        contact.firstName,
+        contact.lastName,
+        contact.email,
+        contact.phone,
+        contact.inquiryType,
+        contact.modelInterest,
+        contact.message,
+        contact.status,
+        contact.preferredContactMethod,
+        contact.preferredContactTime,
+        contact.createdAt.toISOString(),
+        contact.updatedAt.toISOString(),
+        contact.notes
+    ]);
+    return [CSV_HEADERS, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n');
+}
+
 class ExportService {
     // Export contacts to CSV format
     static async exportToCSV(filters = {}, res) {
@@ -19,49 +59,10 @@ class ExportService {
                 orderBy: { createdAt: 'desc' }
             });
 
-            // CSV headers
-            const headers = [
-                'ID',
-                'First Name',
-                'Last Name',
-                'Email',
-                'Phone',
-                'Inquiry Type',
-                'Model Interest',
-                'Message',
-                'Status',
-                'Preferred Contact Method',
-                'Preferred Contact Time',
-                'Created At',
-                'Updated At',
-                'Notes'
-            ];
-
-            // Convert contacts to CSV rows
-            const csvRows = contacts.map(contact => [
-                contact.id,
-                contact.firstName,
-                contact.lastName,
-                contact.email,
-                contact.phone,
-                contact.inquiryType,
-                contact.modelInterest,
-                `"${contact.message.replace(/"/g, '""')}"`, // Escape quotes in message
-                contact.status,
-                contact.preferredContactMethod,
-                contact.preferredContactTime,
-                contact.createdAt.toISOString(),
-                contact.updatedAt.toISOString(),
-                contact.notes || ''
-            ]);
-
-            // Combine headers and rows
-            const csvContent = [headers, ...csvRows]
-                .map(row => row.join(','))
-                .join('\n');
+            const csvContent = toCsv(contacts);
 
             // Set response headers for file download
-            res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Type', 'text/csv; charset=utf-8');
             res.setHeader(
                 'Content-Disposition',
                 `attachment; filename=porsche-contacts-${new Date().toISOString().split('T')[0]}.csv`
