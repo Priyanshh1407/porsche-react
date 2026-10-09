@@ -1,128 +1,104 @@
+// Core API flows. TEST-02: every test creates its own fixtures and can run alone or in any order.
+// (The original version shared an admin token and a contact id between tests, and the status
+// test did `if (!createdContactId) return;`, so run on its own it passed without asserting
+// anything.) Credentials come from tests/test-env.cjs, never hardcoded fallbacks.
 import request from 'supertest';
 import app from '../server.js';
 import prisma from '../prisma/client.js';
 
-describe('Porsche Dealership API Endpoints', () => {
-    let adminToken = '';
-    let createdContactId = '';
+const TEST_EMAIL_DOMAIN = '@api-test.example.com';
 
-    // Mock removed because emailService falls back to demo mode safely without real credentials
+const loginAsAdmin = async () => {
+    const res = await request(app)
+        .post('/api/admin/login')
+        .send({ email: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD });
+    expect(res.statusCode).toBe(200);
+    return res.body.token;
+};
 
-    beforeAll(async () => {
-        // Ensure connection to DB
-        await prisma.$connect();
-        // Clear any existing test data if necessary
+const createContact = (overrides = {}) => prisma.contact.create({
+    data: {
+        firstName: 'Fixture', lastName: 'Contact', email: `fixture-${Date.now()}-${Math.random()}${TEST_EMAIL_DOMAIN}`,
+        phone: '5550199', inquiryType: 'Sales', message: 'Fixture contact for the API tests.',
+        ...overrides,
+    },
+});
+
+afterAll(async () => {
+    await prisma.contact.deleteMany({ where: { email: { endsWith: TEST_EMAIL_DOMAIN } } });
+    await prisma.$disconnect();
+});
+
+describe('Contact API', () => {
+    test('GET /api/contact/health answers healthy', async () => {
+        const res = await request(app).get('/api/contact/health');
+        expect(res.statusCode).toBe(200);
+        expect(res.body.status).toBe('healthy');
     });
 
-    afterAll(async () => {
-        // Clean up test contact
-        if (createdContactId) {
-            try {
-                await prisma.contact.delete({ where: { id: createdContactId } });
-            } catch (e) {
-                // Ignore if already deleted
-            }
-        }
-        await prisma.$disconnect();
+    test('rejects a submission with an invalid email and names the field', async () => {
+        const res = await request(app).post('/api/contact/submit').send({
+            firstName: 'Test', lastName: 'User', email: 'invalid-email', phone: '+1234567890',
+            inquiryType: 'Sales', message: 'This is a test message.',
+        });
+        expect(res.statusCode).toBe(400);
+        expect(res.body.success).toBe(false);
+        expect(res.body.errors.map((e) => e.path)).toContain('email');
     });
 
-    describe('Contact API', () => {
-        it('should return healthy on /api/contact/health', async () => {
-            const res = await request(app).get('/api/contact/health');
-            expect(res.statusCode).toBe(200);
-            expect(res.body.status).toBe('healthy');
+    test('stores a valid submission and returns its id', async () => {
+        const email = `submit${TEST_EMAIL_DOMAIN}`;
+        const res = await request(app).post('/api/contact/submit').send({
+            firstName: 'Automated', lastName: 'Tester', email, phone: '+15555555555',
+            inquiryType: 'Sales', message: 'This is an automated test message for the contact form.', modelInterest: '911',
         });
+        expect(res.statusCode).toBe(201);
+        expect(res.body.success).toBe(true);
 
-        it('should reject contact form submission with invalid email', async () => {
-            const res = await request(app)
-                .post('/api/contact/submit')
-                .send({
-                    firstName: 'Test',
-                    lastName: 'User',
-                    email: 'invalid-email',
-                    phone: '+1234567890',
-                    inquiryType: 'Sales',
-                    message: 'This is a test message.'
-                });
+        const stored = await prisma.contact.findUnique({ where: { id: res.body.data.id } });
+        expect(stored).toEqual(expect.objectContaining({ email, modelInterest: '911', status: 'new' }));
+    });
+});
 
-            expect(res.statusCode).toBe(400);
-            expect(res.body.success).toBe(false);
-            expect(res.body.errors).toBeDefined();
-        });
-
-        it('should submit a valid contact form successfully', async () => {
-            const res = await request(app)
-                .post('/api/contact/submit')
-                .send({
-                    firstName: 'Automated',
-                    lastName: 'Tester',
-                    email: 'test@example.com',
-                    phone: '+15555555555',
-                    inquiryType: 'Sales',
-                    message: 'This is an automated test message for the contact form.',
-                    modelInterest: '911'
-                });
-
-            expect(res.statusCode).toBe(201);
-            expect(res.body.success).toBe(true);
-            expect(res.body.data).toHaveProperty('id');
-            createdContactId = res.body.data.id;
-        });
+describe('Admin API', () => {
+    test('login with the configured credentials returns a token', async () => {
+        expect(typeof (await loginAsAdmin())).toBe('string');
     });
 
-    describe('Admin API', () => {
-        it('should authenticate admin and return token', async () => {
-            const res = await request(app)
-                .post('/api/admin/login')
-                .send({
-                    email: process.env.ADMIN_EMAIL || 'admin@porsche-dealer.com',
-                    password: process.env.ADMIN_PASSWORD || 'admin123'
-                });
+    test('admin routes reject a request without a token', async () => {
+        const res = await request(app).get('/api/admin/contacts');
+        expect(res.statusCode).toBe(401);
+        expect(res.body.success).toBe(false);
+    });
 
-            expect(res.statusCode).toBe(200);
-            expect(res.body.success).toBe(true);
-            expect(res.body.token).toBeDefined();
-            adminToken = res.body.token;
-        });
+    test('lists contacts with a valid token, including a just-created one', async () => {
+        const token = await loginAsAdmin();
+        const contact = await createContact({ lastName: 'Listed' });
+        const res = await request(app)
+            .get(`/api/admin/contacts?q=${encodeURIComponent(contact.email)}`)
+            .set('Authorization', `Bearer ${token}`);
+        expect(res.statusCode).toBe(200);
+        expect(res.body.data.map((c) => c.id)).toEqual([contact.id]);
+    });
 
-        it('should reject admin route without token', async () => {
-            const res = await request(app).get('/api/admin/contacts');
-            expect(res.statusCode).toBe(401);
-            expect(res.body.success).toBe(false);
-        });
+    test('updates a contact status and records when it was contacted', async () => {
+        const token = await loginAsAdmin();
+        const contact = await createContact();
+        const res = await request(app)
+            .put(`/api/admin/contacts/${contact.id}`)
+            .set('Authorization', `Bearer ${token}`)
+            .send({ status: 'contacted' });
+        expect(res.statusCode).toBe(200);
+        expect(res.body.data.status).toBe('contacted');
+        expect(res.body.data.contactedAt).not.toBeNull();
+    });
 
-        it('should fetch contacts with valid admin token', async () => {
-            const res = await request(app)
-                .get('/api/admin/contacts')
-                .set('Authorization', `Bearer ${adminToken}`);
-
-            expect(res.statusCode).toBe(200);
-            expect(res.body.success).toBe(true);
-            expect(Array.isArray(res.body.data)).toBe(true);
-        });
-
-        it('should update contact status', async () => {
-            if (!createdContactId) return; // Skip if contact wasn't created
-
-            const res = await request(app)
-                .put(`/api/admin/contacts/${createdContactId}`)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({ status: 'contacted' });
-
-            expect(res.statusCode).toBe(200);
-            expect(res.body.success).toBe(true);
-            expect(res.body.data.status).toBe('contacted');
-        });
-
-        it('should fetch analytics data', async () => {
-            const res = await request(app)
-                .get('/api/admin/analytics')
-                .set('Authorization', `Bearer ${adminToken}`);
-
-            expect(res.statusCode).toBe(200);
-            expect(res.body.success).toBe(true);
-            expect(res.body.data).toHaveProperty('conversions');
-            expect(res.body.data).toHaveProperty('popularModels');
-        });
+    test('analytics returns all four sections with the right shapes', async () => {
+        const token = await loginAsAdmin();
+        await createContact({ modelInterest: 'Taycan' });
+        const res = await request(app).get('/api/admin/analytics').set('Authorization', `Bearer ${token}`);
+        expect(res.statusCode).toBe(200);
+        expect(Object.keys(res.body.data).sort()).toEqual(['conversions', 'peakHours', 'popularModels', 'trends']);
+        expect(res.body.data.popularModels[0]).toEqual(expect.objectContaining({ model: expect.any(String), count: expect.any(Number) }));
     });
 });

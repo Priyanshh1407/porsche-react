@@ -19,7 +19,10 @@
     "setupFiles": [
       "<rootDir>/tests/test-env.cjs"
     ],
-    "globalSetup": "<rootDir>/tests/global-setup.cjs"
+    "globalSetup": "<rootDir>/tests/global-setup.cjs",
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/require-assertions.cjs"
+    ]
   },
   "keywords": [
     "porsche",
