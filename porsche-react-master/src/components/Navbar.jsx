@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, Menu, X, Shield } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
+import { navbarModelGroups } from '../data/models';
 
 const Navbar = ({theme}) => {
   const [isModelsOpen, setIsModelsOpen] = useState(false);
@@ -27,44 +28,8 @@ const Navbar = ({theme}) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const porscheModels = [
-    {
-      category: "Sports Cars",
-      models: [
-        { name: "911", description: "The iconic sports car", route: "/models/911" },
-        { name: "718 Boxster", description: "Convertible roadster", route: "/models/718-boxster" },
-        { name: "718 Cayman", description: "Mid-engine coupe", route: "/models/718-cayman" }
-      ]
-    },
-    {
-      category: "GT Cars",
-      models: [
-        { name: "911 GT3", description: "Track-focused performance", route: "/models/911-gt3" },
-        { name: "911 GT3 RS", description: "Ultimate track weapon", route: "/models/911-gt3-rs" },
-        { name: "911 GT2 RS", description: "Most powerful 911", route: "/models/911-gt2-rs" }
-      ]
-    },
-    {
-      category: "SUVs",
-      models: [
-        { name: "Macan", description: "Compact luxury SUV", route: "/models/macan" },
-        { name: "Cayenne", description: "Full-size luxury SUV", route: "/models/cayenne" }
-      ]
-    },
-    {
-      category: "Electric",
-      models: [
-        { name: "Taycan", description: "Pure electric performance", route: "/models/taycan" },
-        { name: "Taycan Cross Turismo", description: "Electric versatility", route: "/models/taycan-cross-turismo" }
-      ]
-    },
-    {
-      category: "Sedans",
-      models: [
-        { name: "Panamera", description: "Luxury sports sedan", route: "/models/panamera" }
-      ]
-    }
-  ];
+  // Built from the model registry, so every link resolves to a real page (BUG-03).
+  const porscheModels = navbarModelGroups();
 
   const handleNavigation = (path) => {
     navigate(path);

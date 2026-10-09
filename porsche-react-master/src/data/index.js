@@ -11,18 +11,6 @@ import { cayman_gt4rs } from './modelsData/cayman_gt4rs.js';
 import { cayman_boxster } from './modelsData/cayman_boxster.js';
 import { macan } from './modelsData/macan.js';
 
-import Cayenne from '../pages/models/Cayenne.jsx';
-import Panamera from '../pages/models/Panamera.jsx';
-import Taycan from '../pages/models/Taycan.jsx';
-import GT3RS_3D from '../pages/GT3RS_3D.jsx';
-import GT2RS_911 from '../pages/models/GT2RS_911.jsx';
-import TurboS_911 from '../pages/models/TurboS_911.jsx';
-import Spyder_918_3D from '../pages/Spyder_918_3D.jsx';
-import CarreraGT from '../pages/models/CarreraGT.jsx';
-import Cayman_GT4RS from '../pages/models/Cayman_GT4RS.jsx';
-import CaymanBoxster from '../pages/models/CaymanBoxster.jsx';
-import Macan from '../pages/models/Macan.jsx';
-
 // Export individual models for direct import
 export { gt3rs } from './modelsData/gt3rs.js';
 export { turbos_911 } from './modelsData/turbos_911.js';
@@ -51,19 +39,7 @@ export const carData = {
   macan
 };
 
-export const modelRouteMap = {
-  "911 GT3 RS": <GT3RS_3D />,
-  "911 GT2 RS": <GT2RS_911 />,
-  "911 Turbo S": <TurboS_911 />,
-  "Cayenne": <Cayenne />,
-  "Taycan": <Taycan />,
-  "Panamera": <Panamera />,
-  "918 Spyder": <Spyder_918_3D />,
-  "Carrera GT": <CarreraGT />,
-  "718 Cayman GT4": <Cayman_GT4RS />,
-  "718 Boxster S": <CaymanBoxster />,
-  "Macan GTS": <Macan />
-}
+// Model routing lives in data/models.js (URLs) and data/modelPages.js (components).
 
 // Helper functions for working with car data
 export const getCarByName = (name) => {

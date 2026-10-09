@@ -3,6 +3,7 @@ import { Zap, Gauge, Trophy, ChevronRight, Timer, Target, Flame, Settings, Filte
 import { useNavigate, useLocation } from 'react-router-dom';
 import Loader from '../components/Loader';
 import { useScrollPosition } from '../data/useScrollPosition';
+import { pathForName } from '../data/models';
 
 const AllModels = () => {
   const [activeModel, setActiveModel] = useState(0);
@@ -240,13 +241,13 @@ const AllModels = () => {
 
   const handleExploreButton = (modelName) => {
     setIsPageLoading(true);
-    const encodedModel = encodeURIComponent(modelName);
+    const path = pathForName(modelName);
 
     // Save scroll position before navigating
     // No need to manually save here since the hook handles it automatically
 
     setTimeout(() => {
-      navigate(`/models/${encodedModel}`);
+      navigate(path);
       setIsPageLoading(false);
     }, 800);
   };

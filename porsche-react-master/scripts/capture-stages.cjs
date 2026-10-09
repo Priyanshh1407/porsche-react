@@ -25,11 +25,11 @@ const puppeteer = require('puppeteer');
 // <Sparkles> particles never stop, measured noise up to 0.10%, so its limit is 0.4% (4x its noise; a 1px
 // shift still differs by >= 1.26%, ~3x the limit).
 const CARS = [
-    { id: 'gt3rs', url: '/models/911 GT3 RS' },
-    { id: 'taycan', url: '/models/Taycan' },
-    { id: 'cayenne', url: '/models/Cayenne', maxDiffRatio: 0.004 },
-    { id: 'turbo', url: '/models/911 Turbo S' },
-    { id: 'spyder', url: '/models/918 Spyder' },
+    { id: 'gt3rs', url: '/models/911-gt3-rs' },
+    { id: 'taycan', url: '/models/taycan' },
+    { id: 'cayenne', url: '/models/cayenne', maxDiffRatio: 0.004 },
+    { id: 'turbo', url: '/models/911-turbo-s' },
+    { id: 'spyder', url: '/models/918-spyder' },
 ];
 const VIEWPORT = { width: 1280, height: 720 };
 // A stage is captured only once the picture stops changing (all GSAP tweens and CSS reveals

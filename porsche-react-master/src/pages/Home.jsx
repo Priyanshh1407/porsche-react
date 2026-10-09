@@ -19,6 +19,7 @@ import spyder_918 from '../assets/home/Spyder918.webp';
 import PorscheExperience from "../assets/home/PorscheExperience.avif";
 import Motorsport from "../assets/home/Motorsport.jpg";
 import { useNavigate } from 'react-router-dom';
+import { modelPath } from '../data/models';
 
 const Home = () => {
     const [activeHero, setActiveHero] = useState(0);
@@ -43,7 +44,7 @@ const Home = () => {
             image: hero1,
             logo: "https://images.unsplash.com/photo-1553440569-bcc63803a83d?w=200&h=100&fit=crop&q=80",
             cta: "Experience GT3 RS",
-            route: "/models/911 GT3 RS"
+            route: modelPath("911-gt3-rs")
         },
         {
             title: "718 Cayman GT4 RS",
@@ -52,7 +53,7 @@ const Home = () => {
             image: hero2,
             logo: "https://images.unsplash.com/photo-1553440569-bcc63803a83d?w=200&h=100&fit=crop&q=80",
             cta: "Drive GT4 RS",
-            route: "/models/718 Cayman GT4"
+            route: modelPath("718-cayman-gt4-rs")
         },
         {
             title: "Taycan",
@@ -61,7 +62,7 @@ const Home = () => {
             image: hero3,
             logo: "https://images.unsplash.com/photo-1553440569-bcc63803a83d?w=200&h=100&fit=crop&q=80",
             cta: "Go Electric",
-            route: "/models/Taycan"
+            route: modelPath("taycan")
         }
     ];
 
@@ -86,7 +87,7 @@ const Home = () => {
             fuel: "Gasoline",
             image: turbo911,
             logo: "https://cdn.ui.porsche.com/porsche-design-system/model-signatures/911.b68f913.svg",
-            route: "/models/911 GT3 RS"
+            route: modelPath("911-gt3-rs")
         },
         {
             name: "718",
@@ -138,17 +139,17 @@ const Home = () => {
     };
 
     const modelRoutes = {
-        "Carrera GT": "/models/Carrera GT",
-        "918 Spyder": "/models/918 Spyder",
-        "Cayenne": "/models/Cayenne",
-        "Macan": "/models/Macan GTS",
-        "Panamera": "/models/Panamera",
-        "Taycan": "/models/Taycan",
-        "GT3 RS": "/models/911 GT3 RS",
-        "Turbo S": "/models/911 Turbo S",
-        "GT2 RS": "/models/911 GT2 RS",
-        "GT4 RS": "/models/718 Cayman GT4",
-        "Boxster S": "/models/718 Boxster S"
+        "Carrera GT": modelPath("carrera-gt"),
+        "918 Spyder": modelPath("918-spyder"),
+        "Cayenne": modelPath("cayenne"),
+        "Macan": modelPath("macan-gts"),
+        "Panamera": modelPath("panamera"),
+        "Taycan": modelPath("taycan"),
+        "GT3 RS": modelPath("911-gt3-rs"),
+        "Turbo S": modelPath("911-turbo-s"),
+        "GT2 RS": modelPath("911-gt2-rs"),
+        "GT4 RS": modelPath("718-cayman-gt4-rs"),
+        "Boxster S": modelPath("718-boxster-s")
     };
 
     useEffect(() => {

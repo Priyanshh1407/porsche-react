@@ -15,7 +15,7 @@ const path = require('path');
 const puppeteer = require('puppeteer');
 
 // Non-3D routes first: they should download no GLB at all.
-const ROUTES = ['/', '/contact', '/about', '/models', '/models/911 GT3 RS'];
+const ROUTES = ['/', '/contact', '/about', '/models', '/models/911-gt3-rs'];
 const IDLE_TIMEOUT_MS = 300000;
 
 const args = process.argv.slice(2);
