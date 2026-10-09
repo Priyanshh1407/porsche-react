@@ -29,6 +29,8 @@ describe('Contact form (BUG-01)', () => {
         fireEvent.submit(container.querySelector('form'));
 
         await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+        // BUG-04: relative URL (dev proxy / REACT_APP_API_URL), never a hardcoded localhost.
+        expect(fetchMock.mock.calls[0][0]).toBe('/api/contact/submit');
         const body = JSON.parse(fetchMock.mock.calls[0][1].body);
         expect(body).toEqual(expect.objectContaining({ firstName: 'Anna', inquiryType: 'Sales' }));
         expect(body).not.toHaveProperty('modelInterest');

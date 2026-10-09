@@ -5,6 +5,7 @@ import Footer from '../components/Footer';
 import { carThemes } from '../data/carThemes';
 import showroom from "../assets/home/showroom..jpeg";
 import { useNavigate } from 'react-router-dom';
+import { apiFetch } from '../lib/api';
 
 const Contact = () => {
     const selectedTheme = carThemes.home;
@@ -90,12 +91,9 @@ const Contact = () => {
         );
 
         try {
-            const response = await fetch('http://localhost:5000/api/contact/submit', {
+            const response = await apiFetch('/api/contact/submit', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload),
+                json: payload,
             });
 
             if (response.status === 400) {

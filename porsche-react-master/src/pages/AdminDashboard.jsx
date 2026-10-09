@@ -8,6 +8,7 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart as RechartsBarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import adminBg from '../assets/home/adminBG.jpg';
+import { apiFetch } from '../lib/api';
 
 const COLORS = ['#dc2626', '#ea580c', '#ca8a04', '#65a30d', '#0284c7', '#7c3aed', '#db2777'];
 
@@ -52,13 +53,10 @@ const AdminDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const headers = { 'Authorization': `Bearer ${token}` };
-      
       const [contactsRes, statsRes, analyticsRes] = await Promise.all([
-        fetch('http://localhost:5000/api/admin/contacts', { headers }),
-        fetch('http://localhost:5000/api/admin/stats', { headers }),
-        fetch('http://localhost:5000/api/admin/analytics', { headers })
+        apiFetch('/api/admin/contacts', { auth: true }),
+        apiFetch('/api/admin/stats', { auth: true }),
+        apiFetch('/api/admin/analytics', { auth: true })
       ]);
       
       if (contactsRes.ok) {
@@ -96,10 +94,9 @@ const AdminDashboard = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:5000/api/admin/login', {
+      const res = await apiFetch('/api/admin/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(loginForm)
+        json: loginForm
       });
       const data = await res.json();
       if (data.success) {
@@ -146,14 +143,10 @@ const AdminDashboard = () => {
 
   const updateContactStatus = async (contactId, newStatus) => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const res = await fetch(`http://localhost:5000/api/admin/contacts/${contactId}`, {
+      const res = await apiFetch(`/api/admin/contacts/${contactId}`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ status: newStatus })
+        auth: true,
+        json: { status: newStatus }
       });
       if (res.ok) {
         fetchData();
@@ -167,10 +160,9 @@ const AdminDashboard = () => {
   const deleteContact = async (contactId) => {
     if(!window.confirm("Are you sure you want to delete this contact?")) return;
     try {
-      const token = localStorage.getItem('adminToken');
-      const res = await fetch(`/api/admin/contacts/${contactId}`, {
+      const res = await apiFetch(`/api/admin/contacts/${contactId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        auth: true
       });
       if (res.ok) {
         setContacts(prev => prev.filter(c => c.id !== contactId));
@@ -184,10 +176,7 @@ const AdminDashboard = () => {
 
   const handleExport = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const res = await fetch('/api/admin/export', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await apiFetch('/api/admin/export', { auth: true });
       if (res.ok) {
         const blob = await res.blob();
         const url = window.URL.createObjectURL(blob);
