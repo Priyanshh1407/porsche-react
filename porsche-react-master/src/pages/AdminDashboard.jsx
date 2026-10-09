@@ -7,8 +7,8 @@ import {
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart as RechartsBarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { useNavigate } from 'react-router-dom';
-import adminBg from '../assets/home/adminBG.jpg';
 import { apiFetch } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 
 const COLORS = ['#dc2626', '#ea580c', '#ca8a04', '#65a30d', '#0284c7', '#7c3aed', '#db2777'];
 
@@ -37,8 +37,8 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({ totalContacts: 0, newContacts: 0, contactedLeads: 0, qualifiedLeads: 0, closedLeads: 0 });
   const [analytics, setAnalytics] = useState({ trends: [], popularModels: [], conversions: { total: 0, conversions: {}, conversionRate: '0', contactedRate: '0' }, peakHours: [] });
   
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loginForm, setLoginForm] = useState({ email: '', password: '' });
+  // ARCH-01: auth comes from AuthContext; <RequireAdmin> only renders this page when logged in.
+  const { logout } = useAuth();
   const [settings, setSettings] = useState({
     emailNotifications: true,
     smsNotifications: false,
@@ -57,13 +57,9 @@ const AdminDashboard = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Verify existing token on mount
   useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    if (token) {
-      setIsAuthenticated(true);
-      fetchData();
-    }
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchData = async () => {
@@ -74,11 +70,11 @@ const AdminDashboard = () => {
         apiFetch('/api/admin/analytics', { auth: true })
       ]);
 
+      // A 401 here is handled centrally: apiFetch signals it, AuthContext logs out and
+      // <RequireAdmin> redirects to the login page.
       if (contactsRes.ok) {
         const data = await contactsRes.json();
         setRecentContacts(data.data);
-      } else if (contactsRes.status === 401) {
-        handleLogout();
       }
       
       if (statsRes.ok) {
@@ -106,33 +102,11 @@ const AdminDashboard = () => {
     setTimeout(() => setToastMessage(''), 3000);
   };
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await apiFetch('/api/admin/login', {
-        method: 'POST',
-        json: loginForm
-      });
-      const data = await res.json();
-      if (data.success) {
-        localStorage.setItem('adminToken', data.token);
-        setIsAuthenticated(true);
-        setActiveTab('dashboard');
-        showToast('Successfully logged into Porsche Admin Dashboard');
-        fetchData();
-      } else {
-        showToast(data.message || 'Invalid credentials');
-      }
-    } catch (err) {
-      showToast('Login failed');
-    }
-  };
-
+  // Clears the token AND the email (the old logout left the email behind, so AuthContext still
+  // thought the admin was logged in).
   const handleLogout = () => {
-    localStorage.removeItem('adminToken');
-    setIsAuthenticated(false);
-    setActiveTab('dashboard');
-    showToast('Successfully logged out');
+    logout();
+    navigate('/admin/login', { replace: true });
   };
 
   const handleBackToHome = () => {
@@ -167,7 +141,7 @@ const AdminDashboard = () => {
   }, [debouncedSearch, statusFilter]);
 
   useEffect(() => {
-    if (!isAuthenticated || activeTab !== 'contacts') return;
+    if (activeTab !== 'contacts') return;
     let cancelled = false;
     const params = new URLSearchParams({ page: String(page), limit: String(PAGE_SIZE) });
     if (statusFilter !== 'all') params.set('status', statusFilter);
@@ -184,7 +158,7 @@ const AdminDashboard = () => {
       }
     })();
     return () => { cancelled = true; };
-  }, [isAuthenticated, activeTab, page, statusFilter, debouncedSearch, listVersion]);
+  }, [activeTab, page, statusFilter, debouncedSearch, listVersion]);
 
   const refreshLists = () => {
     fetchData();
@@ -262,73 +236,6 @@ const AdminDashboard = () => {
     }
   };
 
-
-  if (!isAuthenticated) {
-        return (
-      <div className="min-h-screen bg-gray-50">
-        <button 
-          onClick={handleBackToHome}
-          className="absolute top-6 left-6 z-20 flex items-center space-x-2 px-4 py-2 text-white hover:text-gray-200 hover:bg-white hover:bg-opacity-10 rounded-lg transition-all duration-200 backdrop-blur-sm"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span>Back to Home</span>
-        </button>
-
-        <div 
-          className="relative h-screen flex items-center justify-center overflow-hidden"
-          style={{
-            backgroundImage: `url(${adminBg})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
-          <div className="absolute inset-0 bg-black bg-opacity-60" />
-          
-          <div className="relative z-10 max-w-md mx-auto px-4">
-            <div className={`text-center mb-8 animate-float-up ${animateElements ? 'animate' : ''}`}>
-              <div className="flex items-center justify-center mb-4">
-                <Car className="h-12 w-12 text-red-600" />
-              </div>
-              <h1 className="text-3xl font-bold text-white">Porsche Admin</h1>
-              <p className="text-gray-200 mt-2">Dashboard Login</p>
-            </div>
-
-            <div className={`bg-white bg-opacity-10 backdrop-blur-md rounded-lg border border-white border-opacity-20 p-6 animate-login-form ${animateElements ? 'animate' : ''}`}>
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className={`space-y-2 animate-float-up-delay-1 ${animateElements ? 'animate' : ''}`}>
-                  <label className="block text-sm font-medium text-white">Email</label>
-                  <input
-                    type="email"
-                    placeholder="admin@porsche.com"
-                    value={loginForm.email}
-                    onChange={(e) => setLoginForm(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white bg-opacity-10 border border-white border-opacity-20 rounded-md text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-red-600"
-                  />
-                </div>
-                <div className={`space-y-2 animate-float-up-delay-2 ${animateElements ? 'animate' : ''}`}>
-                  <label className="block text-sm font-medium text-white">Password</label>
-                  <input
-                    type="password"
-                    placeholder="Enter your password"
-                    value={loginForm.password}
-                    onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
-                    className="w-full px-3 py-2 bg-white bg-opacity-10 border border-white border-opacity-20 rounded-md text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-red-600"
-                  />
-                </div>
-                
-                <button
-                  type="submit"
-                  className={`w-full bg-gradient-to-r from-red-600 to-orange-600 text-white py-2 px-4 rounded-md hover:from-red-700 hover:to-orange-700 transition duration-200 animate-float-up-delay-3 ${animateElements ? 'animate' : ''}`}
-                >
-                  Sign in
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">

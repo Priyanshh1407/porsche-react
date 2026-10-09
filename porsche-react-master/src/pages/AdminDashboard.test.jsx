@@ -2,6 +2,8 @@
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import AdminDashboard from './AdminDashboard';
+import { AuthProvider } from '../context/AuthContext';
+import { fakeJwt } from '../testUtils/fakeJwt';
 
 const contact = (i, status = 'new') => ({
     id: `id-${i}`, firstName: `Person${i}`, lastName: 'Test', email: `p${i}@example.com`, phone: '5550000',
@@ -13,7 +15,7 @@ const json = (body, status = 200) => Promise.resolve({ ok: status < 400, status,
 let calls;
 beforeEach(() => {
     calls = [];
-    localStorage.setItem('adminToken', 'test-token');
+    localStorage.setItem('adminToken', fakeJwt());
     global.fetch = jest.fn((url, options = {}) => {
         calls.push({ url, method: options.method || 'GET', body: options.body });
         const u = new URL(url, 'http://x');
@@ -38,7 +40,7 @@ afterEach(() => {
 const contactListCalls = () => calls.filter((c) => c.url.startsWith('/api/admin/contacts?') && !c.url.includes('limit=5'));
 
 const openContactsTab = async () => {
-    render(<MemoryRouter><AdminDashboard /></MemoryRouter>);
+    render(<AuthProvider><MemoryRouter><AdminDashboard /></MemoryRouter></AuthProvider>);
     fireEvent.click(await screen.findByRole('button', { name: /Contacts/ }));
     await screen.findByText('Person20 Test');
 };

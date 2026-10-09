@@ -13,16 +13,21 @@ export const API_BASE_URL = (process.env.REACT_APP_API_URL || '').replace(/\/+$/
  * - `auth: true` adds the stored admin token as a Bearer header.
  * Returns the raw Response so callers keep checking `ok` / `status` as before.
  */
-export function apiFetch(path, { json, auth = false, headers = {}, ...options } = {}) {
+export async function apiFetch(path, { json, auth = false, headers = {}, ...options } = {}) {
     const finalHeaders = { ...headers };
     if (json !== undefined) finalHeaders['Content-Type'] = 'application/json';
     if (auth) {
         const token = localStorage.getItem('adminToken');
         if (token) finalHeaders.Authorization = `Bearer ${token}`;
     }
-    return fetch(`${API_BASE_URL}${path}`, {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
         ...options,
         headers: finalHeaders,
         body: json !== undefined ? JSON.stringify(json) : options.body,
     });
+    // ARCH-01: one place handles a rejected admin token: AuthContext listens and logs out.
+    if (auth && response.status === 401) {
+        window.dispatchEvent(new Event('auth:unauthorized'));
+    }
+    return response;
 }

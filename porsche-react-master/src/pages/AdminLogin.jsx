@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Lock, Mail, Car, Shield, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -10,6 +10,9 @@ import { Label } from '../components/ui/label';
 
 const AdminLogin = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    // Where <RequireAdmin> sent us from (ARCH-01); default to the dashboard.
+    const returnTo = location.state?.from || '/admin/dashboard';
     const { isAuthenticated, login } = useAuth();
     
     const [formData, setFormData] = useState({
@@ -31,9 +34,9 @@ const AdminLogin = () => {
 
     useEffect(() => {
         if (isAuthenticated) {
-            navigate('/admin/dashboard');
+            navigate(returnTo, { replace: true });
         }
-    }, [isAuthenticated, navigate]);
+    }, [isAuthenticated, navigate, returnTo]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -72,9 +75,10 @@ const AdminLogin = () => {
             
             if (response.ok && data.success) {
                 login(data.token, formData.email);
-                navigate('/admin/dashboard');
+                navigate(returnTo, { replace: true });
             } else {
-                setError(data.error || 'Login failed. Please check your credentials.');
+                // The API sends its reason in 'message' (e.g. rate limited); 'error' never existed.
+                setError(data.message || 'Login failed. Please check your credentials.');
             }
         } catch (error) {
             console.error('Login error:', error);

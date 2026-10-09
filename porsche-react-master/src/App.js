@@ -14,6 +14,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import { AuthProvider } from './context/AuthContext';
 import { modelPath } from './data/models';
 import RouteErrorBoundary from './components/RouteErrorBoundary';
+import RequireAdmin from './components/RequireAdmin';
 
 // Exported separately so tests can render the real route table inside a MemoryRouter.
 export function AppRoutes() {
@@ -31,7 +32,7 @@ export function AppRoutes() {
       <Route path="/models/:modelSlug/details" element={<ModelDetailsRouter />} />
       <Route path="/3d-experience" element={<Navigate to={modelPath('911-gt3-rs')} replace />} />
       <Route path="/admin/login" element={<AdminLogin />} />
-      <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      <Route path="/admin/dashboard" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
     </Routes>
   );
 }
