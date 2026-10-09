@@ -1,0 +1,9 @@
+{
+  "name": "porsche-showroom",
+  "private": true,
+  "description": "Repo-level commands only. The apps live in porsche-react-master/ and porsche-backend/.",
+  "scripts": {
+    "verify": "node scripts/verify.mjs",
+    "verify:full": "node scripts/verify.mjs --full"
+  }
+}
