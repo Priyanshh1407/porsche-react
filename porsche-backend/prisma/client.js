@@ -5,7 +5,9 @@ import dotenv from 'dotenv';
 dotenv.config({ quiet: true });
 
 const connectionString = process.env.DATABASE_URL;
-const pool = new Pool({ connectionString });
+// connectionTimeoutMillis: pg waits forever for a connection by default, so an unreachable
+// database would hang every request (and /ready) instead of failing fast (ERR-02).
+const pool = new Pool({ connectionString, connectionTimeoutMillis: 5000 });
 const adapter = new PrismaPg(pool);
 
 const prisma = new PrismaClient({ adapter });
