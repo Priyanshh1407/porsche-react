@@ -1,7 +1,10 @@
 import nodemailer, { createTransport } from "nodemailer";
 
 // email config
+// ERR-03: bounded waits. nodemailer's defaults are minutes (2 min to connect, 30 s for the
+// greeting, 10 min socket idle), so a hung SMTP server could hold a send open for a very long time.
 const createTransporter = () => {
+    const timeoutMs = Number(process.env.EMAIL_TIMEOUT_MS) || 10000;
     return nodemailer.createTransport({
         host: process.env.EMAIL_HOST,
         port: process.env.EMAIL_PORT,
@@ -9,7 +12,10 @@ const createTransporter = () => {
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS
-        }
+        },
+        connectionTimeout: timeoutMs,
+        greetingTimeout: timeoutMs,
+        socketTimeout: timeoutMs * 2
     });
 };
 

@@ -124,13 +124,12 @@ router.post('/submit', contactLimiter, contactValidation, async (req, res) => {
             data: contactData
         });
 
-        // send emails(customer confirmation + admin notification)
-        try {
-            await sendContactEmails(contact);
-        } catch (emailError) {
-            console.log('Email sending failed: ', emailError.message);
-            // Don't fail the request if email fails
-        }
+        // Send the emails (customer confirmation + admin notification) in the background (ERR-03):
+        // the lead is already saved, so the visitor gets their answer now instead of waiting on SMTP.
+        // A failure is logged, not silently lost. Stopgap: there is no retry until the outbox (UPG-03).
+        sendContactEmails(contact).catch((emailError) => {
+            console.error(`Email sending failed for contact ${contact.id}: ${emailError.message}`);
+        });
 
         // Notify admins in real-time
         notificationService.newContact(contact);
