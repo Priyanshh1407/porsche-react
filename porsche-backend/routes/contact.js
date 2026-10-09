@@ -5,6 +5,7 @@ import prisma from "../prisma/client.js";
 import { sendContactEmails } from "../utils/emailService.js";
 import notificationService from "../utils/notifications.js";
 import { spamCheck } from "../middleware/validation.js";
+import { INQUIRY_TYPES } from "../config/contactOptions.js";
 
 const router = express.Router();
 
@@ -61,7 +62,7 @@ const contactValidation = [
         .withMessage('Please enter a valid phone number (7–15 digits)'),
 
     body('inquiryType')
-        .isIn(['Sales', 'Service', 'Test_Drive', 'Parts', 'Financing', 'General'])
+        .isIn(INQUIRY_TYPES)
         .withMessage('Please enter a valid inquiry type'),
 
     body('message')

@@ -8,8 +8,33 @@ import Analytics from "../utils/analytics.js";
 import ExportService from "../utils/exportService.js";
 import notificationService from "../utils/notifications.js";
 import { authenticateAdmin } from "../middleware/auth.js";
+import { body, param, query } from "express-validator";
+import { handleValidationErrors } from "../middleware/validation.js";
+import { CONTACT_STATUSES, INQUIRY_TYPES } from "../config/contactOptions.js";
 
 const router = express.Router();
+
+// VAL-01: every admin input is validated; bad input is a 400, never a 500 or stored junk.
+const validContactId = [
+    param('id').isUUID().withMessage('Contact id must be a UUID'),
+];
+const validListQuery = [
+    query('page').optional().isInt({ min: 1 }).withMessage('page must be an integer >= 1').toInt(),
+    query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('limit must be between 1 and 100').toInt(),
+    query('status').optional().isIn([...CONTACT_STATUSES, 'all']).withMessage(`status must be one of: all, ${CONTACT_STATUSES.join(', ')}`),
+    query('inquiryType').optional().isIn(INQUIRY_TYPES).withMessage(`inquiryType must be one of: ${INQUIRY_TYPES.join(', ')}`),
+];
+const validContactUpdate = [
+    body('status').optional().isIn(CONTACT_STATUSES).withMessage(`status must be one of: ${CONTACT_STATUSES.join(', ')}`),
+    body('notes').optional({ values: 'null' }).isString().withMessage('notes must be text')
+        .isLength({ max: 500 }).withMessage('notes can be at most 500 characters'),
+];
+const validExportQuery = [
+    query('status').optional().isIn(CONTACT_STATUSES).withMessage(`status must be one of: ${CONTACT_STATUSES.join(', ')}`),
+    query('inquiryType').optional().isIn(INQUIRY_TYPES).withMessage(`inquiryType must be one of: ${INQUIRY_TYPES.join(', ')}`),
+    query('startDate').optional().isISO8601().withMessage('startDate must be an ISO 8601 date, e.g. 2026-01-31'),
+    query('endDate').optional().isISO8601().withMessage('endDate must be an ISO 8601 date, e.g. 2026-12-31'),
+];
 
 // Constant-time string comparison. Hashing first gives timingSafeEqual equal-length inputs,
 // so neither the length nor the matching prefix of the secret leaks through response time.
@@ -89,7 +114,7 @@ router.post('/login', loginLimiter, async (req, res) => {
 
 
 // GET /api/admin/contacts - Get all contacts (paginated)
-router.get('/contacts', authenticateAdmin, async (req, res) => {
+router.get('/contacts', authenticateAdmin, validListQuery, handleValidationErrors, async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
@@ -130,7 +155,7 @@ router.get('/contacts', authenticateAdmin, async (req, res) => {
 });
 
 // PUT /api/admin/contacts/:id - Update contact status
-router.put('/contacts/:id', authenticateAdmin, async (req, res) => {
+router.put('/contacts/:id', authenticateAdmin, validContactId, validContactUpdate, handleValidationErrors, async (req, res) => {
     try {
         const { status, notes } = req.body;
 
@@ -260,7 +285,7 @@ router.get('/analytics', authenticateAdmin, async (req, res) => {
 });
 
 // GET /api/admin/export - Export contacts to CSV
-router.get('/export', authenticateAdmin, async (req, res) => {
+router.get('/export', authenticateAdmin, validExportQuery, handleValidationErrors, async (req, res) => {
     try {
         const filters = {};
         if (req.query.status) filters.status = req.query.status;
@@ -281,7 +306,7 @@ router.get('/export', authenticateAdmin, async (req, res) => {
 });
 
 // GET /api/admin/contacts/:id/details - Get detailed contact information
-router.get('/contacts/:id/details', authenticateAdmin, async (req, res) => {
+router.get('/contacts/:id/details', authenticateAdmin, validContactId, handleValidationErrors, async (req, res) => {
     try {
         const contactDetails = await ExportService.exportContactDetails(req.params.id);
 
@@ -305,7 +330,7 @@ router.get('/contacts/:id/details', authenticateAdmin, async (req, res) => {
 });
 
 // DELETE /api/admin/contacts/:id - Delete a contact
-router.delete('/contacts/:id', authenticateAdmin, async (req, res) => {
+router.delete('/contacts/:id', authenticateAdmin, validContactId, handleValidationErrors, async (req, res) => {
     try {
         const contact = await prisma.contact.delete({
             where: { id: req.params.id }

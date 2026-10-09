@@ -1,6 +1,7 @@
 import { validationResult } from "express-validator";
 
-// handle validation erros 
+// Responds 400 with one entry per invalid field. express-validator v7 names the field `path`
+// (v6 used `param`, which made `field` always undefined). The rejected value is not echoed back.
 const handleValidationErrors = (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -8,9 +9,8 @@ const handleValidationErrors = (req, res, next) => {
             success: false,
             message: 'Validation failed',
             errors: errors.array().map(error => ({
-                field: error.param,
-                message: error.msg,
-                value: error.value
+                field: error.path,
+                message: error.msg
             }))
         });
     }

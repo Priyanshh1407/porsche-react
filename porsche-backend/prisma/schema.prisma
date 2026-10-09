@@ -6,6 +6,14 @@ datasource db {
   provider = "postgresql"
 }
 
+// VAL-01: the lead pipeline. The database itself rejects any other value.
+enum ContactStatus {
+  new
+  contacted
+  qualified
+  closed
+}
+
 model Contact {
   id                     String    @id @default(uuid())
   firstName              String    @db.VarChar(50)
@@ -17,7 +25,7 @@ model Contact {
   message                String    @db.VarChar(1000)
   preferredContactMethod String    @default("Either")
   preferredContactTime   String    @default("Anytime")
-  status                 String    @default("new")
+  status                 ContactStatus @default(new)
   source                 String    @default("Website")
   ipAddress              String?
   userAgent              String?

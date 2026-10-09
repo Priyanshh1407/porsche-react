@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 import prisma from "./prisma/client.js";
 import { validateEnv } from "./config/env.js";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 // Fail closed on missing configuration (SEC-01).
 try {

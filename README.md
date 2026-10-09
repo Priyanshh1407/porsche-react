@@ -76,12 +76,13 @@ npm install
 ```
 
 ### 2. Run the Backend
-Ensure you have your `.env` configured with your Postgres database URL.
+Ensure you have your `.env` configured with your Postgres database URL (see `porsche-backend/.env.example`).
 ```bash
 cd porsche-backend
-npx prisma db push
+npx prisma migrate deploy
 node server.js
 ```
+Upgrading a database that was created with the old `prisma db push` step? Follow the one-time steps in `porsche-backend/prisma/MIGRATIONS.md`.
 
 ### 3. Run the Frontend
 ```bash
