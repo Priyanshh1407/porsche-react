@@ -235,26 +235,21 @@ router.get('/stats', authenticateAdmin, async (req, res) => {
 // GET /api/admin/analytics - Get analytics data
 router.get('/analytics', authenticateAdmin, async (req, res) => {
     try {
-        const [
-            ConversionStats,
-            ModelPopularity,
-            InquiryTrends,
-            peakHours
-        ] = await Promise.all([
-            Analytics.getConversionStats(30),
-            Analytics.getInquiryTrends(30),
-            Analytics.getModelPopularity(7),
-            Analytics.getPeakHours(30),
-        ]);
+        // Each query is named where it starts, so a result can't land under the wrong key.
+        // (BUG-02: positional destructuring of Promise.all had swapped trends and popularModels.)
+        const queries = {
+            conversions: Analytics.getConversionStats(30),
+            trends: Analytics.getInquiryTrends(30),
+            popularModels: Analytics.getModelPopularity(7),
+            peakHours: Analytics.getPeakHours(30),
+        };
+        const keys = Object.keys(queries);
+        const results = await Promise.all(Object.values(queries));
+        const data = Object.fromEntries(keys.map((key, i) => [key, results[i]]));
 
         res.json({
             success: true,
-            data: {
-                conversions: ConversionStats,
-                popularModels: ModelPopularity,
-                trends: InquiryTrends,
-                peakHours: peakHours
-            }
+            data
         });
     } catch (error) {
         res.status(500).json({

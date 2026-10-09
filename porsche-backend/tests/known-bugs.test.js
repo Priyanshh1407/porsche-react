@@ -1,9 +1,9 @@
 /*
  * Characterization tests for bugs confirmed in PROJECT_AUDIT_REPORT.md (audit #1).
  *
- * Each test asserts the CORRECT behaviour and is marked `test.failing` because the bug is
- * still present. When Phase 1 fixes a bug, its test starts passing, which makes Jest report
- * the `.failing` test as a failure. Then remove `.failing` so it stays as a regression test.
+ * Each test asserted the CORRECT behaviour and was marked `test.failing` while the bug was
+ * present (Phase 0). When Phase 1 fixed a bug, Jest reported "Failing test passed", and
+ * `.failing` was removed, so every test here is now a regular regression test.
  */
 import request from 'supertest';
 import app from '../server.js';
@@ -120,7 +120,8 @@ describe('BUG-02: analytics returns trends and popularModels swapped', () => {
         createdIds.push(contact.id);
     });
 
-    test.failing('popularModels holds {model, count} and trends holds {_id: {date, inquiryType}, count}', async () => {
+    // Fixed in Phase 1: kept as a regression test.
+    test('popularModels holds {model, count} and trends holds {_id: {date, inquiryType}, count}', async () => {
         const res = await request(app)
             .get('/api/admin/analytics')
             .set('Authorization', `Bearer ${await adminToken()}`);
