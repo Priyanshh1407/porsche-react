@@ -37,12 +37,13 @@ const submit = async (overrides) => {
 const errorFields = (res) => (res.body.errors || []).map((e) => e.path);
 
 describe('VAL-02: names', () => {
+    // Latin-alphabet names only (developer decision): English plus related languages with accents.
     test.each([
         ['José', 'Müller'],
         ['Zoë', "O'Connor-Brontë"],
         ['François', 'Lefèvre'],
-        ['李', '明华'],
         ['Mary Ann', 'St. John'],
+        ['Søren', 'Ågård'],
     ])('accepts %s %s', async (firstName, lastName) => {
         const res = await submit({ firstName, lastName });
         expect(res.statusCode).toBe(201);
@@ -52,10 +53,23 @@ describe('VAL-02: names', () => {
         ['digits', 'Anna2'],
         ['markup', '<b>Anna</b>'],
         ['symbols', 'Anna$$'],
+        ['a single letter', 'A'],
     ])('rejects a first name with %s', async (_, firstName) => {
         const res = await submit({ firstName });
         expect(res.statusCode).toBe(400);
         expect(errorFields(res)).toContain('firstName');
+    });
+
+    test.each([
+        ['Chinese', '李', '明华'],
+        ['Cyrillic', 'Иван', 'Петров'],
+        ['Arabic', 'محمد', 'علي'],
+        ['Greek', 'Γιώργος', 'Παπαδόπουλος'],
+        ['mixed Latin and Cyrillic', 'Anna', 'Иванова'],
+    ])('rejects a %s name', async (_, firstName, lastName) => {
+        const res = await submit({ firstName, lastName });
+        expect(res.statusCode).toBe(400);
+        expect(errorFields(res)).toEqual(expect.arrayContaining(firstName === 'Anna' ? ['lastName'] : ['firstName', 'lastName']));
     });
 });
 

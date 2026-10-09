@@ -23,9 +23,11 @@ const contactLimiter = rateLimit({
     }
 });
 
-// VAL-02: names in any script (José Müller, Zoë O'Connor-Brontë, 李明华, Mary Ann St. John).
-// Must start with a letter; then letters, combining marks, spaces, apostrophes, hyphens, dots.
-const NAME_PATTERN = /^[\p{L}\p{M}][\p{L}\p{M}\s'’.-]*$/u;
+// VAL-02: Latin-alphabet names only (developer decision): English and related languages,
+// accents included (José Müller, Zoë O'Connor-Brontë, François Lefèvre, Mary Ann St. John).
+// Other scripts (Chinese, Cyrillic, Arabic, Greek, ...) are rejected. Must start with a letter;
+// then Latin letters, combining accent marks, spaces, apostrophes, hyphens, dots.
+const NAME_PATTERN = /^\p{Script=Latin}[\p{Script=Latin}\p{M}\s'’.-]*$/u;
 
 // VAL-02: real phone numbers in common formats, landlines included (+49 711 9110, (555) 555-0123,
 // 555.555.0123). Only digits, spaces, + ( ) . - and 7–15 digits (the E.164 maximum).
@@ -39,17 +41,17 @@ const isPlausiblePhone = (value) => {
 const contactValidation = [
     body('firstName')
         .trim()
-        .isLength({ min: 1, max: 50 })
-        .withMessage('First name should be between 1 and 50 characters')
+        .isLength({ min: 2, max: 50 })
+        .withMessage('First name should be between 2 and 50 characters')
         .matches(NAME_PATTERN)
-        .withMessage('First name can only contain letters, spaces, hyphens, apostrophes and dots'),
+        .withMessage('First name can only contain Latin letters (accents allowed), spaces, hyphens, apostrophes and dots'),
 
     body('lastName')
         .trim()
-        .isLength({ min: 1, max: 50 })
-        .withMessage('Last name should be between 1 and 50 characters')
+        .isLength({ min: 2, max: 50 })
+        .withMessage('Last name should be between 2 and 50 characters')
         .matches(NAME_PATTERN)
-        .withMessage('Last name can only contain letters, spaces, hyphens, apostrophes and dots'),
+        .withMessage('Last name can only contain Latin letters (accents allowed), spaces, hyphens, apostrophes and dots'),
 
     body('email')
         .isEmail()
