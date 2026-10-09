@@ -4,7 +4,7 @@ import rateLimit from "express-rate-limit";
 import prisma from "../prisma/client.js";
 import { sendContactEmails } from "../utils/emailService.js";
 import notificationService from "../utils/notifications.js";
-import { sanitizeInput, spamCheck } from "../middleware/validation.js";
+import { spamCheck } from "../middleware/validation.js";
 
 const router = express.Router();
 

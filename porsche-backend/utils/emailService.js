@@ -13,6 +13,18 @@ const createTransporter = () => {
     });
 };
 
+// SEC-02: output encoding. Every value interpolated into email HTML goes through escapeHtml via
+// the safeHtml tag, so visitor input (message, names, ...) can never become live markup or links.
+const escapeHtml = (value) => String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+const safeHtml = (strings, ...values) =>
+    strings.reduce((out, part, i) => out + part + (i < values.length ? escapeHtml(values[i]) : ''), '');
+
 // email template
 const getCustomerEmailTemplate = (contact) => {
     const modelName = contact.modelInterest !== 'Not_specified'
@@ -21,7 +33,7 @@ const getCustomerEmailTemplate = (contact) => {
 
     return {
         subject: 'Thank you for your interest in Porsche',
-        html: `
+        html: safeHtml`
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8f9fa;">
         <div style="background-color: #000; padding: 20px; text-align: center;">
           <h1 style="color: #fff; margin: 0; font-size: 28px;">PORSCHE</h1>
@@ -39,7 +51,9 @@ const getCustomerEmailTemplate = (contact) => {
             <p style="margin: 5px 0;"><strong>Inquiry Type:</strong> ${contact.inquiryType.replace('_', ' ').toUpperCase()}</p>
             <p style="margin: 5px 0;"><strong>Model Interest:</strong> ${modelName}</p>
             <p style="margin: 5px 0;"><strong>Preferred Contact:</strong> ${contact.preferredContactMethod}</p>
-            <p style="margin: 5px 0;"><strong>Message:</strong> ${contact.message}</p>
+            <!-- The visitor's free-text message is deliberately not echoed: this email goes to
+                 whatever address was typed into the form (SEC-02). The admin email has it. -->
+
           </div>
           
           <p style="color: #666; line-height: 1.6;">
@@ -63,7 +77,7 @@ const getCustomerEmailTemplate = (contact) => {
 const getAdminEmailTemplate = (contact) => {
     return {
         subject: `New Contact Inquiry - ${contact.inquiryType.toUpperCase()} - ${contact.firstName} ${contact.lastName}`,
-        html: `
+        html: safeHtml`
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background-color: #dc3545; padding: 20px; color: white;">
           <h2 style="margin: 0;">New Contact Form Submission</h2>

@@ -1,5 +1,4 @@
 import { validationResult } from "express-validator";
-import xss from "xss";
 
 // handle validation erros 
 const handleValidationErrors = (req, res, next) => {
@@ -18,17 +17,8 @@ const handleValidationErrors = (req, res, next) => {
     next();
 };
 
-// Sanitize input to prevent XSS
-const sanitizeInput = (req, res, next) => {
-    if (req.body) {
-        Object.keys(req.body).forEach(key => {
-            if (typeof req.body[key] === 'string') {
-                req.body[key] = xss(req.body[key]);
-            }
-        });
-    }
-    next();
-};
+// (sanitizeInput was removed in SEC-02: it was never mounted, and rewriting input on the way in
+// corrupts stored data. Untrusted values are escaped on output instead, see utils/emailService.js.)
 
 // check for spam patterns 
 const spamCheck = (req, res, next) => {
@@ -55,4 +45,4 @@ const spamCheck = (req, res, next) => {
 
     next();
 };
-export { handleValidationErrors, sanitizeInput, spamCheck };
+export { handleValidationErrors, spamCheck };
