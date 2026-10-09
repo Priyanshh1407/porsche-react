@@ -22,20 +22,33 @@ const contactLimiter = rateLimit({
     }
 });
 
+// VAL-02: names in any script (José Müller, Zoë O'Connor-Brontë, 李明华, Mary Ann St. John).
+// Must start with a letter; then letters, combining marks, spaces, apostrophes, hyphens, dots.
+const NAME_PATTERN = /^[\p{L}\p{M}][\p{L}\p{M}\s'’.-]*$/u;
+
+// VAL-02: real phone numbers in common formats, landlines included (+49 711 9110, (555) 555-0123,
+// 555.555.0123). Only digits, spaces, + ( ) . - and 7–15 digits (the E.164 maximum).
+const PHONE_CHARS = /^\+?[\d\s().-]+$/;
+const isPlausiblePhone = (value) => {
+    const digits = String(value).replace(/\D/g, '').length;
+    return PHONE_CHARS.test(String(value)) && digits >= 7 && digits <= 15;
+};
+
 // Validation
 const contactValidation = [
     body('firstName')
         .trim()
-        .isLength({ min: 2, max: 50 })
-        .withMessage('First name should be between 2 and 50 characters')
-        .matches(/^[a-zA-Z\s'-]+$/)
-        .withMessage('First name can only contain letters, spaces, hyphens, and apostrophes'),
+        .isLength({ min: 1, max: 50 })
+        .withMessage('First name should be between 1 and 50 characters')
+        .matches(NAME_PATTERN)
+        .withMessage('First name can only contain letters, spaces, hyphens, apostrophes and dots'),
 
     body('lastName')
         .trim()
-        .isLength({ min: 2, max: 50 })
-        .matches(/^[a-zA-Z\s'-]+$/)
-        .withMessage('Last name can only contain letters, spaces, hyphens, and apostrophes'),
+        .isLength({ min: 1, max: 50 })
+        .withMessage('Last name should be between 1 and 50 characters')
+        .matches(NAME_PATTERN)
+        .withMessage('Last name can only contain letters, spaces, hyphens, apostrophes and dots'),
 
     body('email')
         .isEmail()
@@ -43,8 +56,9 @@ const contactValidation = [
         .withMessage('Please enter a valid email address'),
 
     body('phone')
-        .isMobilePhone()
-        .withMessage('Please enter a valid mobile number'),
+        .trim()
+        .custom(isPlausiblePhone)
+        .withMessage('Please enter a valid phone number (7–15 digits)'),
 
     body('inquiryType')
         .isIn(['Sales', 'Service', 'Test_Drive', 'Parts', 'Financing', 'General'])
