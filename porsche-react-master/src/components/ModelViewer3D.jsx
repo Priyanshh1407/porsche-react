@@ -8,7 +8,10 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import ShowroomErrorBoundary from './ShowroomErrorBoundary';
 import fallbackImage from '../assets/gt3rs/hero image.jpeg';
 
-useGLTF.preload('/2024_manthey_racing_porsche_911_gt3_rs.glb');
+// PERF-01: disabled, not deleted. At module scope this ran on import, and every 3D page was
+// imported by the app shell, so every route downloaded all five models (~130 MB). The model now
+// loads only when this showroom renders (useGLTF below).
+// useGLTF.preload('/2024_manthey_racing_porsche_911_gt3_rs.glb');
 
 function Loader() {
     const { progress } = useProgress();

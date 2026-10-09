@@ -7,7 +7,10 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import ShowroomErrorBoundary from './ShowroomErrorBoundary';
 import fallbackImage from '../assets/918 spyder/hero.jpg';
 
-useGLTF.preload('/porsche-918-spyder-2015/source/source/2014_-_porsche_918_spyder_rigged__mid-poly.glb');
+// PERF-01: disabled, not deleted. At module scope this ran on import, and every 3D page was
+// imported by the app shell, so every route downloaded all five models (~130 MB). The model now
+// loads only when this showroom renders (useGLTF below).
+// useGLTF.preload('/porsche-918-spyder-2015/source/source/2014_-_porsche_918_spyder_rigged__mid-poly.glb');
 
 function Loader() {
     const { progress } = useProgress();

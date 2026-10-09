@@ -1,9 +1,5 @@
 // slug -> page components. Only the router imports this file (see models.js for why).
-import GT3RS_3D from '../pages/GT3RS_3D';
-import Taycan_3D from '../pages/Taycan_3D';
-import Cayenne_3D from '../pages/Cayenne_3D';
-import Turbo_3D from '../pages/Turbo_3D';
-import Spyder_918_3D from '../pages/Spyder_918_3D';
+import { lazy } from 'react';
 import GT2RS_911 from '../pages/models/GT2RS_911';
 import CarreraGT from '../pages/models/CarreraGT';
 import Cayman_GT4RS from '../pages/models/Cayman_GT4RS';
@@ -15,6 +11,14 @@ import Spyder_918 from '../pages/models/Spyder_918';
 import Cayenne from '../pages/models/Cayenne';
 import Taycan from '../pages/models/Taycan';
 import TurboS_911 from '../pages/models/TurboS_911';
+
+// PERF-01: the five 3D showrooms are code-split. Each one (with its three.js scene code and its
+// model) loads only when that showroom is opened, instead of with the app shell on every page.
+const GT3RS_3D = lazy(() => import('../pages/GT3RS_3D'));
+const Taycan_3D = lazy(() => import('../pages/Taycan_3D'));
+const Cayenne_3D = lazy(() => import('../pages/Cayenne_3D'));
+const Turbo_3D = lazy(() => import('../pages/Turbo_3D'));
+const Spyder_918_3D = lazy(() => import('../pages/Spyder_918_3D'));
 
 // Page = what /models/<slug> shows (the 3D showroom where one exists, exactly as before).
 // Details = the classic page linked from each 3D showroom's call-to-action.

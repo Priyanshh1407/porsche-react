@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { findModel, findModelForDetails, modelDetailsPath, modelPath } from './models';
 import { MODEL_PAGES } from './modelPages';
@@ -19,7 +19,13 @@ const ModelRouter = () => {
     if (modelSlug !== model.slug) return <Navigate to={modelPath(model.slug)} replace />;
 
     const { Page } = MODEL_PAGES[model.slug];
-    return <Page />;
+    // The 3D showrooms are lazy-loaded (PERF-01); a black screen matches their dark background
+    // for the moment their code chunk is downloading.
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-black" />}>
+            <Page />
+        </Suspense>
+    );
 };
 
 // /models/:modelSlug/details. The 3D showrooms link to old detail URLs such as

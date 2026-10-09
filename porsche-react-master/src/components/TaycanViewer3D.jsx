@@ -7,7 +7,10 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import ShowroomErrorBoundary from './ShowroomErrorBoundary';
 import fallbackImage from '../assets/taycan/hero.jpeg';
 
-useGLTF.preload('/2025_porsche_taycan_turbo_gt_weissach_package.glb');
+// PERF-01: disabled, not deleted. At module scope this ran on import, and every 3D page was
+// imported by the app shell, so every route downloaded all five models (~130 MB). The model now
+// loads only when this showroom renders (useGLTF below).
+// useGLTF.preload('/2025_porsche_taycan_turbo_gt_weissach_package.glb');
 
 function Loader() {
     const { progress } = useProgress();
