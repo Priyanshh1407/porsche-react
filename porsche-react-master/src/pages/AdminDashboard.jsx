@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
   Car, Users, BarChart, Shield, ArrowRight, Search, Filter, 
-  Mail, Phone, Calendar, MapPin, Eye, Edit, Trash2, Download,
+  Mail, Phone, Calendar, MapPin, Eye, Trash2, Download,
   Settings, Bell, User, TrendingUp, TrendingDown, Plus, 
   CheckCircle, Clock, AlertCircle, XCircle, ArrowLeft
 } from "lucide-react";
@@ -12,13 +12,28 @@ import { apiFetch } from '../lib/api';
 
 const COLORS = ['#dc2626', '#ea580c', '#ca8a04', '#65a30d', '#0284c7', '#7c3aed', '#db2777'];
 
+// The lead pipeline; must match the API's ContactStatus enum (VAL-01).
+const STATUS_OPTIONS = [
+  { value: 'new', label: 'New' },
+  { value: 'contacted', label: 'Contacted' },
+  { value: 'qualified', label: 'Qualified' },
+  { value: 'closed', label: 'Closed' },
+];
+const PAGE_SIZE = 20;
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedContact, setSelectedContact] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [contacts, setContacts] = useState([]);
+  // BUG-05: the dashboard card shows the newest 5; the Contacts tab pages through ALL contacts
+  // on the server (search/filter used to run in the browser over one page of 10).
+  const [recentContacts, setRecentContacts] = useState([]);
+  const [contactsPage, setContactsPage] = useState({ items: [], pagination: { current: 1, pages: 1, total: 0, limit: PAGE_SIZE } });
+  const [page, setPage] = useState(1);
+  const [listVersion, setListVersion] = useState(0); // bump to refetch the current page
   const [stats, setStats] = useState({ totalContacts: 0, newContacts: 0, contactedLeads: 0, qualifiedLeads: 0, closedLeads: 0 });
   const [analytics, setAnalytics] = useState({ trends: [], popularModels: [], conversions: { total: 0, conversions: {}, conversionRate: '0', contactedRate: '0' }, peakHours: [] });
   
@@ -54,14 +69,14 @@ const AdminDashboard = () => {
   const fetchData = async () => {
     try {
       const [contactsRes, statsRes, analyticsRes] = await Promise.all([
-        apiFetch('/api/admin/contacts', { auth: true }),
+        apiFetch('/api/admin/contacts?limit=5', { auth: true }),
         apiFetch('/api/admin/stats', { auth: true }),
         apiFetch('/api/admin/analytics', { auth: true })
       ]);
-      
+
       if (contactsRes.ok) {
         const data = await contactsRes.json();
-        setContacts(data.data);
+        setRecentContacts(data.data);
       } else if (contactsRes.status === 401) {
         handleLogout();
       }
@@ -141,6 +156,41 @@ const AdminDashboard = () => {
     );
   };
 
+  // Contacts tab: search is debounced, and a new search or filter starts again at page 1.
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, statusFilter]);
+
+  useEffect(() => {
+    if (!isAuthenticated || activeTab !== 'contacts') return;
+    let cancelled = false;
+    const params = new URLSearchParams({ page: String(page), limit: String(PAGE_SIZE) });
+    if (statusFilter !== 'all') params.set('status', statusFilter);
+    if (debouncedSearch) params.set('q', debouncedSearch);
+    (async () => {
+      try {
+        const res = await apiFetch(`/api/admin/contacts?${params}`, { auth: true });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        // Ignore a response that arrives after a newer search/page was requested.
+        if (!cancelled) setContactsPage({ items: data.data, pagination: data.pagination });
+      } catch (err) {
+        if (!cancelled) showToast('Failed to load contacts');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isAuthenticated, activeTab, page, statusFilter, debouncedSearch, listVersion]);
+
+  const refreshLists = () => {
+    fetchData();
+    setListVersion((v) => v + 1);
+  };
+
   const updateContactStatus = async (contactId, newStatus) => {
     try {
       const res = await apiFetch(`/api/admin/contacts/${contactId}`, {
@@ -149,13 +199,31 @@ const AdminDashboard = () => {
         json: { status: newStatus }
       });
       if (res.ok) {
-        fetchData();
+        refreshLists();
         showToast('Status updated successfully');
+      } else {
+        const data = await res.json().catch(() => ({}));
+        showToast(data.errors?.[0]?.message || data.message || 'Failed to update status');
       }
     } catch (err) {
       showToast('Failed to update status');
     }
   };
+
+  // BUG-07: every pipeline stage is reachable (both edit buttons used to set 'contacted' only,
+  // so qualified/closed and the conversion rate could never move off 0).
+  const StatusSelect = ({ contact }) => (
+    <select
+      aria-label={`Status for ${contact.firstName} ${contact.lastName}`}
+      value={contact.status}
+      onChange={(e) => updateContactStatus(contact.id, e.target.value)}
+      className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-red-600"
+    >
+      {STATUS_OPTIONS.map((option) => (
+        <option key={option.value} value={option.value}>{option.label}</option>
+      ))}
+    </select>
+  );
 
   const deleteContact = async (contactId) => {
     if(!window.confirm("Are you sure you want to delete this contact?")) return;
@@ -165,9 +233,10 @@ const AdminDashboard = () => {
         auth: true
       });
       if (res.ok) {
-        setContacts(prev => prev.filter(c => c.id !== contactId));
         showToast('Contact deleted');
-        fetchData();
+        refreshLists();
+      } else {
+        showToast('Failed to delete contact');
       }
     } catch (err) {
       showToast('Failed to delete contact');
@@ -193,13 +262,6 @@ const AdminDashboard = () => {
     }
   };
 
-  const filteredContacts = contacts.filter(contact => {
-    const matchesSearch = contact.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          contact.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          contact.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || contact.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
 
   if (!isAuthenticated) {
         return (
@@ -471,7 +533,7 @@ const AdminDashboard = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredContacts.slice(0, 5).map((contact) => (
+                    {recentContacts.map((contact) => (
                       <tr key={contact.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">{contact.firstName} {contact.lastName}</div>
@@ -480,8 +542,10 @@ const AdminDashboard = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{contact.modelInterest}</td>
                         <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(contact.status)}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button onClick={() => setShowContactDetails(contact)} className="text-blue-600 hover:text-blue-900 mr-2"><Eye className="h-4 w-4" /></button>
-                          <button onClick={() => updateContactStatus(contact.id, 'contacted')} className="text-green-600 hover:text-green-900"><Edit className="h-4 w-4" /></button>
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => setShowContactDetails(contact)} aria-label={`View ${contact.firstName} ${contact.lastName}`} className="text-blue-600 hover:text-blue-900"><Eye className="h-4 w-4" /></button>
+                            <StatusSelect contact={contact} />
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -539,7 +603,14 @@ const AdminDashboard = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredContacts.map((contact) => (
+                    {contactsPage.items.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-8 text-center text-sm text-gray-500">
+                          {debouncedSearch || statusFilter !== 'all' ? 'No contacts match this search.' : 'No contacts yet.'}
+                        </td>
+                      </tr>
+                    )}
+                    {contactsPage.items.map((contact) => (
                       <tr key={contact.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">{contact.firstName} {contact.lastName}</div>
@@ -551,14 +622,38 @@ const AdminDashboard = () => {
                         <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(contact.status)}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(contact.createdAt).toLocaleDateString()}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button onClick={() => setShowContactDetails(contact)} className="text-blue-600 hover:text-blue-900 mr-2"><Eye className="h-4 w-4" /></button>
-                          <button onClick={() => updateContactStatus(contact.id, 'contacted')} className="text-green-600 hover:text-green-900 mr-2"><Edit className="h-4 w-4" /></button>
-                          <button onClick={() => deleteContact(contact.id)} className="text-red-600 hover:text-red-900"><Trash2 className="h-4 w-4" /></button>
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => setShowContactDetails(contact)} aria-label={`View ${contact.firstName} ${contact.lastName}`} className="text-blue-600 hover:text-blue-900"><Eye className="h-4 w-4" /></button>
+                            <StatusSelect contact={contact} />
+                            <button onClick={() => deleteContact(contact.id)} aria-label={`Delete ${contact.firstName} ${contact.lastName}`} className="text-red-600 hover:text-red-900"><Trash2 className="h-4 w-4" /></button>
+                          </div>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+              </div>
+              {/* BUG-05: server-side pagination over every matching contact. */}
+              <div className="flex items-center justify-between px-6 py-3 border-t border-gray-200 text-sm text-gray-600">
+                <span>
+                  {contactsPage.pagination.total} contact{contactsPage.pagination.total === 1 ? '' : 's'} · page {contactsPage.pagination.current} of {Math.max(contactsPage.pagination.pages, 1)}
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page <= 1}
+                    className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-40"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setPage((p) => p + 1)}
+                    disabled={page >= contactsPage.pagination.pages}
+                    className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-40"
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
             </div>
           </div>

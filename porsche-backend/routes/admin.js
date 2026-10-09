@@ -23,6 +23,7 @@ const validListQuery = [
     query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('limit must be between 1 and 100').toInt(),
     query('status').optional().isIn([...CONTACT_STATUSES, 'all']).withMessage(`status must be one of: all, ${CONTACT_STATUSES.join(', ')}`),
     query('inquiryType').optional().isIn(INQUIRY_TYPES).withMessage(`inquiryType must be one of: ${INQUIRY_TYPES.join(', ')}`),
+    query('q').optional().trim().isLength({ max: 100 }).withMessage('search term can be at most 100 characters'),
 ];
 const validContactUpdate = [
     body('status').optional().isIn(CONTACT_STATUSES).withMessage(`status must be one of: ${CONTACT_STATUSES.join(', ')}`),
@@ -120,21 +121,30 @@ router.get('/contacts', authenticateAdmin, validListQuery, handleValidationError
         const limit = parseInt(req.query.limit) || 10;
         const status = req.query.status;
         const inquiryType = req.query.inquiryType;
+        const q = req.query.q;
 
         //Build filter
         const where = {};
         if (status && status !== 'all') where.status = status;
         if (inquiryType) where.inquiryType = inquiryType;
+        // BUG-05: search runs on the server over all contacts (it used to filter one page of 10
+        // in the browser). Case-insensitive match on name, email or phone.
+        if (q) {
+            where.OR = ['firstName', 'lastName', 'email', 'phone']
+                .map((field) => ({ [field]: { contains: q, mode: 'insensitive' } }));
+        }
 
-        // get contacts
-        const contacts = await prisma.contact.findMany({
-            where,
-            orderBy: { createdAt: 'desc' },
-            take: limit,
-            skip: (page - 1) * limit
-        });
-
-        const total = await prisma.contact.count({ where });
+        // get contacts. `id` breaks ties between equal createdAt values, so paging is stable
+        // (without it, rows created in the same instant can repeat or vanish between pages).
+        const [contacts, total] = await Promise.all([
+            prisma.contact.findMany({
+                where,
+                orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+                take: limit,
+                skip: (page - 1) * limit
+            }),
+            prisma.contact.count({ where })
+        ]);
 
         res.json({
             success: true,
