@@ -13,6 +13,7 @@ import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import { AuthProvider } from './context/AuthContext';
 import { modelPath } from './data/models';
+import RouteErrorBoundary from './components/RouteErrorBoundary';
 
 // Exported separately so tests can render the real route table inside a MemoryRouter.
 export function AppRoutes() {
@@ -41,7 +42,9 @@ function App() {
       <div>
         <Toaster position="top-right" reverseOrder={false} />
         <BrowserRouter>
-          <AppRoutes />
+          <RouteErrorBoundary>
+            <AppRoutes />
+          </RouteErrorBoundary>
         </BrowserRouter>
       </div>
     </AuthProvider>

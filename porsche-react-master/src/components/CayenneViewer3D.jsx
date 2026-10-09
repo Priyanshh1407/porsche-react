@@ -5,6 +5,8 @@ import { Canvas, useThree } from '@react-three/fiber';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import ShowroomErrorBoundary from './ShowroomErrorBoundary';
+import fallbackImage from '../assets/cayenne/hero.jpg';
 
 useGLTF.preload('/2022_porsche_cayenne_turbo_gt.glb');
 
@@ -265,6 +267,7 @@ const SceneChoreography = () => {
 export default function CayenneViewer3D() {
     return (
         <div style={{ width: '100%', height: '100%' }}>
+            <ShowroomErrorBoundary fallbackImage={fallbackImage} alt="Porsche Cayenne">
             <Canvas camera={{ position: [0, 1.5, 12], fov: 38 }} dpr={[1, 2]}>
                 <React.Suspense fallback={<Loader />}>
                     <SceneChoreography />
@@ -275,6 +278,7 @@ export default function CayenneViewer3D() {
                     <Vignette eskil={false} offset={0.1} darkness={1.1} />
                 </EffectComposer>
             </Canvas>
+            </ShowroomErrorBoundary>
         </div>
     );
 }

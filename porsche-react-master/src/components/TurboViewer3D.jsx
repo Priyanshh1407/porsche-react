@@ -4,6 +4,8 @@ import { Canvas, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import ShowroomErrorBoundary from './ShowroomErrorBoundary';
+import fallbackImage from '../assets/turboS/hero.avif';
 
 useGLTF.preload('/porsche_911_turbo_s.glb');
 
@@ -261,11 +263,13 @@ const SceneChoreography = () => {
 export default function TurboViewer3D() {
     return (
         <div style={{ width: '100%', height: '100%' }}>
+            <ShowroomErrorBoundary fallbackImage={fallbackImage} alt="Porsche 911 Turbo S">
             <Canvas camera={{ position: [0, 1.5, 12], fov: 38 }} dpr={[1, 2]}>
                 <React.Suspense fallback={<Loader />}>
                     <SceneChoreography />
                 </React.Suspense>
             </Canvas>
+            </ShowroomErrorBoundary>
         </div>
     );
 }

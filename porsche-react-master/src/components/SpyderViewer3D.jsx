@@ -4,6 +4,8 @@ import { useGLTF, Environment, Html, useProgress, Center, ContactShadows } from 
 import { Canvas } from '@react-three/fiber';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import ShowroomErrorBoundary from './ShowroomErrorBoundary';
+import fallbackImage from '../assets/918 spyder/hero.jpg';
 
 useGLTF.preload('/porsche-918-spyder-2015/source/source/2014_-_porsche_918_spyder_rigged__mid-poly.glb');
 
@@ -312,11 +314,13 @@ const SceneChoreography = () => {
 export default function SpyderViewer3D() {
     return (
         <div style={{ width: '100%', height: '100%' }}>
+            <ShowroomErrorBoundary fallbackImage={fallbackImage} alt="Porsche 918 Spyder">
             <Canvas camera={{ position: [0, 1.5, 12], fov: 38 }} dpr={[1, 2]}>
                 <React.Suspense fallback={<Loader />}>
                     <SceneChoreography />
                 </React.Suspense>
             </Canvas>
+            </ShowroomErrorBoundary>
         </div>
     );
 }

@@ -4,6 +4,8 @@ import { useGLTF, Environment, Html, useProgress, Center, ContactShadows } from 
 import { Canvas, useThree } from '@react-three/fiber';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import ShowroomErrorBoundary from './ShowroomErrorBoundary';
+import fallbackImage from '../assets/taycan/hero.jpeg';
 
 useGLTF.preload('/2025_porsche_taycan_turbo_gt_weissach_package.glb');
 
@@ -311,11 +313,13 @@ const SceneChoreography = () => {
 export default function TaycanViewer3D() {
     return (
         <div style={{ width: '100%', height: '100%' }}>
+            <ShowroomErrorBoundary fallbackImage={fallbackImage} alt="Porsche Taycan">
             <Canvas camera={{ position: [0, 1.5, 12], fov: 38 }} dpr={[1, 2]}>
                 <React.Suspense fallback={<Loader />}>
                     <SceneChoreography />
                 </React.Suspense>
             </Canvas>
+            </ShowroomErrorBoundary>
         </div>
     );
 }
