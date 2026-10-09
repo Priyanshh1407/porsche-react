@@ -68,3 +68,8 @@ jest.mock('postprocessing', () =>
 
 // jsdom does not implement scrolling; pages call window.scrollTo on mount.
 window.scrollTo = () => {};
+
+// TEST-02/TEST-01: a test that finishes without asserting anything fails (no vacuous passes).
+beforeEach(() => {
+    expect.hasAssertions();
+});
