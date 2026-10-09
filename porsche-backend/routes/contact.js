@@ -9,9 +9,13 @@ import { sanitizeInput, spamCheck } from "../middleware/validation.js";
 const router = express.Router();
 
 // Contact form rate limiting
+// 5 per IP per hour (SEC-03: had been left at 100 "for testing"). Counts every attempt,
+// including rejected ones, so the form can't be used to relay unlimited email.
 const contactLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hr
-    max: 100, // Increased for testing (was 5)
+    limit: 5,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
     message: {
         success: false,
         message: 'Too many contact submissions. Please try again'

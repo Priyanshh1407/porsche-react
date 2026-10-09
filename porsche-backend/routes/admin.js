@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import express from "express";
+import rateLimit from "express-rate-limit";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import prisma from "../prisma/client.js";
@@ -17,8 +18,22 @@ const safeEqual = (a, b) => {
     return crypto.timingSafeEqual(digest(a), digest(b));
 };
 
+// Brute-force protection (SEC-03): 5 failed attempts per IP per 15 minutes.
+// Successful logins are not counted, so the real admin is never locked out by normal use.
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 5,
+    skipSuccessfulRequests: true,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    message: {
+        success: false,
+        message: 'Too many failed login attempts. Please try again in 15 minutes.'
+    }
+});
+
 // POST /api/admin/login - Admin login
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
     try {
         const { email, password } = req.body ?? {};
 

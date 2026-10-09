@@ -22,6 +22,12 @@ import adminRoutes from "./routes/admin.js";
 
 const app = express();
 
+// Behind a reverse proxy (Render, Railway, Nginx) every request arrives from the proxy's IP,
+// so all visitors would share one rate-limit bucket. TRUST_PROXY = number of proxy hops to
+// trust for X-Forwarded-For; unset/0 = connect directly, trust nothing (SEC-03).
+const trustProxyHops = Number(process.env.TRUST_PROXY || 0);
+if (trustProxyHops > 0) app.set('trust proxy', trustProxyHops);
+
 //Security
 app.use(helmet());
 app.use(cors({
