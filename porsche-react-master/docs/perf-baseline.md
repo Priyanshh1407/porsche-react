@@ -65,7 +65,8 @@ showrooms are `React.lazy` chunks. Same build/serve/measure method as above.
 
 Notes:
 - **Home misses the Phase 1 target (< 5 MB) at 5.6 MB.** It loads no models; the weight is two
-  hero photos (`hero2.jpg` 1.91 MB, `hero3.jpg` 1.05 MB). Logged as PERF-04 for Phase 5.
+  hero photos (`hero2.jpg` 1.91 MB, `hero3.jpg` 1.05 MB). PERF-04: accepted as-is by the developer;
+  the home page is not to be changed further.
 - The local measuring server does not compress, so JS counts uncompressed (main ≈ 1.09 MB on the
   wire here vs ≈ 308 kB gzipped from a real host). Real-world numbers will be somewhat lower.
 - The 3D showroom stage screenshots are unchanged (44/44 match the Phase 0 baseline).
