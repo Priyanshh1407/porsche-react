@@ -1,0 +1,2 @@
+# Prisma checksums migration files: keep them byte-identical on every OS (no CRLF conversion).
+porsche-backend/prisma/migrations/** text eol=lf
