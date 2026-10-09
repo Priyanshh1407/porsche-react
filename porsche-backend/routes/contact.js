@@ -51,16 +51,18 @@ const contactValidation = [
         .isLength({ min: 10, max: 1000 })
         .withMessage('Message must be between 10 and 1000 characters'),
 
+    // values: 'falsy' so an untouched <select> (sent as '') counts as "not provided" and falls
+    // back to the defaults below; plain .optional() only skips undefined (BUG-01).
     body('modelInterest')
-        .optional()
+        .optional({ values: 'falsy' })
         .isIn(['911', '718_Cayman', '718_Boxster', 'Cayenne', 'Macan', 'Panamera', 'Taycan', 'CarreraGT', 'Cayman_GT4RS', 'GT2RS_911', 'GT3RS', 'Spyder_918', 'TurboS_911', 'Other', 'Not_specified']),
 
     body('preferredContactMethod')
-        .optional()
+        .optional({ values: 'falsy' })
         .isIn(['Email', 'Phone', 'Either']),
 
     body('preferredContactTime')
-        .optional()
+        .optional({ values: 'falsy' })
         .isIn(['Morning', 'Afternoon', 'Evening', 'Anytime']),
 ];
 

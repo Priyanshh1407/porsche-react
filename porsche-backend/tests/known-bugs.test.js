@@ -34,7 +34,8 @@ afterAll(async () => {
 
 describe('BUG-01: contact form rejects blank optional dropdowns', () => {
     // Exactly what src/pages/Contact.jsx sends when the user leaves the optional selects untouched.
-    test.failing('accepts the UI payload with empty optional fields', async () => {
+    // Fixed in Phase 1: kept as a regression test.
+    test('accepts the UI payload with empty optional fields and stores the defaults', async () => {
         const res = await request(app)
             .post('/api/contact/submit')
             .send({ ...validContact, modelInterest: '', preferredContactMethod: '', preferredContactTime: '' });
@@ -42,6 +43,22 @@ describe('BUG-01: contact form rejects blank optional dropdowns', () => {
         if (res.body?.data?.id) createdIds.push(res.body.data.id);
         expect(res.statusCode).toBe(201);
         expect(res.body.success).toBe(true);
+
+        const stored = await prisma.contact.findUnique({ where: { id: res.body.data.id } });
+        expect(stored).toEqual(expect.objectContaining({
+            modelInterest: 'Not_specified',
+            preferredContactMethod: 'Either',
+            preferredContactTime: 'Anytime',
+        }));
+    });
+
+    test('still rejects a non-empty value outside the allowed list', async () => {
+        const res = await request(app)
+            .post('/api/contact/submit')
+            .send({ ...validContact, modelInterest: 'Trabant' });
+
+        expect(res.statusCode).toBe(400);
+        expect(res.body.errors.map((e) => e.path)).toContain('modelInterest');
     });
 });
 

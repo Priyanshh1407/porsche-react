@@ -84,16 +84,30 @@ const Contact = () => {
         setIsSubmitting(true);
         setSubmitStatus(null);
 
+        // Untouched optional selects are '' — omit them so the API applies its defaults (BUG-01).
+        const payload = Object.fromEntries(
+            Object.entries(formData).filter(([, value]) => value !== '')
+        );
+
         try {
             const response = await fetch('http://localhost:5000/api/contact/submit', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(payload),
             });
 
-            if (response.ok) {
+            if (response.status === 400) {
+                // Show the API's per-field validation messages under the matching inputs.
+                const data = await response.json().catch(() => ({}));
+                const fieldErrors = {};
+                (data.errors || []).forEach(({ path, msg }) => {
+                    if (path && !fieldErrors[path]) fieldErrors[path] = msg;
+                });
+                setErrors(fieldErrors);
+                setSubmitStatus('error');
+            } else if (response.ok) {
                 await response.json();
                 setSubmitStatus('success');
                 // Reset form on success

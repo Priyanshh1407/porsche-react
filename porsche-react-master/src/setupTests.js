@@ -65,3 +65,6 @@ jest.mock('@react-three/postprocessing', () =>
 jest.mock('postprocessing', () =>
     new Proxy({ __esModule: true }, { get: (target, key) => (key in target ? target[key] : new Proxy({}, { get: () => 0 })) })
 );
+
+// jsdom does not implement scrolling; pages call window.scrollTo on mount.
+window.scrollTo = () => {};
