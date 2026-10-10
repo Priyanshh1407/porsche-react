@@ -18,6 +18,19 @@ six more have photo-based model pages.
 *These are the pipeline's own stage screenshots (first scroll stage of each showroom), so they
 show exactly what the current code renders.*
 
+### Demo
+
+Scrolling the GT3 RS showroom: each section triggers a hand-tuned camera move.
+
+![Scrolling through the GT3 RS showroom](porsche-react-master/docs/demo-gt3rs.gif)
+
+A lead from the contact form reaches the admin dashboard, with its email delivery status.
+
+![Submitting a lead and finding it in the admin dashboard](porsche-react-master/docs/demo-lead-flow.gif)
+
+*Both recorded from the local production build (the lead flow against the real API and a test
+database, emails in demo mode).*
+
 ## What it does
 
 - **3D showrooms (5 cars).** Each page scrolls through 8–9 sections (powertrain, brakes,
