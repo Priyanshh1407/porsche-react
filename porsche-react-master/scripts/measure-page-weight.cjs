@@ -8,14 +8,24 @@
  *   npm run build && node scripts/measure-page-weight.cjs
  *   node scripts/measure-page-weight.cjs --base https://your-site.example   # deployed site
  *   options: --build <dir> (default: build)   --json (machine-readable output)
+ *            --update-budget   rewrite docs/perf-budget.json from this run (+10% headroom).
+ *                              Only with the developer's approval, like the trajectory baseline.
  */
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
 
-// Non-3D routes first: they should download no GLB at all.
-const ROUTES = ['/', '/contact', '/about', '/models', '/models/911-gt3-rs'];
+// UPG-04: every route a visitor can open. Non-3D routes first: they must download no GLB at all.
+const SHOWROOMS = ['911-gt3-rs', 'taycan', 'cayenne', '911-turbo-s', '918-spyder'];
+const ROUTES = [
+    '/', '/contact', '/about', '/models', '/services', '/experience', '/configurator', '/admin/login',
+    ...['911-gt2-rs', 'carrera-gt', '718-cayman-gt4-rs', '718-boxster-s', 'macan-gts', 'panamera'].map((s) => `/models/${s}`),
+    ...SHOWROOMS.map((s) => `/models/${s}/details`),
+    ...SHOWROOMS.map((s) => `/models/${s}`),
+];
+const BUDGET_FILE = path.resolve(__dirname, '..', 'docs', 'perf-budget.json');
+const HEADROOM = 0.10;
 const IDLE_TIMEOUT_MS = 300000;
 
 const args = process.argv.slice(2);
@@ -66,7 +76,7 @@ async function measure(browser, base, route) {
         note = `did not reach network idle: ${err.message.split('\n')[0]}`;
     }
     await page.close();
-    return { route, totalMB: mb(total), glbCount: Object.keys(glbs).length, glbs, missing: [...missingFiles], note };
+    return { route, totalBytes: total, totalMB: mb(total), glbCount: Object.keys(glbs).length, glbs, missing: [...missingFiles], note };
 }
 
 (async () => {
@@ -88,6 +98,30 @@ async function measure(browser, base, route) {
 
     const jsDir = path.join(buildDir, 'static', 'js');
     const mainJs = !remoteBase && fs.existsSync(jsDir) ? fs.readdirSync(jsDir).find((f) => /^main\..*\.js$/.test(f)) : null;
+
+    if (args.includes('--update-budget')) {
+        const failed = results.filter((r) => r.note);
+        if (failed.length) { console.error(`Not writing a budget: ${failed.map((r) => r.route).join(', ')} did not finish loading.`); process.exit(1); }
+        const zlib = require('zlib');
+        const mainGzipKB = +(zlib.gzipSync(fs.readFileSync(path.join(jsDir, mainJs)), { level: 9 }).length / 1024).toFixed(1);
+        const ceil01 = (x) => Math.ceil(x * 10) / 10;
+        const budget = {
+            _about: 'UPG-04 page-weight budget, enforced by npm run verify:full. Ceilings = measured size + 10%, '
+                + 'from a local production build (uncompressed). Regenerate only with developer approval: '
+                + 'node scripts/measure-page-weight.cjs --update-budget',
+            measuredOn: new Date().toISOString().slice(0, 10),
+            headroom: HEADROOM,
+            mainJsGzipKB: { measured: mainGzipKB, max: ceil01(mainGzipKB * (1 + HEADROOM)) },
+            routes: Object.fromEntries(results.map((r) => [r.route, {
+                measuredMB: +(r.totalBytes / 1048576).toFixed(2),
+                maxMB: ceil01((r.totalBytes / 1048576) * (1 + HEADROOM)),
+                models: r.glbCount,
+            }])),
+        };
+        fs.writeFileSync(BUDGET_FILE, `${JSON.stringify(budget, null, 2)}\n`);
+        console.log(`Budget written: ${results.length} routes, main.js ${budget.mainJsGzipKB.max} kB gz -> ${path.relative(process.cwd(), BUDGET_FILE)}`);
+        return;
+    }
 
     if (asJson) {
         console.log(JSON.stringify({ base, results, mainJs }, null, 2));

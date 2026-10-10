@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /*
  * PERF-02 guard: the entry bundle (main.*.js), which every visitor downloads, must not contain
- * libraries that only some routes need. Prints every JS chunk with its gzipped size.
+ * libraries that only some routes need. UPG-04: and it must stay under the gzipped size limit in
+ * docs/perf-budget.json. Prints every JS chunk with its gzipped size.
  *
  *   npm run build && node scripts/check-bundle.cjs        (exit 1 if a library leaked into main)
  *   options: --build <dir> (default: build)   --json
@@ -38,13 +39,20 @@ const chunks = fs.readdirSync(jsDir).filter((f) => f.endsWith('.js')).map((file)
 
 const main = chunks.find((c) => c.main);
 const leaked = main ? main.libs : [];
+const budgetFile = path.resolve(__dirname, '..', 'docs', 'perf-budget.json');
+const maxKB = fs.existsSync(budgetFile) ? JSON.parse(fs.readFileSync(budgetFile, 'utf8')).mainJsGzipKB.max : null;
+const overBudget = maxKB !== null && main.gzipKB > maxKB;
+const ok = leaked.length === 0 && !overBudget;
 
 if (args.includes('--json')) {
-    console.log(JSON.stringify({ ok: leaked.length === 0, mainGzipKB: main && main.gzipKB, leaked, chunks }, null, 2));
+    console.log(JSON.stringify({ ok, mainGzipKB: main && main.gzipKB, maxKB, leaked, chunks }, null, 2));
 } else {
     for (const c of chunks) console.log(`${String(c.gzipKB).padStart(7)} kB gz  ${c.file.padEnd(28)} ${c.libs.join(', ')}`);
-    console.log(leaked.length
-        ? `FAIL: main bundle contains route-only libraries: ${leaked.join(', ')}`
-        : `OK: main bundle (${main.gzipKB} kB gz) contains no route-only library`);
+    const problems = [];
+    if (leaked.length) problems.push(`main bundle contains route-only libraries: ${leaked.join(', ')}`);
+    if (overBudget) problems.push(`main bundle ${main.gzipKB} kB gz > budget ${maxKB} kB`);
+    console.log(problems.length
+        ? `FAIL: ${problems.join('; ')}`
+        : `OK: main bundle ${main.gzipKB} kB gz${maxKB !== null ? ` (budget ${maxKB} kB)` : ''}, no route-only library`);
 }
-process.exit(leaked.length ? 1 : 0);
+process.exit(ok ? 0 : 1);

@@ -27,9 +27,10 @@ const FULL = process.argv.includes('--full');
 const PRISMA_TOOLING = new Set(['prisma', '@prisma/config', '@prisma/dev', 'deepmerge-ts', 'mysql2',
     'hono', '@hono/node-server', 'valibot', 'fast-uri']);
 
-// Page-weight budget (bytes from the production build). Non-3D routes must load no 3D model;
-// the home page's accepted 5.6 MB (PERF-04, developer decision) fits under the 6 MB ceiling.
-const BUDGET = { nonModelRouteMB: 6, nonModelRoutes: ['/', '/contact', '/about', '/models'], showroom: '/models/911-gt3-rs' };
+// UPG-04: page-weight budget per route (measured size + 10%) and the model count each route may
+// load, from porsche-react-master/docs/perf-budget.json. The main.js limit is checked in the build
+// gate (check-bundle.cjs).
+const BUDGET_FILE = path.join(FRONTEND, 'docs', 'perf-budget.json');
 
 fs.mkdirSync(LOGS, { recursive: true });
 
@@ -131,17 +132,21 @@ try {
         gate('page-weight budget', () => {
             const r = node([path.join(FRONTEND, 'scripts', 'measure-page-weight.cjs'), '--json']);
             const { results: routes } = JSON.parse(r.out.slice(r.out.indexOf('{')));
+            const budget = JSON.parse(fs.readFileSync(BUDGET_FILE, 'utf8')).routes;
             const problems = [];
             for (const route of routes) {
-                if (BUDGET.nonModelRoutes.includes(route.route)) {
-                    if (route.glbCount > 0) problems.push(`${route.route} loads ${route.glbCount} model(s)`);
-                    if (route.totalMB > BUDGET.nonModelRouteMB) problems.push(`${route.route} ${route.totalMB} MB > ${BUDGET.nonModelRouteMB} MB`);
-                }
-                if (route.route === BUDGET.showroom && route.glbCount !== 1) problems.push(`${route.route} loads ${route.glbCount} models (expected only its own)`);
+                const limit = budget[route.route];
+                if (!limit) { problems.push(`${route.route} has no budget`); continue; }
+                const mbUsed = route.totalBytes / 1048576;
+                if (route.note) problems.push(`${route.route}: ${route.note}`);
+                if (mbUsed > limit.maxMB) problems.push(`${route.route} ${mbUsed.toFixed(2)} MB > budget ${limit.maxMB} MB`);
+                if (route.glbCount !== limit.models) problems.push(`${route.route} loads ${route.glbCount} model(s), budget allows ${limit.models}`);
                 // A file the page links but the build lacks (e.g. manifest.json, favicon.ico) gets index.html back.
                 for (const file of route.missing || []) problems.push(`${route.route} requests missing ${file}`);
             }
-            const summary = routes.map((x) => `${x.route} ${x.totalMB}MB/${x.glbCount}glb`).join(', ');
+            for (const name of Object.keys(budget)) if (!routes.some((x) => x.route === name)) problems.push(`budget route ${name} was not measured`);
+            const largestShare = Math.max(...routes.map((x) => x.totalBytes / 1048576 / budget[x.route].maxMB));
+            const summary = `${routes.length} routes within budget (closest: ${(largestShare * 100).toFixed(0)}% of its ceiling); 3D routes 1 model each, others 0`;
             return { ok: problems.length === 0, out: r.out, detail: problems.length ? problems.join('; ') : summary };
         });
 
