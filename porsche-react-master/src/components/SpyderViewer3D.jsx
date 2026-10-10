@@ -1,10 +1,11 @@
 import React, { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
-import { useGLTF, Environment, Html, useProgress, Center, ContactShadows } from '@react-three/drei';
+import { useGLTF, Environment, Center, ContactShadows } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import ShowroomErrorBoundary from './ShowroomErrorBoundary';
+import ShowroomLoader from './ShowroomLoader';
 import fallbackImage from '../assets/918 spyder/hero.jpg';
 
 // PERF-01: disabled, not deleted. At module scope this ran on import, and every 3D page was
@@ -12,23 +13,7 @@ import fallbackImage from '../assets/918 spyder/hero.jpg';
 // loads only when this showroom renders (useGLTF below).
 // useGLTF.preload('/porsche-918-spyder-2015/source/source/2014_-_porsche_918_spyder_rigged__mid-poly.glb');
 
-function Loader() {
-    const { progress } = useProgress();
-    return (
-        <Html center>
-            <div style={{
-                color: '#a3e635', // lime-400
-                fontSize: '13px',
-                fontWeight: 600,
-                letterSpacing: '0.4em',
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-                textShadow: '0 0 10px rgba(163, 230, 53, 0.5)'
-            }}>
-                LOADING {Math.round(progress)}%
-            </div>
-        </Html>
-    );
-}
+const Loader = () => <ShowroomLoader color="#a3e635" glow="rgba(163, 230, 53, 0.5)" />;
 
 const SceneChoreography = () => {
     const { scene } = useGLTF('/porsche-918-spyder-2015/source/source/2014_-_porsche_918_spyder_rigged__mid-poly.glb');

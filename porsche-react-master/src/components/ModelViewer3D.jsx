@@ -1,11 +1,12 @@
 import React, { useRef, useLayoutEffect } from 'react';
-import { useGLTF, Environment, Html, useProgress, Center, ContactShadows } from '@react-three/drei';
+import { useGLTF, Environment, Center, ContactShadows } from '@react-three/drei';
 import { Canvas, useThree } from '@react-three/fiber';
 import { EffectComposer, Bloom, ChromaticAberration } from '@react-three/postprocessing';
 import { BlendFunction } from 'postprocessing';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import ShowroomErrorBoundary from './ShowroomErrorBoundary';
+import ShowroomLoader from './ShowroomLoader';
 import fallbackImage from '../assets/gt3rs/hero image.jpeg';
 
 // PERF-01: disabled, not deleted. At module scope this ran on import, and every 3D page was
@@ -13,23 +14,7 @@ import fallbackImage from '../assets/gt3rs/hero image.jpeg';
 // loads only when this showroom renders (useGLTF below).
 // useGLTF.preload('/2024_manthey_racing_porsche_911_gt3_rs.glb');
 
-function Loader() {
-    const { progress } = useProgress();
-    return (
-        <Html center>
-            <div style={{
-                color: '#2dd4bf',
-                fontSize: '13px',
-                fontWeight: 600,
-                letterSpacing: '0.4em',
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-                textShadow: '0 0 10px rgba(45, 212, 191, 0.5)'
-            }}>
-                LOADING {Math.round(progress)}%
-            </div>
-        </Html>
-    );
-}
+const Loader = () => <ShowroomLoader />;
 
 const SceneChoreography = () => {
     const { scene } = useGLTF('/2024_manthey_racing_porsche_911_gt3_rs.glb');
