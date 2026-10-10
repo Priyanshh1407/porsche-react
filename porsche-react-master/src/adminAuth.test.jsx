@@ -34,6 +34,9 @@ const dashboardApi = (contactsStatus = 200) => jest.fn((url) => {
     return json({ data: { trends: [], popularModels: [], conversions: {}, peakHours: [] } });
 });
 
+// The dashboard is a lazy chunk (PERF-02). Importing it once up front means the tests below wait
+// for React, not for Jest transforming recharts on first use (> findBy's 1 s default).
+beforeAll(() => import('./pages/AdminDashboard'));
 beforeEach(() => localStorage.clear());
 afterEach(() => jest.restoreAllMocks());
 

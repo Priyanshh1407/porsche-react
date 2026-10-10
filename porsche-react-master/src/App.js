@@ -1,4 +1,5 @@
 import './App.css';
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Home from './pages/Home';
@@ -10,12 +11,14 @@ import Services from './pages/Services';
 import Experience from './pages/Experience';
 import Configurator from './pages/Configurator';
 import AdminLogin from './pages/AdminLogin';
-import AdminDashboard from './pages/AdminDashboard';
 import { AuthProvider } from './context/AuthContext';
 import { modelPath } from './data/models';
 import RouteErrorBoundary from './components/RouteErrorBoundary';
 import RequireAdmin from './components/RequireAdmin';
 import NotFound from './pages/NotFound';
+
+// PERF-02: the dashboard's charting library (recharts) is only downloaded by admins, not every visitor.
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 
 // Exported separately so tests can render the real route table inside a MemoryRouter.
 export function AppRoutes() {
@@ -33,7 +36,16 @@ export function AppRoutes() {
       <Route path="/models/:modelSlug/details" element={<ModelDetailsRouter />} />
       <Route path="/3d-experience" element={<Navigate to={modelPath('911-gt3-rs')} replace />} />
       <Route path="/admin/login" element={<AdminLogin />} />
-      <Route path="/admin/dashboard" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+      <Route
+        path="/admin/dashboard"
+        element={(
+          <RequireAdmin>
+            <Suspense fallback={<div className="min-h-screen bg-gray-50" role="status" aria-label="Loading dashboard" />}>
+              <AdminDashboard />
+            </Suspense>
+          </RequireAdmin>
+        )}
+      />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

@@ -115,7 +115,10 @@ try {
             fs.rmSync(path.join(FRONTEND, 'build'), { recursive: true, force: true });
             // Not CI=true: CRA would turn existing lint warnings (some in protected 3D files) into errors.
             const r = npm(['run', 'build'], { cwd: FRONTEND, env: { CI: '' } });
-            return { ok: r.code === 0, out: r.out, detail: lastLine(r.out, /main\.[0-9a-f]+\.js/) };
+            if (r.code !== 0) return { ok: false, out: r.out, detail: 'build failed' };
+            // PERF-02: route-only libraries (recharts, three, postprocessing) must stay out of main.js.
+            const c = node([path.join(FRONTEND, 'scripts', 'check-bundle.cjs')]);
+            return { ok: c.code === 0, out: `${r.out}\n${c.out}`, detail: `${lastLine(r.out, /main\.[0-9a-f]+\.js/)}; ${lastLine(c.out, /^(OK|FAIL)/)}` };
         });
     }
 
