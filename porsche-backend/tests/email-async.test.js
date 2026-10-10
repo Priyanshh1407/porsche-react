@@ -37,23 +37,26 @@ beforeEach(() => {
 });
 afterEach(() => errorSpy.mockRestore());
 
-test('the lead is saved and the visitor gets 201 immediately, even though SMTP never answers', async () => {
-    const started = Date.now();
+const emailFailureLogged = () => errorSpy.mock.calls.some((c) => String(c[0]).includes('Email sending failed'));
+
+test('the lead is saved and the visitor gets 201 before the hung email attempt has even failed', async () => {
     const res = await request(app).post('/api/contact/submit').send({
         firstName: 'Err', lastName: 'Three', email: 'err03@example.com', phone: '5550303',
         inquiryType: 'Sales', message: 'Testing a hung mail server.',
     });
-    const elapsed = Date.now() - started;
 
     expect(res.statusCode).toBe(201);
-    expect(elapsed).toBeLessThan(1500);
+    // Ordering, not timing: if the route awaited the send, the SMTP timeout would have fired and
+    // been logged BEFORE this response arrived. (A wall-clock limit was flaky on a busy machine
+    // and could not tell the difference once EMAIL_TIMEOUT_MS is short.)
+    expect(emailFailureLogged()).toBe(false);
     expect(await prisma.contact.findUnique({ where: { id: res.body.data.id } })).not.toBeNull();
 });
 
 test('the email failure is logged in the background instead of being lost silently', async () => {
     const deadline = Date.now() + 4000;
-    while (Date.now() < deadline && !errorSpy.mock.calls.some((c) => String(c[0]).includes('Email sending failed'))) {
+    while (Date.now() < deadline && !emailFailureLogged()) {
         await new Promise((r) => setTimeout(r, 100));
     }
-    expect(errorSpy.mock.calls.some((c) => String(c[0]).includes('Email sending failed'))).toBe(true);
+    expect(emailFailureLogged()).toBe(true);
 });
