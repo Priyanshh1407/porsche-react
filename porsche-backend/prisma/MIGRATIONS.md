@@ -8,12 +8,13 @@ to run.
 |---|---|
 | `0_init` | The schema as it was created by `db push` before migrations existed (baseline). |
 | `1_contact_status_enum` | `Contact.status` text → `ContactStatus` enum (`new`, `contacted`, `qualified`, `closed`). **Hand-written** to convert the column in place: Prisma's generated SQL drops and re-adds the column, which would reset every lead to `new`. It refuses to run (and changes nothing) if a row holds any other value. |
+| `2_email_outbox` | Adds the `EmailOutbox` table (+ `EmailKind`, `EmailStatus` enums) for UPG-03. **Purely additive**: existing leads are not modified, and no outbox rows are created for them (that would re-email every past customer). Rehearsed in Phase 6 on a database holding an existing lead. |
 
 ## Fresh database (new machine, CI, new deployment)
 
 ```bash
 cd porsche-backend
-npx prisma migrate deploy      # applies 0_init and 1_contact_status_enum
+npx prisma migrate deploy      # applies 0_init, 1_contact_status_enum and 2_email_outbox
 ```
 
 ## Existing database created with `db push` (one-time upgrade)
@@ -34,7 +35,7 @@ and its recovery. Run it yourself against your own database (`DATABASE_URL` in `
    ```bash
    npx prisma migrate resolve --applied 0_init
    ```
-4. **Apply the enum migration:**
+4. **Apply the remaining migrations** (`1_contact_status_enum`, `2_email_outbox`):
    ```bash
    npx prisma migrate deploy
    ```
@@ -53,6 +54,14 @@ UPDATE "Contact" SET status = 'new' WHERE status NOT IN ('new', 'contacted', 'qu
 npx prisma migrate resolve --rolled-back 1_contact_status_enum
 npx prisma migrate deploy
 ```
+
+## Already applied `1_contact_status_enum` earlier? (adding `2_email_outbox`)
+```bash
+npx prisma migrate deploy      # applies only what is missing: 2_email_outbox
+npx prisma migrate status      # "Database schema is up to date"
+```
+After deploying the backend with this migration, new leads' emails are delivered by the outbox
+worker. It starts with the server; nothing else to configure.
 
 ## Changing the schema from now on
 ```bash

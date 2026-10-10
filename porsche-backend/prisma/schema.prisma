@@ -15,27 +15,62 @@ enum ContactStatus {
 }
 
 model Contact {
-  id                     String    @id @default(uuid())
-  firstName              String    @db.VarChar(50)
-  lastName               String    @db.VarChar(50)
+  id                     String        @id @default(uuid())
+  firstName              String        @db.VarChar(50)
+  lastName               String        @db.VarChar(50)
   email                  String
   phone                  String
   inquiryType            String
-  modelInterest          String    @default("Not_specified")
-  message                String    @db.VarChar(1000)
-  preferredContactMethod String    @default("Either")
-  preferredContactTime   String    @default("Anytime")
+  modelInterest          String        @default("Not_specified")
+  message                String        @db.VarChar(1000)
+  preferredContactMethod String        @default("Either")
+  preferredContactTime   String        @default("Anytime")
   status                 ContactStatus @default(new)
-  source                 String    @default("Website")
+  source                 String        @default("Website")
   ipAddress              String?
   userAgent              String?
-  notes                  String?   @db.VarChar(500)
+  notes                  String?       @db.VarChar(500)
   contactedAt            DateTime?
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @default(now()) @updatedAt
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @default(now()) @updatedAt
+  emails                 EmailOutbox[]
 
   @@index([email])
   @@index([createdAt])
   @@index([status])
   @@index([inquiryType])
+}
+
+// UPG-03: transactional outbox. Each email a lead triggers is a row written in the SAME
+// transaction as the lead, then delivered (and retried) by utils/emailOutbox.js. One row per
+// email, so a retry never re-sends an email that already went out.
+enum EmailKind {
+  customer_confirmation
+  admin_notification
+}
+
+enum EmailStatus {
+  pending
+  sent
+  failed
+}
+
+model EmailOutbox {
+  id            String      @id @default(uuid())
+  contactId     String
+  contact       Contact     @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  kind          EmailKind
+  status        EmailStatus @default(pending)
+  attempts      Int         @default(0)
+  nextAttemptAt DateTime    @default(now())
+  // Lease: a worker that claims a row owns it until this time. If it dies mid-send the lease
+  // expires and another worker retries (at-least-once delivery).
+  lockedUntil   DateTime?
+  lastError     String?     @db.VarChar(500)
+  sentAt        DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @default(now()) @updatedAt
+
+  @@unique([contactId, kind])
+  @@index([status, nextAttemptAt])
 }
