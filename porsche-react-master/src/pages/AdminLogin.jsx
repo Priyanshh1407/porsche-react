@@ -194,12 +194,12 @@ const AdminLogin = () => {
                         </form>
                         
                         <div className={`mt-8 pt-6 border-t border-slate-200 animate-float-up-delay-4 ${animateElements ? 'animate' : ''}`}>
+                            {/* Phase 7: this used to show "Demo Credentials admin@porsche.com / admin123", which never
+                                existed. The only login is the one configured on the server. */}
                             <div className="bg-slate-50 rounded-lg p-4">
-                                <p className="text-xs text-center text-slate-600 mb-2 font-medium">Demo Credentials</p>
-                                <div className="text-xs text-center text-slate-500 space-y-1">
-                                    <p>Email: admin@porsche.com</p>
-                                    <p>Password: admin123</p>
-                                </div>
+                                <p className="text-xs text-center text-slate-500">
+                                    The admin login is set on the server by <code>ADMIN_EMAIL</code> and <code>ADMIN_PASSWORD</code>.
+                                </p>
                             </div>
                         </div>
                     </CardContent>

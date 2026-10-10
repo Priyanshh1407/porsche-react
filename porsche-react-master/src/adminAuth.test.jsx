@@ -125,3 +125,10 @@ describe('login page', () => {
         await waitFor(() => expect(currentPath()).toBe('/admin/dashboard'));
     });
 });
+
+test('the login page does not advertise credentials that do not exist (Phase 7)', () => {
+    renderApp('/admin/login');
+    expect(screen.queryByText(/admin123/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Demo Credentials/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/ADMIN_EMAIL/)).toBeInTheDocument(); // says where the login really comes from
+});
