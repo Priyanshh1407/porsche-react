@@ -2,43 +2,51 @@ import React, { useState, useEffect, useRef } from "react";
 import { Zap, Clock, Thermometer, BatteryCharging, Settings, Monitor, ChevronDown, ChevronUp } from "lucide-react";
 import Evspecs from "../assets/taycan/Evspecs.jpeg";
 
+// Battery fill animation: 0 -> 90% in 30 steps over 900 ms, starting 550 ms after the card shows.
+const batteryTarget = 90;
+const batteryAnimDuration = 900; // ms
+const batteryAnimSteps = 30;
+const batteryStep = batteryTarget / batteryAnimSteps;
+const batteryInterval = batteryAnimDuration / batteryAnimSteps;
+
 export default function EVSpecs({ theme, image }) {
   const [showMore, setShowMore] = useState(false);
   const [flash, setFlash] = useState(false);
   const [batteryPercent, setBatteryPercent] = useState(0);
   const [animateIn, setAnimateIn] = useState(false);
-  const batteryTarget = 90;
-  const batteryAnimDuration = 900; // ms
-  const batteryAnimSteps = 30;
-  const batteryStep = batteryTarget / batteryAnimSteps;
-  const batteryInterval = batteryAnimDuration / batteryAnimSteps;
   const hasAnimated = useRef(false);
   const cardRef = useRef(null);
 
   useEffect(() => {
     // Animate in only once when card enters viewport
-    if (!hasAnimated.current) {
-      const observer = new window.IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) {
-            setAnimateIn(true);
-            setTimeout(() => {
-              let percent = 0;
-              const interval = setInterval(() => {
-                percent += batteryStep;
-                setBatteryPercent(Math.min(percent, batteryTarget));
-                if (percent >= batteryTarget) clearInterval(interval);
-              }, batteryInterval);
-            }, 550);
-            hasAnimated.current = true;
-            observer.disconnect();
-          }
-        },
-        { threshold: 0.5 }
-      );
-      if (cardRef.current) observer.observe(cardRef.current);
-      return () => observer.disconnect();
-    }
+    if (hasAnimated.current) return undefined;
+    let startTimer;
+    let fillTimer;
+    const observer = new window.IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setAnimateIn(true);
+          startTimer = setTimeout(() => {
+            let percent = 0;
+            fillTimer = setInterval(() => {
+              percent += batteryStep;
+              setBatteryPercent(Math.min(percent, batteryTarget));
+              if (percent >= batteryTarget) clearInterval(fillTimer);
+            }, batteryInterval);
+          }, 550);
+          hasAnimated.current = true;
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 }
+    );
+    if (cardRef.current) observer.observe(cardRef.current);
+    // Leaving the page mid-animation stops the timers (they used to keep firing after unmount).
+    return () => {
+      observer.disconnect();
+      clearTimeout(startTimer);
+      clearInterval(fillTimer);
+    };
   }, []);
 
   return (

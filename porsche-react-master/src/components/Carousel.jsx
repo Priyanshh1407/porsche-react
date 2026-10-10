@@ -14,13 +14,14 @@ const Carousel = ({ heading, description, data, theme }) => {
     // Touch/Swipe functionality
     const [touchStart, setTouchStart] = useState(null);
     const [touchEnd, setTouchEnd] = useState(null);
-    const [slideWidth, setSlideWidth] = useState(320);
-    const [slideGap, setSlideGap] = useState(16);
 
 
+
+    // Last valid index. Keyboard, drag and swipe used to stop one past it, on an empty slide.
+    const lastIndex = isValidDataArray(data) ? data.length - 1 : 0;
 
     const nextSlide = () => {
-        setCurrentSlide((prev) => Math.min(prev + 1, data.length));
+        setCurrentSlide((prev) => Math.min(prev + 1, lastIndex));
     };
 
     const prevSlide = () => {
@@ -31,19 +32,19 @@ const Carousel = ({ heading, description, data, theme }) => {
         setCurrentSlide(index);
     }
 
-    // Keyboard navigation
+    // Keyboard navigation. Re-subscribes when the slide count changes, so it never uses a stale count.
     useEffect(() => {
         const handleKeyPress = (event) => {
             if (event.key === 'ArrowLeft') {
-                prevSlide();
+                setCurrentSlide((prev) => Math.max(prev - 1, 0));
             } else if (event.key === 'ArrowRight') {
-                nextSlide();
+                setCurrentSlide((prev) => Math.min(prev + 1, lastIndex));
             }
         };
 
         window.addEventListener('keydown', handleKeyPress);
         return () => window.removeEventListener('keydown', handleKeyPress);
-    }, []);
+    }, [lastIndex]);
 
     // Mouse and Touch drag functionality
     // Mouse events
@@ -111,37 +112,6 @@ const Carousel = ({ heading, description, data, theme }) => {
         }
     };
 
-    const getSlideWidth = () => {
-        if (typeof window !== 'undefined') {
-            const width = window.innerWidth;
-            if (width < 640) return width - 48; // Mobile - full width minus padding
-            if (width < 768) return width - 64; // Small tablet
-            if (width < 1024) return 500; // Tablet
-            return 700; // Desktop
-        }
-        return 280;
-    };
-
-    const getSlideGap = () => {
-        if (typeof window !== 'undefined') {
-            if (window.innerWidth < 640) return 0; // Mobile
-            if (window.innerWidth < 1024) return 24; // Tablet
-            return 80; // Desktop
-        }
-        return 0;
-    };
-
-    useEffect(() => {
-        const handleResize = () => {
-            setSlideWidth(getSlideWidth());
-            setSlideGap(getSlideGap());
-        };
-
-        handleResize();
-
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
 
     if (!isValidDataArray(data)) {
         return (
