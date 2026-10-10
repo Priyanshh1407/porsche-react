@@ -10,7 +10,7 @@ npm start                    # http://localhost:5000
 npm test                     # needs the Docker test DB: npm run test:db:up
 ```
 
-The server refuses to start without `DATABASE_URL`, `JWT_SECRET` (32+ chars), `ADMIN_EMAIL` and
+The server refuses to start without `DATABASE_URL`, `JWT_SECRET`, `ADMIN_EMAIL` and
 `ADMIN_PASSWORD`, or if the database doesn't answer. It shuts down cleanly on SIGTERM/SIGINT.
 
 ## API

@@ -45,7 +45,7 @@ Environment variables (names from `porsche-backend/.env.example`):
 |---|---|
 | `NODE_ENV` | `production` |
 | `DATABASE_URL` | Neon connection string |
-| `JWT_SECRET` | a random string of 32+ characters, e.g. `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` |
+| `JWT_SECRET` | a random string (longer is harder to guess), e.g. `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | the dashboard login (a single admin) |
 | `FRONTEND_URL` | the exact frontend origin, e.g. `https://your-app.vercel.app` (no trailing slash). CORS allows only this origin. |
 | `TRUST_PROXY` | `1`: Render puts one proxy in front of the app. Without it, every visitor shares one rate-limit bucket. |

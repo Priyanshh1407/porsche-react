@@ -26,8 +26,9 @@ describe('SEC-01: startup configuration check', () => {
         expect(() => validateEnv({ ...complete, ADMIN_PASSWORD: '   ' })).toThrow('ADMIN_PASSWORD');
     });
 
-    test('warns (does not fail) on a short JWT_SECRET', () => {
-        expect(validateEnv({ ...complete, JWT_SECRET: 'short' })).toEqual([expect.stringContaining('JWT_SECRET')]);
+    test('accepts a JWT_SECRET of any length without a warning (developer decision)', () => {
+        expect(() => validateEnv({ ...complete, JWT_SECRET: 'short' })).not.toThrow();
+        expect(validateEnv({ ...complete, JWT_SECRET: 'short' })).toBeUndefined();
     });
 
     test('the real server process refuses to start without configuration', () => {

@@ -127,7 +127,7 @@ cd porsche-react
 
 # Backend
 cd porsche-backend
-cp .env.example .env            # fill in DATABASE_URL, JWT_SECRET (32+ chars), ADMIN_EMAIL, ADMIN_PASSWORD
+cp .env.example .env            # fill in DATABASE_URL, JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD
 npm install                     # also generates the Prisma client
 npx prisma migrate deploy       # creates the tables
 npm start                       # http://localhost:5000  (GET /ready checks the database)

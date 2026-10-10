@@ -12,7 +12,7 @@ dotenv.config({ quiet: true });
 
 // Fail closed on missing configuration (SEC-01).
 try {
-    validateEnv().forEach((warning) => console.warn(`⚠️  ${warning}`));
+    validateEnv();
 } catch (err) {
     console.error(`❌ ${err.message}`);
     process.exit(1);
