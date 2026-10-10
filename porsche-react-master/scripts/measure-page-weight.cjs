@@ -19,7 +19,7 @@ const puppeteer = require('puppeteer');
 // UPG-04: every route a visitor can open. Non-3D routes first: they must download no GLB at all.
 const SHOWROOMS = ['911-gt3-rs', 'taycan', 'cayenne', '911-turbo-s', '918-spyder'];
 const ROUTES = [
-    '/', '/contact', '/about', '/models', '/services', '/experience', '/configurator', '/admin/login',
+    '/', '/contact', '/about', '/models', '/services', '/experience', '/configurator', '/credits', '/admin/login',
     ...['911-gt2-rs', 'carrera-gt', '718-cayman-gt4-rs', '718-boxster-s', 'macan-gts', 'panamera'].map((s) => `/models/${s}`),
     ...SHOWROOMS.map((s) => `/models/${s}/details`),
     ...SHOWROOMS.map((s) => `/models/${s}`),

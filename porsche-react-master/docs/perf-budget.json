@@ -42,6 +42,11 @@
       "maxMB": 1.1,
       "models": 0
     },
+    "/credits": {
+      "measuredMB": 0.79,
+      "maxMB": 0.9,
+      "models": 0
+    },
     "/admin/login": {
       "measuredMB": 0.79,
       "maxMB": 0.9,

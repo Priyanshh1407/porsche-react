@@ -33,3 +33,9 @@ test('the navbar menu button has an accessible name that reflects its state', ()
     fireEvent.click(button);
     expect(screen.getByRole('button', { name: 'Close menu' })).toHaveAttribute('aria-expanded', 'true');
 });
+
+test('the footer links to the credits page and carries the disclaimer (Phase 7)', () => {
+    render(<MemoryRouter><Footer theme={theme} /></MemoryRouter>);
+    expect(screen.getByRole('link', { name: 'Credits' })).toHaveAttribute('href', '/credits');
+    expect(screen.getByText(/not affiliated with Porsche AG/i)).toBeInTheDocument();
+});

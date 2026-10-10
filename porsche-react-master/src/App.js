@@ -16,6 +16,7 @@ import { modelPath } from './data/models';
 import RouteErrorBoundary from './components/RouteErrorBoundary';
 import RequireAdmin from './components/RequireAdmin';
 import NotFound from './pages/NotFound';
+import Credits from './pages/Credits';
 
 // PERF-02: the dashboard's charting library (recharts) is only downloaded by admins, not every visitor.
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -31,6 +32,7 @@ export function AppRoutes() {
       <Route path='/services' element={<Services />} />
       <Route path='/experience' element={<Experience />} />
       <Route path='/configurator' element={<Configurator />} />
+      <Route path='/credits' element={<Credits />} />
       {/* Every model page and its old URLs resolve through the registry in data/models.js. */}
       <Route path="/models/:modelSlug" element={<ModelRouter />} />
       <Route path="/models/:modelSlug/details" element={<ModelDetailsRouter />} />

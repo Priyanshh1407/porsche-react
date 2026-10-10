@@ -132,10 +132,17 @@ const Footer = ({ name,fullName,theme }) => {
         {/* Bottom Bar */}
         <div className="mt-8 lg:mt-12 pt-6 lg:pt-8 border-t border-slate-700/50">
           <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-            <p className={`${theme.footerText} text-xs lg:text-sm`}>
-              © 2024 <span className={`${theme.footerHeading} font-medium`}>{fullName}</span>. All rights reserved.
-            </p>
+            <div>
+              <p className={`${theme.footerText} text-xs lg:text-sm`}>
+                © 2024 <span className={`${theme.footerHeading} font-medium`}>{fullName}</span>. All rights reserved.
+              </p>
+              {/* Phase 7: independent portfolio project; model credits on /credits. */}
+              <p className={`${theme.footerText} text-xs mt-1`}>Not affiliated with Porsche AG.</p>
+            </div>
             <div className="flex items-center space-x-6">
+              <Link to="/credits" className={`${theme.footerText} ${theme.footerHover} text-xs lg:text-sm transition-colors`}>
+                Credits
+              </Link>
               {/* No legal pages exist yet: text rather than links that go nowhere. */}
               <span className={`${theme.footerText} ${theme.text} text-xs lg:text-sm transition-colors`}>
                 Privacy Policy
