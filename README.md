@@ -138,7 +138,9 @@ npm install
 npm start                       # http://localhost:3000, proxies /api to :5000
 ```
 
-Leave `EMAIL_PASS` empty and emails are logged to the console instead of sent. Upgrading an older
+Leave `EMAIL_PASS` empty and emails are logged to the console instead of sent. `npm start` in the frontend prints
+"Failed to parse source map … @mediapipe/tasks-vision": that's harmless (a dependency of Drei ships
+without its source map). Tested from a fresh clone: about 5 minutes to a working site. Upgrading an older
 database created with `prisma db push`? Follow
 [`porsche-backend/prisma/MIGRATIONS.md`](porsche-backend/prisma/MIGRATIONS.md). Hosting notes:
 [`DEPLOY.md`](DEPLOY.md).
