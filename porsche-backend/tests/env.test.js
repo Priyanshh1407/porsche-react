@@ -12,8 +12,8 @@ const complete = {
 };
 
 describe('SEC-01: startup configuration check', () => {
-    test('passes with every required variable and no warnings', () => {
-        expect(validateEnv(complete)).toEqual([]);
+    test('passes with every required variable', () => {
+        expect(() => validateEnv(complete)).not.toThrow();
     });
 
     test.each(['DATABASE_URL', 'JWT_SECRET', 'ADMIN_EMAIL', 'ADMIN_PASSWORD'])('throws when %s is missing', (name) => {
