@@ -1,2 +1,5 @@
 # Output of npm run verify
 /.verify-logs/
+
+# Local database backups (they contain real data; never commit them)
+porsche-backup-*.sql
