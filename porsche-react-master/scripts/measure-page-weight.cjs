@@ -26,7 +26,12 @@ const ROUTES = [
 ];
 const BUDGET_FILE = path.resolve(__dirname, '..', 'docs', 'perf-budget.json');
 const HEADROOM = 0.10;
-const IDLE_TIMEOUT_MS = 300000;
+// The heaviest page (GT3 RS, ~70 MB) reaches network idle locally in seconds. A route that doesn't
+// is retried once on a fresh page: a single stalled file transfer (seen once in Phase 6: one
+// request never finished) shouldn't fail the gate, while a real problem such as constant polling
+// fails both attempts.
+const IDLE_TIMEOUT_MS = 120000;
+const ATTEMPTS = 2;
 
 const args = process.argv.slice(2);
 const opt = (name, dflt) => { const i = args.indexOf(name); return i === -1 ? dflt : args[i + 1]; };
@@ -55,7 +60,7 @@ function serve(port) {
     });
 }
 
-async function measure(browser, base, route) {
+async function measureOnce(browser, base, route) {
     missingFiles.clear();
     const page = await browser.newPage();
     const cdp = await page.target().createCDPSession();
@@ -63,8 +68,11 @@ async function measure(browser, base, route) {
     const urls = {};
     const glbs = {};
     let total = 0;
-    cdp.on('Network.requestWillBeSent', (e) => { urls[e.requestId] = e.request.url; });
+    const pending = new Set();
+    cdp.on('Network.requestWillBeSent', (e) => { urls[e.requestId] = e.request.url; pending.add(e.requestId); });
+    cdp.on('Network.loadingFailed', (e) => pending.delete(e.requestId));
     cdp.on('Network.loadingFinished', (e) => {
+        pending.delete(e.requestId);
         total += e.encodedDataLength;
         const url = urls[e.requestId] || '';
         if (url.endsWith('.glb')) glbs[decodeURIComponent(url.split('/').pop())] = mb(e.encodedDataLength);
@@ -73,10 +81,21 @@ async function measure(browser, base, route) {
     try {
         await page.goto(base + encodeURI(route), { waitUntil: 'networkidle0', timeout: IDLE_TIMEOUT_MS });
     } catch (err) {
-        note = `did not reach network idle: ${err.message.split('\n')[0]}`;
+        const stuck = [...pending].map((id) => (urls[id] || '?').replace(base, '')).slice(0, 5);
+        note = `did not reach network idle: ${err.message.split('\n')[0]}; still pending: ${stuck.join(', ') || 'none tracked'}`;
     }
     await page.close();
     return { route, totalBytes: total, totalMB: mb(total), glbCount: Object.keys(glbs).length, glbs, missing: [...missingFiles], note };
+}
+
+async function measure(browser, base, route) {
+    const failedAttempts = [];
+    for (let attempt = 1; ; attempt++) {
+        const result = await measureOnce(browser, base, route);
+        if (!result.note) return failedAttempts.length ? { ...result, retriedAfter: failedAttempts } : result;
+        failedAttempts.push(result.note);
+        if (attempt === ATTEMPTS) return { ...result, note: `${ATTEMPTS} attempts failed: ${failedAttempts.join(' | ')}` };
+    }
 }
 
 (async () => {

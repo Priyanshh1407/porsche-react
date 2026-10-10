@@ -146,7 +146,10 @@ try {
             }
             for (const name of Object.keys(budget)) if (!routes.some((x) => x.route === name)) problems.push(`budget route ${name} was not measured`);
             const largestShare = Math.max(...routes.map((x) => x.totalBytes / 1048576 / budget[x.route].maxMB));
-            const summary = `${routes.length} routes within budget (closest: ${(largestShare * 100).toFixed(0)}% of its ceiling); 3D routes 1 model each, others 0`;
+            // A route that only loaded on its second attempt passes, but is named so a recurring stall gets noticed.
+            const retried = routes.filter((x) => x.retriedAfter).map((x) => x.route);
+            const summary = `${routes.length} routes within budget (closest: ${(largestShare * 100).toFixed(0)}% of its ceiling); 3D routes 1 model each, others 0`
+                + (retried.length ? `; needed a retry: ${retried.join(', ')}` : '');
             return { ok: problems.length === 0, out: r.out, detail: problems.length ? problems.join('; ') : summary };
         });
 
