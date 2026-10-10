@@ -26,10 +26,14 @@ const LEASE_PER_EMAIL_MS = 60_000;
 
 export const backoffMs = (attempts) => Math.min(BASE_BACKOFF_MS * 2 ** (attempts - 1), MAX_BACKOFF_MS);
 
-/** Called inside the contact's transaction (tx): records the emails this lead needs. */
-export async function enqueueContactEmails(tx, contactId) {
-    await tx.emailOutbox.createMany({ data: EMAIL_KINDS.map((kind) => ({ contactId, kind })) });
-}
+/**
+ * The outbox rows a new lead needs, as a Prisma nested write for contact.create(): Prisma writes
+ * the contact and its emails as ONE atomic operation (fewer round trips than an interactive
+ * $transaction, same all-or-nothing guarantee). Measured p50 per submit (scripts/
+ * measure-submit-latency.mjs): 3.4 ms before the outbox, 6.5 ms with an interactive transaction,
+ * 5.8 ms with this nested write.
+ */
+export const contactEmailsNestedWrite = () => ({ create: EMAIL_KINDS.map((kind) => ({ kind })) });
 
 /** Claims up to batchSize due emails for this worker. contactIds optionally limits the scope. */
 async function claimDue(batchSize, contactIds) {
