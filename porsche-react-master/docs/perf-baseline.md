@@ -117,3 +117,23 @@ image is the leather normal map (8.9 MB PNG, 7.6 MB as lossless WebP).
   are deployed but never requested. Kept by decision.
 - **Time-to-first-frame on throttled Fast 4G** was planned to quantify the GT3 RS swap; with the
   swap rejected and no GLB changed, it was not measured.
+
+## Phase 6 (2026-10-10): budgets enforced (UPG-04)
+
+`docs/perf-budget.json` holds a ceiling for each of the 24 routes (measured size + 10%), the
+number of 3D models each may load (showrooms 1, everything else 0), and `main.js` at most
+211.9 kB gzipped (measured 192.6 kB). `npm run verify:full` enforces all of it. Run-to-run noise:
+at most 1.38% (`/services`), so the headroom is about 7x the noise.
+
+Proof, in a throwaway worktree (the real code was never changed):
+- a 1 MB photo added to the contact page → `page-weight budget FAIL: /contact 1.97 MB > budget
+  1.1 MB`, while all 8 other gates passed;
+- ~60 kB of extra JavaScript imported eagerly → `FAIL: main bundle 254.2 kB gz > budget 211.9 kB`.
+  Home grew only to 5.26 MB (ceiling 5.8 MB): **no route budget notices a JS regression of
+  this size**, so the separate `main.js` budget is necessary. (A first attempt used only the
+  string's `.length`; the minifier folded it to a constant and the bundle didn't grow at all.)
+
+Heaviest non-3D pages, now locked in by the budget rather than fixed (PERF-05, for the developer
+to decide): `/models/macan-gts` 13.3 MB (one 9.7 MB carousel JPEG), `/models/911-turbo-s/details`
+11.7 MB, `/models/carrera-gt` 10.2 MB, `/models/918-spyder/details` 8.7 MB,
+`/models/taycan/details` 7.8 MB.
