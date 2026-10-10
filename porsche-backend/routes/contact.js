@@ -3,8 +3,6 @@ import { body, validationResult } from "express-validator";
 import rateLimit from "express-rate-limit";
 import prisma from "../prisma/client.js";
 import { sendContactEmails } from "../utils/emailService.js";
-import notificationService from "../utils/notifications.js";
-import { spamCheck } from "../middleware/validation.js";
 import { INQUIRY_TYPES } from "../config/contactOptions.js";
 
 const router = express.Router();
@@ -132,9 +130,6 @@ router.post('/submit', contactLimiter, contactValidation, async (req, res) => {
         sendContactEmails(contact).catch((emailError) => {
             console.error(`Email sending failed for contact ${contact.id}: ${emailError.message}`);
         });
-
-        // Notify admins in real-time
-        notificationService.newContact(contact);
 
         // Success response
         res.status(201).json({

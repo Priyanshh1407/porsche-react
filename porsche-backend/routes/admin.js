@@ -2,11 +2,9 @@ import crypto from "crypto";
 import express from "express";
 import rateLimit from "express-rate-limit";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
 import prisma from "../prisma/client.js";
 import Analytics from "../utils/analytics.js";
 import ExportService from "../utils/exportService.js";
-import notificationService from "../utils/notifications.js";
 import { authenticateAdmin } from "../middleware/auth.js";
 import { body, param, query } from "express-validator";
 import { handleValidationErrors } from "../middleware/validation.js";
@@ -364,10 +362,6 @@ router.delete('/contacts/:id', authenticateAdmin, validContactId, handleValidati
     }
 });
 
-// GET /api/admin/notifications - Server-Sent Events for real-time updates
-router.get('/notifications', authenticateAdmin, (req, res) => {
-    notificationService.subscribe(res, req.admin.email);
-});
 
 
 export default router;
