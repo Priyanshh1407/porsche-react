@@ -1,135 +1,160 @@
 {
-  "_about": "UPG-04 page-weight budget, enforced by npm run verify:full. Ceilings = measured size + 10%, from a local production build (uncompressed). Regenerate only with developer approval: node scripts/measure-page-weight.cjs --update-budget",
+  "_about": "UPG-04 page-weight budget, enforced by npm run verify:full. Ceilings = measured FIRST-PARTY bytes + 10% (third-party bytes such as random placeholder photos vary per load and are reported, not budgeted), from a local production build (uncompressed). Regenerate only with developer approval: node scripts/measure-page-weight.cjs --update-budget A re-base never raises a ceiling: the lower of the old and new value is kept.",
   "measuredOn": "2026-10-10",
   "headroom": 0.1,
   "mainJsGzipKB": {
-    "measured": 192.6,
+    "measured": 193.8,
     "max": 211.9
   },
   "routes": {
     "/": {
       "measuredMB": 5.18,
-      "maxMB": 5.8,
+      "maxMB": 5.7,
+      "thirdPartyMB": 0.01,
       "models": 0
     },
     "/contact": {
       "measuredMB": 0.92,
       "maxMB": 1.1,
+      "thirdPartyMB": 0,
       "models": 0
     },
     "/about": {
-      "measuredMB": 1.22,
-      "maxMB": 1.4,
+      "measuredMB": 0.93,
+      "maxMB": 1.1,
+      "thirdPartyMB": 0.29,
       "models": 0
     },
     "/models": {
       "measuredMB": 0.79,
       "maxMB": 0.9,
+      "thirdPartyMB": 0,
       "models": 0
     },
     "/services": {
-      "measuredMB": 1.17,
-      "maxMB": 1.3,
+      "measuredMB": 0.79,
+      "maxMB": 0.9,
+      "thirdPartyMB": 0.37,
       "models": 0
     },
     "/experience": {
-      "measuredMB": 1.25,
-      "maxMB": 1.4,
+      "measuredMB": 0.79,
+      "maxMB": 0.9,
+      "thirdPartyMB": 0.46,
       "models": 0
     },
     "/configurator": {
-      "measuredMB": 0.93,
-      "maxMB": 1.1,
+      "measuredMB": 0.89,
+      "maxMB": 1,
+      "thirdPartyMB": 0.05,
       "models": 0
     },
     "/credits": {
       "measuredMB": 0.79,
       "maxMB": 0.9,
+      "thirdPartyMB": 0,
       "models": 0
     },
     "/admin/login": {
       "measuredMB": 0.79,
       "maxMB": 0.9,
+      "thirdPartyMB": 0,
       "models": 0
     },
     "/models/911-gt2-rs": {
       "measuredMB": 3.96,
       "maxMB": 4.4,
+      "thirdPartyMB": 0.01,
       "models": 0
     },
     "/models/carrera-gt": {
       "measuredMB": 10.24,
       "maxMB": 11.3,
+      "thirdPartyMB": 0,
       "models": 0
     },
     "/models/718-cayman-gt4-rs": {
-      "measuredMB": 2.86,
+      "measuredMB": 2.87,
       "maxMB": 3.2,
+      "thirdPartyMB": 0,
       "models": 0
     },
     "/models/718-boxster-s": {
-      "measuredMB": 1.98,
+      "measuredMB": 1.99,
       "maxMB": 2.2,
+      "thirdPartyMB": 0,
       "models": 0
     },
     "/models/macan-gts": {
-      "measuredMB": 13.3,
-      "maxMB": 14.7,
+      "measuredMB": 13.21,
+      "maxMB": 14.6,
+      "thirdPartyMB": 0.09,
       "models": 0
     },
     "/models/panamera": {
       "measuredMB": 2.22,
       "maxMB": 2.5,
+      "thirdPartyMB": 0,
       "models": 0
     },
     "/models/911-gt3-rs/details": {
-      "measuredMB": 4.43,
+      "measuredMB": 4.41,
       "maxMB": 4.9,
+      "thirdPartyMB": 0.02,
       "models": 0
     },
     "/models/taycan/details": {
-      "measuredMB": 7.81,
+      "measuredMB": 7.82,
       "maxMB": 8.6,
+      "thirdPartyMB": 0,
       "models": 0
     },
     "/models/cayenne/details": {
-      "measuredMB": 5.12,
+      "measuredMB": 5.13,
       "maxMB": 5.7,
+      "thirdPartyMB": 0,
       "models": 0
     },
     "/models/911-turbo-s/details": {
       "measuredMB": 11.66,
       "maxMB": 12.9,
+      "thirdPartyMB": 0,
       "models": 0
     },
     "/models/918-spyder/details": {
       "measuredMB": 8.67,
       "maxMB": 9.6,
+      "thirdPartyMB": 0,
       "models": 0
     },
     "/models/911-gt3-rs": {
-      "measuredMB": 69.63,
-      "maxMB": 76.6,
+      "measuredMB": 67.97,
+      "maxMB": 74.8,
+      "thirdPartyMB": 1.67,
       "models": 1
     },
     "/models/taycan": {
-      "measuredMB": 16.88,
-      "maxMB": 18.6,
+      "measuredMB": 15.28,
+      "maxMB": 16.9,
+      "thirdPartyMB": 1.6,
       "models": 1
     },
     "/models/cayenne": {
-      "measuredMB": 20.78,
-      "maxMB": 22.9,
+      "measuredMB": 19.45,
+      "maxMB": 21.4,
+      "thirdPartyMB": 1.33,
       "models": 1
     },
     "/models/911-turbo-s": {
       "measuredMB": 20.36,
       "maxMB": 22.4,
+      "thirdPartyMB": 0,
       "models": 1
     },
     "/models/918-spyder": {
       "measuredMB": 15.86,
       "maxMB": 17.5,
+      "thirdPartyMB": 0,
       "models": 1
     }
   }

@@ -68,12 +68,14 @@ async function measureOnce(browser, base, route) {
     const urls = {};
     const glbs = {};
     let total = 0;
+    let firstParty = 0; // served by this app; third-party = fonts, image CDNs (can vary per load)
     const pending = new Set();
     cdp.on('Network.requestWillBeSent', (e) => { urls[e.requestId] = e.request.url; pending.add(e.requestId); });
     cdp.on('Network.loadingFailed', (e) => pending.delete(e.requestId));
     cdp.on('Network.loadingFinished', (e) => {
         pending.delete(e.requestId);
         total += e.encodedDataLength;
+        if ((urls[e.requestId] || '').startsWith(base)) firstParty += e.encodedDataLength;
         const url = urls[e.requestId] || '';
         if (url.endsWith('.glb')) glbs[decodeURIComponent(url.split('/').pop())] = mb(e.encodedDataLength);
     });
@@ -85,7 +87,7 @@ async function measureOnce(browser, base, route) {
         note = `did not reach network idle: ${err.message.split('\n')[0]}; still pending: ${stuck.join(', ') || 'none tracked'}`;
     }
     await page.close();
-    return { route, totalBytes: total, totalMB: mb(total), glbCount: Object.keys(glbs).length, glbs, missing: [...missingFiles], note };
+    return { route, totalBytes: total, totalMB: mb(total), firstPartyBytes: firstParty, thirdPartyBytes: total - firstParty, glbCount: Object.keys(glbs).length, glbs, missing: [...missingFiles], note };
 }
 
 async function measure(browser, base, route) {
@@ -125,15 +127,17 @@ async function measure(browser, base, route) {
         const mainGzipKB = +(zlib.gzipSync(fs.readFileSync(path.join(jsDir, mainJs)), { level: 9 }).length / 1024).toFixed(1);
         const ceil01 = (x) => Math.ceil(x * 10) / 10;
         const budget = {
-            _about: 'UPG-04 page-weight budget, enforced by npm run verify:full. Ceilings = measured size + 10%, '
+            _about: 'UPG-04 page-weight budget, enforced by npm run verify:full. Ceilings = measured FIRST-PARTY bytes + 10% '
+                + '(third-party bytes such as random placeholder photos vary per load and are reported, not budgeted), '
                 + 'from a local production build (uncompressed). Regenerate only with developer approval: '
                 + 'node scripts/measure-page-weight.cjs --update-budget',
             measuredOn: new Date().toISOString().slice(0, 10),
             headroom: HEADROOM,
             mainJsGzipKB: { measured: mainGzipKB, max: ceil01(mainGzipKB * (1 + HEADROOM)) },
             routes: Object.fromEntries(results.map((r) => [r.route, {
-                measuredMB: +(r.totalBytes / 1048576).toFixed(2),
-                maxMB: ceil01((r.totalBytes / 1048576) * (1 + HEADROOM)),
+                measuredMB: +(r.firstPartyBytes / 1048576).toFixed(2),
+                maxMB: ceil01((r.firstPartyBytes / 1048576) * (1 + HEADROOM)),
+                thirdPartyMB: +(r.thirdPartyBytes / 1048576).toFixed(2),
                 models: r.glbCount,
             }])),
         };

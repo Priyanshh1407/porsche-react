@@ -27,8 +27,9 @@ const FULL = process.argv.includes('--full');
 const PRISMA_TOOLING = new Set(['prisma', '@prisma/config', '@prisma/dev', 'deepmerge-ts', 'mysql2',
     'hono', '@hono/node-server', 'valibot', 'fast-uri']);
 
-// UPG-04: page-weight budget per route (measured size + 10%) and the model count each route may
-// load, from porsche-react-master/docs/perf-budget.json. The main.js limit is checked in the build
+// UPG-04: page-weight budget per route (measured first-party bytes + 10%) and the model count each
+// route may load, from porsche-react-master/docs/perf-budget.json. Third-party bytes (fonts, image
+// CDNs; /services loads random placeholder photos) vary per load, so they are reported, not budgeted. The main.js limit is checked in the build
 // gate (check-bundle.cjs).
 const BUDGET_FILE = path.join(FRONTEND, 'docs', 'perf-budget.json');
 
@@ -137,7 +138,7 @@ try {
             for (const route of routes) {
                 const limit = budget[route.route];
                 if (!limit) { problems.push(`${route.route} has no budget`); continue; }
-                const mbUsed = route.totalBytes / 1048576;
+                const mbUsed = route.firstPartyBytes / 1048576;
                 if (route.note) problems.push(`${route.route}: ${route.note}`);
                 if (mbUsed > limit.maxMB) problems.push(`${route.route} ${mbUsed.toFixed(2)} MB > budget ${limit.maxMB} MB`);
                 if (route.glbCount !== limit.models) problems.push(`${route.route} loads ${route.glbCount} model(s), budget allows ${limit.models}`);
@@ -145,10 +146,11 @@ try {
                 for (const file of route.missing || []) problems.push(`${route.route} requests missing ${file}`);
             }
             for (const name of Object.keys(budget)) if (!routes.some((x) => x.route === name)) problems.push(`budget route ${name} was not measured`);
-            const largestShare = Math.max(...routes.map((x) => x.totalBytes / 1048576 / budget[x.route].maxMB));
+            const largestShare = Math.max(...routes.map((x) => x.firstPartyBytes / 1048576 / budget[x.route].maxMB));
+            const thirdParty = routes.reduce((n, x) => Math.max(n, x.thirdPartyBytes), 0) / 1048576;
             // A route that only loaded on its second attempt passes, but is named so a recurring stall gets noticed.
             const retried = routes.filter((x) => x.retriedAfter).map((x) => x.route);
-            const summary = `${routes.length} routes within budget (closest: ${(largestShare * 100).toFixed(0)}% of its ceiling); 3D routes 1 model each, others 0`
+            const summary = `${routes.length} routes within budget (closest: ${(largestShare * 100).toFixed(0)}% of its ceiling); 3D routes 1 model each, others 0; third-party max ${thirdParty.toFixed(2)} MB (not budgeted)`
                 + (retried.length ? `; needed a retry: ${retried.join(', ')}` : '');
             return { ok: problems.length === 0, out: r.out, detail: problems.length ? problems.join('; ') : summary };
         });

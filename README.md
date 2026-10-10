@@ -112,7 +112,7 @@ npm run verify:full   # ~9 min: + fresh build with bundle checks, page-weight bu
 | Backend tests (122) | API, validation, auth, CSV safety, email outbox (incl. concurrency), migrations on a real Postgres |
 | Frontend tests (89) | Routing, forms, auth flow, dashboard, error boundaries, credits |
 | E2E (7, Puppeteer) | Contact form → admin login → search → status change → logout, against the real backend |
-| Bundle + page weight | No admin/3D library in `main.js`; every route within its byte budget and model count |
+| Bundle + page weight | No admin/3D library in `main.js`; every route within its byte budget (first-party bytes) and model count |
 | Stage screenshots (44) | Every scroll stage of every showroom matches the baseline (GPU) |
 | SIGTERM | The API finishes in-flight requests and exits cleanly in a Linux container |
 
@@ -158,6 +158,10 @@ database created with `prisma db push`? Follow
 - **Stage-screenshot baselines are GPU-specific.** A different machine needs its own baseline.
 - **Not everything is wired up:** the footer's newsletter box does nothing, there are no legal
   pages, and the Configurator says it is coming soon.
+- **Third-party runtime dependencies.** Four showrooms load their lighting (Drei `Environment`
+  presets, 1.3–1.7 MB) from `raw.githack.com`; if that service is unavailable, those scenes can't
+  light the car. Self-hosting the HDR files would remove the dependency. The Services page shows
+  random placeholder photos from `picsum.photos`, so its images change on every visit.
 - **Create React App is deprecated**; a move to Vite would be the next infrastructure step.
 
 ## Tech stack
