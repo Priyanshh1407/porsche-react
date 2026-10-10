@@ -5,15 +5,11 @@ import { carThemes } from '../data/carThemes';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '../components/ui/carousel';
 import {
     ChevronLeft,
     ChevronRight,
     ArrowRight,
-    Star,
     MapPin,
-    Clock,
-    Users,
     Calendar,
     Car,
     Globe,

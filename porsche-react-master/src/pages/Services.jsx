@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, User, ArrowRight } from 'lucide-react';
-import { carThemes } from '../data/carThemes';
 
 const Services = () => {
   const [activeSection, setActiveSection] = useState('philosophy');
-  const selectedTheme = carThemes.home;
 
   // Smooth scroll function
   const scrollToSection = (sectionId) => {

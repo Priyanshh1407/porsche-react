@@ -30,14 +30,8 @@ function RollingNumberInView({ target, decimals = 0, interval = 40, baseDelay = 
 }
 
 export default function WarningBanner() {
-  const [showSpec, setShowSpec] = useState(false);
   const [specsInView, setSpecsInView] = useState(false);
   const specsRef = useRef(null);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowSpec(true), 1200);
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     if (!specsRef.current) return;

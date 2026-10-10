@@ -1,5 +1,5 @@
 import React from "react";
-import { Car, Wifi, Thermometer, Music, Tv2, Settings, ArrowUp } from "lucide-react";
+import { Car, Thermometer, Music, Tv2, Settings, ArrowUp } from "lucide-react";
 import interior from "../assets/turboS/interior.webp"
 
 export default function DailyDriverInfo({ theme }) {

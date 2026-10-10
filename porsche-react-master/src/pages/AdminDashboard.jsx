@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
-import { 
-  Car, Users, BarChart, Shield, ArrowRight, Search, Filter, 
-  Mail, Phone, Calendar, MapPin, Eye, Trash2, Download,
-  Settings, Bell, User, TrendingUp, TrendingDown, Plus, 
-  CheckCircle, Clock, AlertCircle, XCircle, ArrowLeft
+import {
+  Car, Users, BarChart, Search, Mail, Eye, Trash2, Download,
+  User, TrendingUp, Plus, CheckCircle, Clock, XCircle, ArrowLeft
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart as RechartsBarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { useNavigate } from 'react-router-dom';
@@ -24,7 +22,6 @@ const PAGE_SIZE = 20;
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [selectedContact, setSelectedContact] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BatteryCharging, Zap, Settings, Car, Gauge, Activity } from "lucide-react";
+import { Zap, Settings, Car, Gauge, Activity } from "lucide-react";
 import hybridTechLeft from "../assets/918 spyder/hybridTechLeft.avif";
 import hybridTechRight from "../assets/918 spyder/hybridTechRight.jpg";
 
@@ -98,7 +98,7 @@ function CockpitDisplay({ theme }) {
 
 export default function HybridTech({ theme }) {
   const [isVisible, setIsVisible] = useState(false);
-  const [showAllSpecs, setShowAllSpecs] = useState(false);
+  const showAllSpecs = false; // nothing toggles it yet: only the first 2 specs show
 
   // Use split images if provided, else fallback to single image or default
   const leftImg = hybridTechLeft ;

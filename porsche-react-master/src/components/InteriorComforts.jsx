@@ -1,5 +1,5 @@
 import React from "react";
-import { CheckCircle, Lightbulb, Users, Tv2, Thermometer } from "lucide-react";
+import { Lightbulb, Users, Tv2, Thermometer } from "lucide-react";
 import InteriorComfort from "../assets/panamera/interior-comfort.jpeg";
 
 export default function InteriorComforts({ theme }) {

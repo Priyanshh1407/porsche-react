@@ -1,10 +1,9 @@
 import React, { useState } from "react";
-import { Calendar, Trophy, TrendingUp, Users, Star, Award, Zap, Settings, Crown, Target } from "lucide-react";
+import { Trophy, TrendingUp, Star, Award, Zap, Settings, Crown } from "lucide-react";
 import legacy from "../assets/carreragt/legacy.jpg"
 
 const TimelineCard = ({ item, theme, index }) => {
   const {
-    primary = "orange-400",
     text = "text-white",
     textSecondary = "text-gray-400",
     border = "border-gray-700",
@@ -272,7 +271,7 @@ export default function LegacySection({
       <section className="relative w-full py-16 px-6 bg-transparent">
         {/* Subtle blurred Carrera GT background image */}
         <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
-          <img src={legacy} />
+          <img src={legacy} alt="" />{/* decorative background: screen readers skip it */}
         </div>
         {/* Subtle background elements for Singer-inspired heritage look */}
         <div className="absolute inset-0 pointer-events-none select-none z-0">

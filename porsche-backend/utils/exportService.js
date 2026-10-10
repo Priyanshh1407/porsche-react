@@ -44,7 +44,7 @@ class ExportService {
     // Export contacts to CSV format
     static async exportToCSV(filters = {}, res) {
         try {
-            // map mongoose filters to prisma where clauses
+            // map the export filters to Prisma where clauses
             const where = {};
             if (filters.status) where.status = filters.status;
             if (filters.inquiryType) where.inquiryType = filters.inquiryType;

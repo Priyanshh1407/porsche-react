@@ -4,7 +4,6 @@ import { panamera } from '../../data/modelsData/panamera'
 import Navbar from '../../components/Navbar';
 import Hero from '../../components/Hero';
 import Highlights from '../../components/Highlights';
-import Performance from '../../components/Performance';
 import Features from '../../components/Features';
 import Carousel from '../../components/Carousel';
 import Footer from '../../components/Footer';

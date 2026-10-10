@@ -2,15 +2,17 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Contact from './Contact';
 
-const fillRequiredFields = (container) => {
-    const set = (name, value) => fireEvent.change(container.querySelector(`[name="${name}"]`), { target: { name, value } });
-    set('firstName', 'Anna');
-    set('lastName', 'Schmidt');
-    set('email', 'anna@example.com');
-    set('phone', '+15555550123');
-    set('inquiryType', 'Sales');
-    set('message', 'I would like to book a test drive this month.');
+// Fields are found by their visible labels, the way a user (or screen reader) finds them.
+const fillRequiredFields = () => {
+    const set = (label, value) => fireEvent.change(screen.getByLabelText(label), { target: { value } });
+    set(/First Name/, 'Anna');
+    set(/Last Name/, 'Schmidt');
+    set(/^Email/, 'anna@example.com');
+    set(/Phone Number/, '+15555550123');
+    set(/Inquiry Type/, 'Sales');
+    set(/^Message/, 'I would like to book a test drive this month.');
 };
+const submit = () => fireEvent.click(screen.getByRole('button', { name: 'Send Message' }));
 
 const renderContact = () => render(<MemoryRouter><Contact /></MemoryRouter>);
 
@@ -23,10 +25,10 @@ describe('Contact form (BUG-01)', () => {
         const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue({
             ok: true, status: 201, json: async () => ({ success: true, data: { id: 'x' } }),
         });
-        const { container } = renderContact();
-        fillRequiredFields(container);
+        renderContact();
+        fillRequiredFields();
 
-        fireEvent.submit(container.querySelector('form'));
+        submit();
 
         await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
         // BUG-04: relative URL (dev proxy / REACT_APP_API_URL), never a hardcoded localhost.
@@ -47,10 +49,10 @@ describe('Contact form (BUG-01)', () => {
                 errors: [{ path: 'phone', msg: 'Please enter a valid mobile number' }],
             }),
         });
-        const { container } = renderContact();
-        fillRequiredFields(container);
+        renderContact();
+        fillRequiredFields();
 
-        fireEvent.submit(container.querySelector('form'));
+        submit();
 
         expect(await screen.findByText('Please enter a valid mobile number')).toBeInTheDocument();
     });

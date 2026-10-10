@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Zap, Gauge, Trophy, ChevronRight, Timer, Target, Flame, Settings, Filter } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Zap, Gauge, Trophy, ChevronRight, Timer, Target, Flame, Filter } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Loader from '../components/Loader';
 import { useScrollPosition } from '../data/useScrollPosition';
 import { pathForName } from '../data/models';
@@ -14,7 +14,6 @@ const AllModels = () => {
 
   const scrollRef = useScrollPosition('allModels');
   const navigate = useNavigate();
-  const location = useLocation();
 
   const categories = ['All', 'Track', 'Performance', 'Electric', 'SUV', 'Luxury', 'Convertible', 'Hypercar', 'Classic'];
 

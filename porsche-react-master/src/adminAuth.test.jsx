@@ -6,6 +6,13 @@ import { AuthProvider } from './context/AuthContext';
 import { fakeJwt } from './testUtils/fakeJwt';
 import { getTokenExpiry, isTokenExpired } from './lib/jwt';
 
+// Signs in through the login form by its labels and button, as a user would.
+const signIn = (email, password) => {
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: email } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: password } });
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+};
+
 const LocationProbe = () => <div data-testid="location">{useLocation().pathname}</div>;
 const currentPath = () => screen.getByTestId('location').textContent;
 
@@ -100,10 +107,8 @@ describe('session ends correctly', () => {
 describe('login page', () => {
     test("shows the API's message (e.g. rate limited) instead of a generic one", async () => {
         global.fetch = jest.fn(() => json({ success: false, message: 'Too many failed login attempts. Please try again in 15 minutes.' }, 429));
-        const { container } = renderApp('/admin/login');
-        fireEvent.change(container.querySelector('input[name="email"]'), { target: { name: 'email', value: 'admin@test.local' } });
-        fireEvent.change(container.querySelector('input[name="password"]'), { target: { name: 'password', value: 'wrong' } });
-        fireEvent.submit(container.querySelector('form'));
+        renderApp('/admin/login');
+        signIn('admin@test.local', 'wrong');
         expect(await screen.findByText(/Too many failed login attempts/)).toBeInTheDocument();
     });
 
@@ -111,11 +116,9 @@ describe('login page', () => {
         global.fetch = jest.fn((url) => (url === '/api/admin/login'
             ? json({ success: true, token: fakeJwt() })
             : dashboardApi()(url)));
-        const { container } = renderApp('/admin/dashboard');
+        renderApp('/admin/dashboard');
         expect(currentPath()).toBe('/admin/login');
-        fireEvent.change(container.querySelector('input[name="email"]'), { target: { name: 'email', value: 'admin@test.local' } });
-        fireEvent.change(container.querySelector('input[name="password"]'), { target: { name: 'password', value: 'right' } });
-        fireEvent.submit(container.querySelector('form'));
+        signIn('admin@test.local', 'right');
         await waitFor(() => expect(currentPath()).toBe('/admin/dashboard'));
     });
 });
