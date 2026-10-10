@@ -36,8 +36,9 @@ async function main() {
         // copy the source, excluding host node_modules (Windows binaries) and the secret .env
         "tar -C /src --exclude=./node_modules --exclude=./.env -cf - . | tar -C /app -xf -",
         'cd /app',
-        'npm ci --no-audit --no-fund --loglevel=error',
-        'npx prisma generate > /dev/null',
+        // Installed exactly like a production deploy: runtime dependencies only, and no manual
+        // "prisma generate" (the backend's postinstall must produce the client by itself).
+        'npm ci --omit=dev --no-audit --no-fund --loglevel=error',
         'exec node server.js',
     ].join(' && ');
 
