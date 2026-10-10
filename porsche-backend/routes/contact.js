@@ -3,7 +3,7 @@ import { body, validationResult } from "express-validator";
 import rateLimit from "express-rate-limit";
 import prisma from "../prisma/client.js";
 import { sendContactEmails } from "../utils/emailService.js";
-import { INQUIRY_TYPES } from "../config/contactOptions.js";
+import { INQUIRY_TYPES, MODEL_OPTIONS, MODEL_VALUES } from "../config/contactOptions.js";
 
 const router = express.Router();
 
@@ -74,7 +74,7 @@ const contactValidation = [
     // back to the defaults below; plain .optional() only skips undefined (BUG-01).
     body('modelInterest')
         .optional({ values: 'falsy' })
-        .isIn(['911', '718_Cayman', '718_Boxster', 'Cayenne', 'Macan', 'Panamera', 'Taycan', 'CarreraGT', 'Cayman_GT4RS', 'GT2RS_911', 'GT3RS', 'Spyder_918', 'TurboS_911', 'Other', 'Not_specified']),
+        .isIn(MODEL_VALUES),
 
     body('preferredContactMethod')
         .optional({ values: 'falsy' })
@@ -152,26 +152,9 @@ router.post('/submit', contactLimiter, contactValidation, async (req, res) => {
 
 //GET /api/contact/models - Get available Porsche models
 router.get('/models', (req, res) => {
-    const models = [
-        { value: '911', label: '911', category: 'Sports Cars' },
-        { value: '718_Cayman', label: '718 Cayman', category: 'Sports Cars' },
-        { value: '718_Boxster', label: '718 Boxster', category: 'Sports Cars' },
-        { value: 'Cayenne', label: 'Cayenne', category: 'SUV' },
-        { value: 'Macan', label: 'Macan', category: 'SUV' },
-        { value: 'Panamera', label: 'Panamera', category: 'Sedan' },
-        { value: 'Taycan', label: 'Taycan', category: 'Electric' },
-        { value: 'CarreraGT', label: 'Carrera GT', category: 'Supercar' },
-        { value: 'Cayman_GT4RS', label: 'Cayman GT4 RS', category: 'Sports Cars' },
-        { value: 'GT2RS_911', label: '911 GT2 RS', category: 'Sports Cars' },
-        { value: 'GT3RS', label: '911 GT3 RS', category: 'Sports Cars' },
-        { value: 'Spyder_918', label: '918 Spyder', category: 'Supercar' },
-        { value: 'TurboS_911', label: '911 Turbo S', category: 'Sports Cars' },
-        { value: 'Other', label: 'Other', category: 'Other' }
-    ];
-
     res.json({
         success: true,
-        data: models
+        data: MODEL_OPTIONS
     });
 });
 

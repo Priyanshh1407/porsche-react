@@ -1,4 +1,5 @@
-import nodemailer, { createTransport } from "nodemailer";
+import nodemailer from "nodemailer";
+import { modelLabel } from "../config/contactOptions.js";
 
 // email config
 // ERR-03: bounded waits. nodemailer's defaults are minutes (2 min to connect, 30 s for the
@@ -34,7 +35,7 @@ const safeHtml = (strings, ...values) =>
 // email template
 const getCustomerEmailTemplate = (contact) => {
     const modelName = contact.modelInterest !== 'Not_specified'
-        ? contact.modelInterest.replace('_', '')
+        ? modelLabel(contact.modelInterest)
         : 'our vehicles';
 
     return {
@@ -87,7 +88,7 @@ const getAdminEmailTemplate = (contact) => {
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background-color: #dc3545; padding: 20px; color: white;">
           <h2 style="margin: 0;">New Contact Form Submission</h2>
-          <p style="margin: 5px 0 0 0; opacity: 0.9;">Priority: ${contact.inquiryType === 'sales' ? 'HIGH' : 'NORMAL'}</p>
+          <p style="margin: 5px 0 0 0; opacity: 0.9;">Priority: ${contact.inquiryType === 'Sales' ? 'HIGH' : 'NORMAL'}</p>
         </div>
         
         <div style="padding: 20px; background-color: #f8f9fa;">
@@ -110,7 +111,7 @@ const getAdminEmailTemplate = (contact) => {
             </tr>
             <tr style="background-color: white;">
               <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Model Interest:</td>
-              <td style="padding: 10px; border: 1px solid #ddd;">${contact.modelInterest.replace('_', ' ')}</td>
+              <td style="padding: 10px; border: 1px solid #ddd;">${modelLabel(contact.modelInterest)}</td>
             </tr>
             <tr style="background-color: #f9f9f9;">
               <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Preferred Contact:</td>

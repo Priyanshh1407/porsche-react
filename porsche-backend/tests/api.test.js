@@ -95,10 +95,12 @@ describe('Admin API', () => {
 
     test('analytics returns all four sections with the right shapes', async () => {
         const token = await loginAsAdmin();
-        await createContact({ modelInterest: 'Taycan' });
+        await createContact({ modelInterest: 'GT2RS_911' });
         const res = await request(app).get('/api/admin/analytics').set('Authorization', `Bearer ${token}`);
         expect(res.statusCode).toBe(200);
         expect(Object.keys(res.body.data).sort()).toEqual(['conversions', 'peakHours', 'popularModels', 'trends']);
         expect(res.body.data.popularModels[0]).toEqual(expect.objectContaining({ model: expect.any(String), count: expect.any(Number) }));
+        // Human labels, not raw values with underscores swapped ("GT2RS 911").
+        expect(res.body.data.popularModels.map((m) => m.model)).toContain('911 GT2 RS');
     });
 });

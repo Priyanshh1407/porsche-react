@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import rateLimit from "express-rate-limit";
+import morgan from "morgan";
 import dotenv from "dotenv";
 import prisma from "./prisma/client.js";
 import { validateEnv } from "./config/env.js";
@@ -36,12 +36,11 @@ app.use(cors({
     credentials: true
 }));
 
-// Create admin user if it doesn't exist (for development)
-const createDefaultAdmin = async () => {
-    // This is just for logging - actual admin auth is handled via environment variables
-    console.log('📧 Admin email:', process.env.ADMIN_EMAIL);
-    console.log('🔐 Admin login configured');
-};
+// Request log, one line per request (method, path, status, time). Off in tests to keep output
+// readable. Bodies are never logged, so form contents and passwords don't end up in logs.
+if (process.env.NODE_ENV !== 'test') {
+    app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+}
 
 //Body parsing 
 app.use(express.json());
@@ -103,7 +102,7 @@ async function start() {
         process.exit(1);
     }
     console.log('✅ Connected to Postgres database via Prisma');
-    createDefaultAdmin();
+    console.log('🔐 Admin login configured');
 
     const PORT = process.env.PORT || 5000;
     const server = app.listen(PORT, () => {

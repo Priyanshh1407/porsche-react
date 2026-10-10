@@ -1,4 +1,5 @@
 import prisma from '../prisma/client.js';
+import { modelLabel } from '../config/contactOptions.js';
 
 class Analytics {
     // Track conversion funnel
@@ -66,7 +67,7 @@ class Analytics {
             });
 
             return modelStats.map(stat => ({
-                model: stat.modelInterest.replace('_', ' '),
+                model: modelLabel(stat.modelInterest),
                 count: stat._count.modelInterest
             }));
         } catch (error) {
