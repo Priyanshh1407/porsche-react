@@ -6,6 +6,7 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart as RechartsBarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
+import EmailDeliveryBadge from '../components/EmailDeliveryBadge';
 import { useAuth } from '../context/AuthContext';
 
 const COLORS = ['#dc2626', '#ea580c', '#ca8a04', '#65a30d', '#0284c7', '#7c3aed', '#db2777'];
@@ -516,7 +517,12 @@ const AdminDashboard = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{contact.modelInterest}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{contact.inquiryType}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(contact.status)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex flex-col items-start gap-1">
+                            {getStatusBadge(contact.status)}
+                            <EmailDeliveryBadge emails={contact.emails} />
+                          </div>
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(contact.createdAt).toLocaleDateString()}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex items-center gap-2">

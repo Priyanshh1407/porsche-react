@@ -137,6 +137,9 @@ router.get('/contacts', authenticateAdmin, validListQuery, handleValidationError
         const [contacts, total] = await Promise.all([
             prisma.contact.findMany({
                 where,
+                // UPG-03: delivery state for the dashboard badge. Never lastError: SMTP error text
+                // can name internal hosts and doesn't belong in the browser.
+                include: { emails: { select: { kind: true, status: true, attempts: true } } },
                 orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
                 take: limit,
                 skip: (page - 1) * limit

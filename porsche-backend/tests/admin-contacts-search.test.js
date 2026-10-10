@@ -59,3 +59,22 @@ test('an over-long search term is rejected', async () => {
     const res = await list(`q=${'x'.repeat(101)}`);
     expect(res.statusCode).toBe(400);
 });
+
+// UPG-03: the dashboard shows each lead's email delivery, but never SMTP error details.
+test('each contact carries its email delivery status (kind, status, attempts only)', async () => {
+    const lead = await prisma.contact.findFirst({ where: { lastName: TAG, firstName: 'Person0' } });
+    await prisma.emailOutbox.createMany({
+        data: [
+            { contactId: lead.id, kind: 'customer_confirmation', status: 'sent', attempts: 1 },
+            { contactId: lead.id, kind: 'admin_notification', status: 'pending', attempts: 2, lastError: 'SMTP 421 secret-host.internal' },
+        ],
+    });
+    const res = await list(`q=bug05-0@`);
+    expect(res.statusCode).toBe(200);
+    const emails = res.body.data.find((c) => c.id === lead.id).emails;
+    expect([...emails].sort((a, b) => a.kind.localeCompare(b.kind))).toEqual([
+        { kind: 'admin_notification', status: 'pending', attempts: 2 },
+        { kind: 'customer_confirmation', status: 'sent', attempts: 1 },
+    ]);
+    expect(JSON.stringify(res.body)).not.toContain('secret-host');
+});

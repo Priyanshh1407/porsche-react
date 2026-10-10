@@ -25,6 +25,8 @@ beforeEach(() => {
         if (u.pathname === '/api/admin/contacts') {
             const page = Number(u.searchParams.get('page'));
             const items = page === 1 ? Array.from({ length: 20 }, (_, i) => contact(i + 1)) : [contact(21)];
+            // UPG-03: one lead with its email delivery recorded by the outbox.
+            items[0].emails = [{ kind: 'customer_confirmation', status: 'sent', attempts: 1 }, { kind: 'admin_notification', status: 'pending', attempts: 3 }];
             return json({ data: items, pagination: { current: page, pages: 2, total: 21, limit: 20 } });
         }
         if (options.method === 'PUT') return json({ success: true, data: {} });
@@ -83,4 +85,12 @@ test('only real tabs are offered (the fake Settings tab is gone)', async () => {
     for (const tab of [/Dashboard/, /Contacts/, /Analytics/]) {
         expect(screen.getByRole('button', { name: tab })).toBeInTheDocument();
     }
+});
+
+test('each lead in the Contacts tab shows its email delivery state from the API (UPG-03)', async () => {
+    await openContactsTab();
+    // A row's accessible name is its cell text, so each lead's row can be found by its email.
+    const row = (email) => screen.getByRole('row', { name: (name) => name.includes(email) });
+    expect(within(row('p1@example.com')).getByText('Retrying (3/5)')).toBeInTheDocument();
+    expect(within(row('p2@example.com')).getByText('—')).toBeInTheDocument(); // created before the outbox
 });
