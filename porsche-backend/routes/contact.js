@@ -2,7 +2,7 @@ import express from "express";
 import { body, validationResult } from "express-validator";
 import rateLimit from "express-rate-limit";
 import prisma from "../prisma/client.js";
-import { sendContactEmails } from "../utils/emailService.js";
+import { enqueueContactEmails, nudgeEmailWorker } from "../utils/emailOutbox.js";
 import { INQUIRY_TYPES, MODEL_OPTIONS, MODEL_VALUES } from "../config/contactOptions.js";
 
 const router = express.Router();
@@ -120,16 +120,15 @@ router.post('/submit', contactLimiter, contactValidation, async (req, res) => {
             status: 'new'
         };
 
-        const contact = await prisma.contact.create({
-            data: contactData
+        // UPG-03: the lead and the emails it needs are saved in ONE transaction, so a lead can never
+        // exist without its emails being recorded. The outbox worker delivers (and retries) them;
+        // the visitor's request never waits on SMTP (ERR-03).
+        const contact = await prisma.$transaction(async (tx) => {
+            const created = await tx.contact.create({ data: contactData });
+            await enqueueContactEmails(tx, created.id);
+            return created;
         });
-
-        // Send the emails (customer confirmation + admin notification) in the background (ERR-03):
-        // the lead is already saved, so the visitor gets their answer now instead of waiting on SMTP.
-        // A failure is logged, not silently lost. Stopgap: there is no retry until the outbox (UPG-03).
-        sendContactEmails(contact).catch((emailError) => {
-            console.error(`Email sending failed for contact ${contact.id}: ${emailError.message}`);
-        });
+        nudgeEmailWorker();
 
         // Success response
         res.status(201).json({

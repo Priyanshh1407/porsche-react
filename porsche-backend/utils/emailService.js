@@ -137,45 +137,25 @@ const getAdminEmailTemplate = (contact) => {
     };
 };
 
-// email functions
-const sendContactEmails = async (contact) => {
-    // If no real password is provided, fallback to console log for demo purposes
-    if (!process.env.EMAIL_PASS || process.env.EMAIL_PASS === 'your_app_specific_password_here' || process.env.EMAIL_PASS === '') {
-        console.log("==========================================");
-        console.log("DEMO MODE: Email sending is stubbed.");
-        console.log("CUSTOMER EMAIL WOULD BE SENT TO:", contact.email);
-        console.log("ADMIN EMAIL WOULD BE SENT TO:", process.env.ADMIN_EMAIL);
-        console.log("==========================================");
-        return true;
-    }
+// UPG-03: one email at a time. The outbox (utils/emailOutbox.js) decides WHICH emails a lead needs
+// and retries each one separately, so a failed admin notification never re-sends the customer's.
+const isDemoMode = () => !process.env.EMAIL_PASS || process.env.EMAIL_PASS === 'your_app_specific_password_here';
 
-    const transporter = createTransporter();
-
-    try {
-        // send customer confirmation mail
-        const customerEmail = getCustomerEmailTemplate(contact);
-        await transporter.sendMail({
-            from: process.env.EMAIL_FROM,
-            to: contact.email,
-            subject: customerEmail.subject,
-            html: customerEmail.html
-        });
-
-        // send admin notification email
-        const adminEmail = getAdminEmailTemplate(contact);
-        await transporter.sendMail({
-            from: process.env.EMAIL_FROM,
-            to: process.env.ADMIN_EMAIL,
-            subject: adminEmail.subject,
-            html: adminEmail.html
-        });
-
-        console.log("Contact Emails successfully sent.");
-        return true;
-    } catch (error) {
-        console.log("Error sending contact emails:", error);
-        throw error;
-    }
+/** The message for one outbox row: { to, subject, html }. */
+const buildEmail = (kind, contact) => {
+    if (kind === 'customer_confirmation') return { to: contact.email, ...getCustomerEmailTemplate(contact) };
+    if (kind === 'admin_notification') return { to: process.env.ADMIN_EMAIL, ...getAdminEmailTemplate(contact) };
+    throw new Error(`Unknown email kind: ${kind}`);
 };
 
-export { sendContactEmails, getAdminEmailTemplate, getCustomerEmailTemplate };
+/** Sends one message. Throws on failure so the outbox can retry it. */
+const sendEmail = async (message) => {
+    if (isDemoMode()) {
+        // No SMTP password configured: log instead of sending (local development / demos).
+        console.log(`DEMO MODE: email not sent. To: ${message.to} | Subject: ${message.subject}`);
+        return;
+    }
+    await createTransporter().sendMail({ from: process.env.EMAIL_FROM, ...message });
+};
+
+export { buildEmail, sendEmail, getAdminEmailTemplate, getCustomerEmailTemplate };

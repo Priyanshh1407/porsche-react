@@ -4,6 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import prisma from "./prisma/client.js";
+import { startEmailWorker } from "./utils/emailOutbox.js";
 import { validateEnv } from "./config/env.js";
 import { checkDatabase } from "./utils/dbHealth.js";
 
@@ -109,11 +110,17 @@ async function start() {
         console.log(`Server running on port:${server.address().port}`);
         console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
     });
+    // UPG-03: delivers the emails recorded in the outbox (and retries failures).
+    const emailWorker = startEmailWorker();
 
     const shutdown = (signal) => {
         console.log(`\n${signal} received: shutting down...`);
-        // Stop accepting new connections, let in-flight requests finish, then close the pool.
+        // Stop accepting new connections, let in-flight requests finish, let an email that is being
+        // sent finish, then close the pool. If the force-exit below fires first, that email's lease
+        // simply expires and it is retried after restart (at-least-once delivery).
+        const workerStopped = emailWorker.stop();
         server.close(async () => {
+            await workerStopped;
             await prisma.$disconnect();
             console.log('Database connection closed');
             process.exit(0);
