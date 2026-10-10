@@ -1,20 +1,8 @@
-import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Mail, Settings, Zap, Heart } from "lucide-react";
 import porscheHero from "../assets/home/configurator.jpg";
 
 const Configurator = () => {
-  const [email, setEmail] = useState("");
-  const [showToast, setShowToast] = useState(false);
-
-  const handleEmailSubmit = (e) => {
-    e.preventDefault();
-    if (email) {
-      setShowToast(true);
-      setEmail("");
-      setTimeout(() => setShowToast(false), 4000);
-    }
-  };
-
   const features = [
     {
       icon: <Settings className="w-8 h-8" />,
@@ -287,14 +275,6 @@ const Configurator = () => {
         <div className="absolute bottom-32 right-16 w-40 h-40 bg-red-600 rounded-full blur-3xl opacity-15 animate-float" style={{ animationDelay: '2s' }} />
         <div className="absolute top-1/2 left-0 w-32 h-32 bg-yellow-400 rounded-full blur-3xl opacity-10 animate-float" style={{ animationDelay: '4s' }} />
 
-        {/* Toast Notification */}
-        <div className={`toast ${showToast ? 'show' : ''}`}>
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            Successfully subscribed! You'll be notified when the configurator launches.
-          </div>
-        </div>
-
         <div className="relative z-10 container mx-auto px-6 py-16">
           {/* Enhanced Header */}
           <div className="text-center mb-20 animate-fade-up">
@@ -364,23 +344,18 @@ const Configurator = () => {
               <p className="text-gray-400 leading-relaxed">Be among the first to experience the revolutionary Porsche configurator when it launches</p>
             </div>
 
-            <div className="space-y-6">
-              <div className="relative">
-                <input
-                  type="email"
-                  placeholder="Enter your email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-6 py-4 bg-black/50 border border-gray-700 rounded-xl text-white placeholder:text-gray-500 focus:outline-none input-glow transition-all duration-300 font-medium backdrop-blur-sm"
-                  onKeyPress={(e) => e.key === 'Enter' && handleEmailSubmit(e)}
-                />
-              </div>
-              <button
-                onClick={handleEmailSubmit}
-                className="btn-primary w-full h-14 px-8 text-lg bg-gradient-accent text-white rounded-xl shadow-luxury font-semibold"
+            {/* Launch-notification signup isn't built yet. It used to show "Successfully subscribed!"
+                while sending the address nowhere; point people to the contact form instead. */}
+            <div className="space-y-6 text-center">
+              <p className="text-gray-300">
+                Email launch alerts are coming soon. Until then, our team can answer questions about any model.
+              </p>
+              <Link
+                to="/contact"
+                className="btn-primary flex items-center justify-center w-full h-14 px-8 text-lg bg-gradient-accent text-white rounded-xl shadow-luxury font-semibold"
               >
-                Notify Me First
-              </button>
+                Contact Us
+              </Link>
             </div>
           </div>
 

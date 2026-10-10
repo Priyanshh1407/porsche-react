@@ -39,12 +39,6 @@ const AdminDashboard = () => {
   
   // ARCH-01: auth comes from AuthContext; <RequireAdmin> only renders this page when logged in.
   const { logout } = useAuth();
-  const [settings, setSettings] = useState({
-    emailNotifications: true,
-    smsNotifications: false,
-    autoRefresh: true,
-    emailTemplate: 'Thank you for your interest in Porsche. We will contact you within 24 hours.'
-  });
   const [showContactDetails, setShowContactDetails] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
   const [animateElements, setAnimateElements] = useState(false);
@@ -319,8 +313,7 @@ const AdminDashboard = () => {
               {[
                 { id: 'dashboard', label: 'Dashboard', icon: BarChart },
                 { id: 'contacts', label: 'Contacts', icon: Users },
-                { id: 'analytics', label: 'Analytics', icon: TrendingUp },
-                { id: 'settings', label: 'Settings', icon: Settings }
+                { id: 'analytics', label: 'Analytics', icon: TrendingUp }
               ].map((tab) => {
                 const Icon = tab.icon;
                 return (
@@ -632,24 +625,6 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {activeTab === 'settings' && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">Notification Settings</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-900">Email Notifications</h4>
-                    <p className="text-sm text-gray-500">Receive email alerts for new contacts</p>
-                  </div>
-                  <button onClick={() => setSettings(prev => ({ ...prev, emailNotifications: !prev.emailNotifications }))} className={`relative inline-flex h-6 w-11 items-center rounded-full ${settings.emailNotifications ? 'bg-red-600' : 'bg-gray-200'}`}>
-                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.emailNotifications ? 'translate-x-6' : 'translate-x-1'}`} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

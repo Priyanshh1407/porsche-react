@@ -75,3 +75,12 @@ test('every pipeline status can be chosen and is sent to the API (BUG-07)', asyn
     expect(put.url).toBe('/api/admin/contacts/id-1');
     expect(JSON.parse(put.body)).toEqual({ status: 'qualified' });
 });
+
+test('only real tabs are offered (the fake Settings tab is gone)', async () => {
+    render(<AuthProvider><MemoryRouter><AdminDashboard /></MemoryRouter></AuthProvider>);
+    await screen.findByRole('button', { name: /Contacts/ });
+    expect(screen.queryByRole('button', { name: /Settings/ })).not.toBeInTheDocument();
+    for (const tab of [/Dashboard/, /Contacts/, /Analytics/]) {
+        expect(screen.getByRole('button', { name: tab })).toBeInTheDocument();
+    }
+});
