@@ -138,6 +138,8 @@ try {
                     if (route.totalMB > BUDGET.nonModelRouteMB) problems.push(`${route.route} ${route.totalMB} MB > ${BUDGET.nonModelRouteMB} MB`);
                 }
                 if (route.route === BUDGET.showroom && route.glbCount !== 1) problems.push(`${route.route} loads ${route.glbCount} models (expected only its own)`);
+                // A file the page links but the build lacks (e.g. manifest.json, favicon.ico) gets index.html back.
+                for (const file of route.missing || []) problems.push(`${route.route} requests missing ${file}`);
             }
             const summary = routes.map((x) => `${x.route} ${x.totalMB}MB/${x.glbCount}glb`).join(', ');
             return { ok: problems.length === 0, out: r.out, detail: problems.length ? problems.join('; ') : summary };

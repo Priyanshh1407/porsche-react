@@ -24,6 +24,9 @@ const buildDir = path.resolve(__dirname, '..', opt('--build', 'build'));
 const remoteBase = opt('--base', null);
 const asJson = args.includes('--json');
 const mb = (bytes) => +(bytes / 1048576).toFixed(1);
+// Files a page asked for that don't exist in the build. The server answers them with index.html
+// (like an SPA host would), so the browser gets HTML instead of e.g. a manifest: a silent bug.
+const missingFiles = new Set();
 
 function serve(port) {
     if (!fs.existsSync(path.join(buildDir, 'index.html'))) {
@@ -33,13 +36,17 @@ function serve(port) {
     return new Promise((resolve) => {
         const server = http.createServer((req, res) => {
             let file = path.join(buildDir, decodeURIComponent(req.url.split('?')[0]));
-            if (!file.startsWith(buildDir) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) file = path.join(buildDir, 'index.html');
+            if (!file.startsWith(buildDir) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
+                if (path.extname(req.url.split('?')[0])) missingFiles.add(req.url.split('?')[0]);
+                file = path.join(buildDir, 'index.html');
+            }
             fs.createReadStream(file).pipe(res);
         }).listen(port, () => resolve(server));
     });
 }
 
 async function measure(browser, base, route) {
+    missingFiles.clear();
     const page = await browser.newPage();
     const cdp = await page.target().createCDPSession();
     await cdp.send('Network.enable');
@@ -59,7 +66,7 @@ async function measure(browser, base, route) {
         note = `did not reach network idle: ${err.message.split('\n')[0]}`;
     }
     await page.close();
-    return { route, totalMB: mb(total), glbCount: Object.keys(glbs).length, glbs, note };
+    return { route, totalMB: mb(total), glbCount: Object.keys(glbs).length, glbs, missing: [...missingFiles], note };
 }
 
 (async () => {
@@ -90,6 +97,7 @@ async function measure(browser, base, route) {
     for (const r of results) {
         console.log(`  ${r.route.padEnd(22)} ${String(r.totalMB).padStart(7)} MB   GLBs: ${r.glbCount}${r.note ? `   (${r.note})` : ''}`);
         for (const [name, size] of Object.entries(r.glbs)) console.log(`      ${size} MB  ${name}`);
+        for (const file of r.missing) console.log(`      MISSING FILE: ${file} (answered with index.html)`);
     }
     if (mainJs) console.log(`  main bundle file: static/js/${mainJs} (gzipped size: see "npm run build" output)`);
 })();
