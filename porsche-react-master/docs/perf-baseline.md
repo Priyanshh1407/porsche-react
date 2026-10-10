@@ -70,3 +70,50 @@ Notes:
 - The local measuring server does not compress, so JS counts uncompressed (main ≈ 1.09 MB on the
   wire here vs ≈ 308 kB gzipped from a real host). Real-world numbers will be somewhat lower.
 - The 3D showroom stage screenshots are unchanged (44/44 match the Phase 0 baseline).
+
+## After Phase 5 (2026-10-10): PERF-02 + missing files; GT3 RS texture swap evaluated, not adopted
+
+Same build/serve/measure method. "Before" = end of Phase 4 (`verify:full` on `phase-4-architecture`).
+
+| Route | Phase 4 | Phase 5 | Why |
+|---|---|---|---|
+| `/` (home) | 5.6 MB | **5.2 MB** | admin charts (recharts) left `main.js`; Home.jsx untouched |
+| `/contact` | 1.3 MB | **0.9 MB** | same |
+| `/about` | 1.6 MB | **1.2 MB** | same |
+| `/models` | 1.2 MB | **0.8 MB** | same |
+| `/models/911-gt3-rs` | 70.1 MB | **69.7 MB** | same (GLB unchanged, 65.9 MB) |
+
+| JavaScript | Phase 4 | Phase 5 |
+|---|---|---|
+| `main` chunk, gzipped (`npm run build`) | 307.57 kB | **197.22 kB** (−110.35 kB, −36%) |
+| recharts chunk, gzipped | inside `main` | 109.1 kB, loaded only on `/admin/dashboard` |
+
+`scripts/check-bundle.cjs` (in `verify:full`) fails if recharts, three or postprocessing lands in
+`main.js` again.
+
+**Missing files:** every page requested `/manifest.json` and `/favicon.ico`, which didn't exist; the
+host answered with `index.html`. Now 0 on every route; `measure-page-weight` reports any such file
+and the `verify:full` budget gate fails on it.
+
+### GT3 RS texture-only compression: measured, then rejected by the developer
+
+| | PNG (deployed) | WebP candidate |
+|---|---|---|
+| Textures inside the GLB | 34.0 MB | 14.7 MB (colour maps lossy q85, normal maps lossless, no resize) |
+| GLB file | 65.9 MB | 46.6 MB (−29%) |
+| `/models/911-gt3-rs` page | 69.7 MB | 50.4 MB |
+| Structure (`check-model-structure`) | n/a | identical: 549 nodes, matrices, geometry bytes, bounding box |
+| Stage screenshots vs Phase 0 baseline | match | all 9 match at the strict 0.1% limit (max 0.03%) |
+
+The developer chose to keep the PNG model; the WebP file was deleted. `scripts/optimize-models.mjs`
+and `scripts/check-model-structure.mjs` stay in the repo, so the candidate can be regenerated
+(`node scripts/optimize-models.mjs`, ~2.5 min) and re-verified at any time. The largest remaining
+image is the leather normal map (8.9 MB PNG, 7.6 MB as lossless WebP).
+
+### Measured for reference, not pursued (developer decisions)
+- **Lossless HTTP compression** (brotli q11) of the five GLBs: 129.0 → 71.9 MB, byte-identical after
+  decoding. Not pursued: hosting is undecided.
+- **Unused files in `public/`** (~32 MB: 918 zip, duplicate textures, `screenshots/`, `logo512.png`)
+  are deployed but never requested. Kept by decision.
+- **Time-to-first-frame on throttled Fast 4G** was planned to quantify the GT3 RS swap; with the
+  swap rejected and no GLB changed, it was not measured.
