@@ -205,7 +205,7 @@ export default function LegacySection({
 
   return (
     <>
-      <style jsx>{`
+      <style>{`
         @keyframes slideInFromLeft {
           from {
             opacity: 0;

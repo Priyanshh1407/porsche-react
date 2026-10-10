@@ -414,7 +414,7 @@ const AllModels = () => {
                 </div>
               </div>
 
-              <div ref={scrollRef} className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
+              <div ref={scrollRef} className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar allmodels-scrollbar">
                 {filteredModels.map((model, index) => (
                   <div
                     key={model.id}
@@ -482,19 +482,19 @@ const AllModels = () => {
       )}
 
       {/* Custom Scrollbar Styles */}
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
+      <style>{`
+        .allmodels-scrollbar::-webkit-scrollbar {
           width: 6px;
         }
-        .custom-scrollbar::-webkit-scrollbar-track {
+        .allmodels-scrollbar::-webkit-scrollbar-track {
           background: rgba(55, 65, 81, 0.3);
           border-radius: 3px;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
+        .allmodels-scrollbar::-webkit-scrollbar-thumb {
           background: linear-gradient(to bottom, ${currentModel.color.replace('from-', '').replace('via-', '').replace('to-', '').split(' ').join(', ')});
           border-radius: 3px;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        .allmodels-scrollbar::-webkit-scrollbar-thumb:hover {
           background: linear-gradient(to bottom, ${currentModel.color.replace('from-', '').replace('via-', '').replace('to-', '').split(' ').join(', ')});
         }
       `}</style>

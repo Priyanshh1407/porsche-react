@@ -108,7 +108,7 @@ export default function WarningBanner() {
           <div className="flex flex-row gap-12 rounded-2xl px-12 py-8 shadow-2xl border-2 border-red-700 border-opacity-60 bg-black bg-opacity-20 backdrop-blur-sm items-end justify-center">
             
             {/* 0-100 km/h */}
-            <div className="flex flex-col items-center justify-end min-w-32 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+            <div className="flex flex-col items-center justify-end min-w-32 warningbanner-fade-in-up" style={{ animationDelay: '0.2s' }}>
               <div className="h-9 mb-2"></div>
               <span className="text-4xl font-extrabold text-red-400 mb-1">
                 <RollingNumberInView target={2.7} decimals={1} interval={40} baseDelay={200} />
@@ -117,7 +117,7 @@ export default function WarningBanner() {
             </div>
 
             {/* Top Speed */}
-            <div className="flex flex-col items-center justify-end min-w-32 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+            <div className="flex flex-col items-center justify-end min-w-32 warningbanner-fade-in-up" style={{ animationDelay: '0.4s' }}>
               <div className="h-9 mb-2"></div>
               <span className="text-4xl font-extrabold text-yellow-400 mb-1">340</span>
               <span className="text-base text-gray-300 uppercase tracking-wider font-semibold mt-1">KM/H</span>
@@ -125,7 +125,7 @@ export default function WarningBanner() {
             </div>
 
             {/* Lap Time */}
-            <div className="flex flex-col items-center justify-end min-w-32 animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
+            <div className="flex flex-col items-center justify-end min-w-32 warningbanner-fade-in-up" style={{ animationDelay: '0.6s' }}>
               <div className="flex items-center justify-center mb-2 h-9">
                 <Timer size={32} className="text-blue-400" />
               </div>
@@ -134,7 +134,7 @@ export default function WarningBanner() {
             </div>
 
             {/* RPM with Tachometer Arc */}
-            <div className="flex flex-col items-center justify-end min-w-32 animate-fade-in-up" style={{ animationDelay: '0.8s' }}>
+            <div className="flex flex-col items-center justify-end min-w-32 warningbanner-fade-in-up" style={{ animationDelay: '0.8s' }}>
               <div className="flex items-center justify-center mb-2 h-9 w-16">
                 <svg width="64" height="36" viewBox="0 0 64 36" className="tach-svg">
                   <defs>
@@ -158,7 +158,7 @@ export default function WarningBanner() {
             </div>
 
             {/* Downforce */}
-            <div className="flex flex-col items-center justify-end min-w-32 animate-fade-in-up" style={{ animationDelay: '1.0s' }}>
+            <div className="flex flex-col items-center justify-end min-w-32 warningbanner-fade-in-up" style={{ animationDelay: '1.0s' }}>
               <div className="flex items-center justify-center mb-2 h-9">
                 <ArrowDown size={32} className="text-green-400" />
               </div>
@@ -170,8 +170,8 @@ export default function WarningBanner() {
       </div>
 
       {/* Animations */}
-      <style jsx>{`
-        @keyframes fade-in-up {
+      <style>{`
+        @keyframes warningbanner-fade-in-up-kf {
           from {
             opacity: 0;
             transform: translateY(30px);
@@ -195,8 +195,8 @@ export default function WarningBanner() {
           }
         }
 
-        .animate-fade-in-up {
-          animation: fade-in-up 0.8s cubic-bezier(0.4, 0, 0.2, 1) both;
+        .warningbanner-fade-in-up {
+          animation: warningbanner-fade-in-up-kf 0.8s cubic-bezier(0.4, 0, 0.2, 1) both;
         }
 
         .tach-arc {

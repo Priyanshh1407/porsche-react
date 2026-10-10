@@ -189,7 +189,7 @@ export default function HybridTech({ theme }) {
               {(showAllSpecs ? specifications : specifications.slice(0, 2)).map((spec, index) => (
                 <div
                   key={spec.label}
-                  className={`group bg-black/30 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:border-yellow-400 hover:border-opacity-50 transition-all duration-500 hover:bg-opacity-15 hover:scale-105 ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}
+                  className={`group bg-black/30 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:border-yellow-400 hover:border-opacity-50 transition-all duration-500 hover:bg-opacity-15 hover:scale-105 ${isVisible ? 'hybridtech-fade-in-up' : 'opacity-0'}`}
                   style={{ animationDelay: spec.delay, minHeight: '150px' }}
                 >
                   <div className="flex items-center justify-between mb-4">
@@ -248,8 +248,8 @@ export default function HybridTech({ theme }) {
       </div>
 
       {/* Enhanced animations */}
-      <style jsx>{`
-        @keyframes fade-in-up {
+      <style>{`
+        @keyframes hybridtech-fade-in-up-kf {
           from {
             opacity: 0;
             transform: translateY(40px);
@@ -259,8 +259,8 @@ export default function HybridTech({ theme }) {
             transform: translateY(0);
           }
         }
-        .animate-fade-in-up {
-          animation: fade-in-up 0.8s cubic-bezier(0.4, 0, 0.2, 1) both;
+        .hybridtech-fade-in-up {
+          animation: hybridtech-fade-in-up-kf 0.8s cubic-bezier(0.4, 0, 0.2, 1) both;
         }
       `}</style>
     </section>

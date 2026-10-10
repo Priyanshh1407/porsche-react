@@ -101,20 +101,6 @@ const About = () => {
                 </div>
             </div>
 
-            <style jsx>{`
-                @keyframes fade-in {
-                    from { opacity: 0; transform: translateY(20px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-
-                .animate-fade-in {
-                    animation: fade-in 1s ease-out;
-                }
-                
-                .animate-fade-in-delay {
-                    animation: fade-in 1s ease-out 0.3s both;
-                }
-            `}</style>
 
             <Footer theme={selectedTheme} />
         </div>
