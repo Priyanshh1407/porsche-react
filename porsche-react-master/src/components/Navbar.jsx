@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, Menu, X, Shield } from 'lucide-react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { navbarModelGroups } from '../data/models';
 
 const Navbar = ({theme}) => {
@@ -115,6 +115,8 @@ const Navbar = ({theme}) => {
             <div className={`lg:hidden animate-float-up-delay-2 ${animateElements ? 'animate' : ''}`}>
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+                aria-expanded={isMobileMenuOpen}
                 className={`text-white ${theme.navHover} transition-colors duration-300`}
               >
                 {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}

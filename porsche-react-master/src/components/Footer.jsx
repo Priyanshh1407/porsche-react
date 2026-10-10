@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 
 const Footer = ({ name,fullName,theme }) => {
@@ -54,9 +55,10 @@ const Footer = ({ name,fullName,theme }) => {
                 'Rear-axle Steering'
               ].map((item) => (
                 <li key={item}>
-                  <a href="#" className={`${theme.footerText} ${theme.footerHover} text-sm transition-colors duration-300 hover:translate-x-1 transform inline-block`}>
+                  {/* No page exists for these feature names, so they are text, not dead "#" links. */}
+                  <span className={`${theme.footerText} ${theme.footerHover} text-sm transition-colors duration-300 hover:translate-x-1 transform inline-block`}>
                     {item}
-                  </a>
+                  </span>
                 </li>
               ))}
             </ul>
@@ -69,19 +71,21 @@ const Footer = ({ name,fullName,theme }) => {
             </h3>
             <ul className="space-y-3">
               {[
-                'Documentation',
-                'Technical Support',
-                'Service Centers',
-                'Warranty',
-                'Parts & Accessories',
-                'Contact Us'
-              ].map((item) => (
-                <li key={item}>
-                  <a href="#" className={`${theme.footerText} ${theme.footerHover} text-sm transition-colors duration-300 hover:translate-x-1 transform inline-block`}>
-                    {item}
-                  </a>
-                </li>
-              ))}
+                // Real destinations where a page covers the topic; plain text where none exists.
+                { label: 'Documentation' },
+                { label: 'Technical Support', to: '/contact' },
+                { label: 'Service Centers', to: '/services' },
+                { label: 'Warranty', to: '/services' },
+                { label: 'Parts & Accessories', to: '/services' },
+                { label: 'Contact Us', to: '/contact' }
+              ].map(({ label, to }) => {
+                const className = `${theme.footerText} ${theme.footerHover} text-sm transition-colors duration-300 hover:translate-x-1 transform inline-block`;
+                return (
+                  <li key={label}>
+                    {to ? <Link to={to} className={className}>{label}</Link> : <span className={className}>{label}</span>}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </div>
@@ -132,15 +136,16 @@ const Footer = ({ name,fullName,theme }) => {
               © 2024 <span className={`${theme.footerHeading} font-medium`}>{fullName}</span>. All rights reserved.
             </p>
             <div className="flex items-center space-x-6">
-              <a href="#" className={`${theme.footerText} ${theme.text} text-xs lg:text-sm transition-colors`}>
+              {/* No legal pages exist yet: text rather than links that go nowhere. */}
+              <span className={`${theme.footerText} ${theme.text} text-xs lg:text-sm transition-colors`}>
                 Privacy Policy
-              </a>
-              <a href="#" className={`${theme.footerText} ${theme.text} text-xs lg:text-sm transition-colors`}>
+              </span>
+              <span className={`${theme.footerText} ${theme.text} text-xs lg:text-sm transition-colors`}>
                 Terms of Service
-              </a>
-              <a href="#" className={`${theme.footerText} ${theme.text} text-xs lg:text-sm transition-colors`}>
+              </span>
+              <span className={`${theme.footerText} ${theme.text} text-xs lg:text-sm transition-colors`}>
                 Cookies
-              </a>
+              </span>
             </div>
           </div>
         </div>

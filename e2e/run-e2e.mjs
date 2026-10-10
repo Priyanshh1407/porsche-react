@@ -182,7 +182,7 @@ async function main() {
             await page.goto(`${base}/contact`, { waitUntil: 'domcontentloaded' });
             await page.waitForSelector('nav');
             const openModelsMenu = async () => {
-                await page.click('nav .lg\\:hidden > button');
+                await page.click('nav button[aria-label="Open menu"]'); // accessible label added in Phase 4
                 await page.waitForFunction(() => [...document.querySelectorAll('nav button')].some((b) => b.textContent.trim() === 'Models'));
                 await page.evaluate(() => [...document.querySelectorAll('nav button')].find((b) => b.textContent.trim() === 'Models').click());
                 await sleep(300);
