@@ -3,7 +3,7 @@ import Highlights from "../../components/Highlights";
 import Features from "../../components/Features";
 import Performance from "../../components/Performance";
 import Carousel from "../../components/Carousel";
-import OpenTopExperience from "../../components/OpenTopExperience";
+import BoxsterOpenTop from "../../components/BoxsterOpenTop";
 
 import { carThemes } from "../../data/carThemes";
 import { cayman_boxster } from "../../data";
@@ -22,12 +22,7 @@ export default function CaymanBoxster() {
   return <div className={`${selectedTheme.bgPattern}`}>
     <Navbar theme={selectedTheme} />
     <Hero data={selectedData.hero} theme={selectedTheme} />
-    <OpenTopExperience
-      theme={selectedTheme}
-      heading={selectedData.carouselHeading}
-      description={selectedData.carouselDescription}
-      slides={selectedData.carouselSlidesOpenTop}
-    />
+    <BoxsterOpenTop data={selectedData.openTop} theme={selectedTheme} />
     <Features data={selectedData.detailedSpecs} theme={selectedTheme} />
     <Highlights data={selectedData.highlights} theme={selectedTheme} />
     <Performance data={selectedData.performanceSpecs} theme={selectedTheme} image={selectedData.performanceImage} />

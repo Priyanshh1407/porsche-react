@@ -124,22 +124,24 @@ export const cayman_boxster = {
     },
   ],
   performanceImage: performance,  
-  carouselSlidesOpenTop: [
-    {
-      id: 1,
-      title: "Open-Top Freedom",
-      description: "Fully automatic convertible roof opens in just 9 seconds for pure driving joy.",
-      image: carousel1,
-      imageAlt: "Boxster with roof down",
-    },
-    {
-      id: 2,
-      title: "Sunset Drives",
-      description: "Experience the thrill of open-air motoring, perfect for golden hour and evening cruises.",
-      image: carousel2,
-      imageAlt: "Boxster at sunset",
-    },
-  ],
+  // Signature section (BoxsterOpenTop): the roof sequence and the roads it is for.
+  openTop: {
+    roofSeconds: 9,
+    maxSpeedKmh: 50,
+    stages: [
+      { at: 0, short: "Unlatch", label: "Unlatching the soft top…" },
+      { at: 2.5, short: "Fold", label: "Folding the roof…" },
+      { at: 6.5, short: "Stow", label: "Stowing it behind the seats…" },
+    ],
+    image: carousel1,
+    imageAlt: "Boxster with roof down",
+    routesImage: carousel2,
+    routes: [
+      { tag: "Coast", title: "Golden-hour coast roads", text: "Sea air, low sun and long sweeping bends: what the open top was made for." },
+      { tag: "Mountains", title: "Alpine passes", text: "Hairpins where the mid-engine balance shines, and the flat-six echoes off the rock." },
+      { tag: "Country", title: "Empty country lanes", text: "Hedgerows, crests and the smell of cut grass, best enjoyed with the roof down." },
+    ],
+  },
   carouselSlidesMain: [
     {
       id: 1,
