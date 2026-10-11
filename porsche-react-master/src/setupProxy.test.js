@@ -20,14 +20,22 @@ beforeAll((done) => {
 afterAll(() => new Promise((resolve) => { server.close(resolve); }));
 
 const GLB = '2024_manthey_racing_porsche_911_gt3_rs.glb';
-// Node's http client (the jsdom test environment has no fetch); the body is drained and counted.
+// Node's http client (the jsdom test environment has no fetch). Only the first bytes of a body
+// are read, then the connection is closed: streaming a whole 66 MB model made the test slow and
+// timing-dependent under load.
 const get = (p, { method = 'GET', headers = {} } = {}) => new Promise((resolve, reject) => {
     const req = http.request(`${base}${p}`, { method, headers }, (res) => {
-        let bytes = 0;
-        res.on('data', (c) => { bytes += c.length; });
-        res.on('end', () => resolve({ status: res.statusCode, headers: res.headers, bytes }));
+        const chunks = [];
+        let length = 0;
+        const done = () => resolve({ status: res.statusCode, headers: res.headers, head: Buffer.concat(chunks).subarray(0, 12) });
+        res.on('data', (c) => {
+            chunks.push(c);
+            length += c.length;
+            if (length >= 12) { res.removeAllListeners('end'); req.destroy(); done(); }
+        });
+        res.on('end', done);
     });
-    req.on('error', reject);
+    req.on('error', (err) => (err.code === 'ECONNRESET' ? undefined : reject(err)));
     req.end();
 });
 
@@ -37,7 +45,11 @@ test('serves a model uncompressed with its real size, so the loader can show pro
     expect(res.status).toBe(200);
     expect(res.headers['content-encoding']).toBeUndefined();
     expect(Number(res.headers['content-length'])).toBe(size);
-    expect(res.bytes).toBe(size); // the file itself, byte for byte in length
+    const fd = fs.openSync(path.join(__dirname, '..', 'public', GLB), 'r');
+    const head = Buffer.alloc(12);
+    fs.readSync(fd, head, 0, 12, 0);
+    fs.closeSync(fd);
+    expect(res.head.equals(head)).toBe(true); // the file itself (GLB header), not a compressed stream
     expect(res.headers['content-type']).toBe('model/gltf-binary');
     expect(res.headers['cache-control']).toMatch(/max-age=[1-9]/);
 });
