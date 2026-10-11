@@ -20,6 +20,22 @@ const STATUS_OPTIONS = [
 ];
 const PAGE_SIZE = 20;
 
+// Each chart says what period it covers, and says so when there is nothing to draw (an empty
+// chart used to look like a broken one).
+const PeriodTag = ({ children }) => (
+  <span className="text-xs font-medium text-gray-500 bg-gray-100 rounded-full px-2.5 py-1">{children}</span>
+);
+const ChartHeader = ({ title, period, as: Tag = 'h3' }) => (
+  <div className="flex items-center justify-between mb-4">
+    <Tag className="text-lg font-semibold text-gray-900">{title}</Tag>
+    <PeriodTag>{period}</PeriodTag>
+  </div>
+);
+const EmptyChart = ({ children }) => (
+  <div className="h-[300px] flex items-center justify-center text-sm text-gray-500 border border-dashed border-gray-200 rounded-lg">{children}</div>
+);
+const shortDate = (iso) => new Date(`${iso}T00:00:00Z`).toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' });
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -34,6 +50,10 @@ const AdminDashboard = () => {
   const [listVersion, setListVersion] = useState(0); // bump to refetch the current page
   const [stats, setStats] = useState({ totalContacts: 0, newContacts: 0, contactedLeads: 0, qualifiedLeads: 0, closedLeads: 0 });
   const [analytics, setAnalytics] = useState({ trends: [], popularModels: [], conversions: { total: 0, conversions: {}, conversionRate: '0', contactedRate: '0' }, peakHours: [] });
+  // 'loading' | 'ready' | 'error': "no enquiries" is only said once the data is really there.
+  const [analyticsStatus, setAnalyticsStatus] = useState('loading');
+  const hasTrend = analytics.trends?.some((day) => day.count > 0);
+  const hasModels = analytics.popularModels?.length > 0;
   
   // ARCH-01: auth comes from AuthContext; <RequireAdmin> only renders this page when logged in.
   const { logout } = useAuth();
@@ -82,9 +102,13 @@ const AdminDashboard = () => {
       if (analyticsRes.ok) {
         const data = await analyticsRes.json();
         setAnalytics(data.data);
+        setAnalyticsStatus('ready');
+      } else {
+        setAnalyticsStatus('error');
       }
     } catch (err) {
       console.error(err);
+      setAnalyticsStatus((status) => (status === 'loading' ? 'error' : status));
       showToast('Failed to fetch dashboard data');
     }
   };
@@ -376,20 +400,23 @@ const AdminDashboard = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className={`bg-white rounded-lg shadow p-6 animate-chart ${animateElements ? 'animate' : ''}`}>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Trends</h3>
+                <ChartHeader title="Contact Trends" period="Last 30 days" />
+                {analyticsStatus !== 'ready' ? <EmptyChart>{analyticsStatus === 'loading' ? 'Loading…' : "Couldn't load analytics"}</EmptyChart> : hasTrend ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={analytics.trends}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="_id.date" />
-                    <YAxis />
-                    <Tooltip />
+                    <XAxis dataKey="date" tickFormatter={shortDate} minTickGap={24} />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip labelFormatter={shortDate} formatter={(value) => [value, 'Enquiries']} />
                     <Line type="monotone" dataKey="count" stroke="#dc2626" strokeWidth={2} />
                   </LineChart>
                 </ResponsiveContainer>
+                ) : <EmptyChart>No enquiries in the last 30 days</EmptyChart>}
               </div>
 
               <div className={`bg-white rounded-lg shadow p-6 animate-chart ${animateElements ? 'animate' : ''}`}>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Model Popularity</h3>
+                <ChartHeader title="Model Popularity" period="All time" />
+                {analyticsStatus !== 'ready' ? <EmptyChart>{analyticsStatus === 'loading' ? 'Loading…' : "Couldn't load analytics"}</EmptyChart> : hasModels ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
@@ -410,6 +437,7 @@ const AdminDashboard = () => {
                     <Tooltip />
                   </PieChart>
                 </ResponsiveContainer>
+                ) : <EmptyChart>No enquiries with a model yet</EmptyChart>}
               </div>
             </div>
 
@@ -566,20 +594,23 @@ const AdminDashboard = () => {
           <div className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Trends</h3>
+                <ChartHeader title="Contact Trends" period="Last 30 days" />
+                {analyticsStatus !== 'ready' ? <EmptyChart>{analyticsStatus === 'loading' ? 'Loading…' : "Couldn't load analytics"}</EmptyChart> : hasTrend ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <RechartsBarChart data={analytics.trends}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="_id.date" />
-                    <YAxis />
-                    <Tooltip />
+                    <XAxis dataKey="date" tickFormatter={shortDate} minTickGap={24} />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip labelFormatter={shortDate} formatter={(value) => [value, 'Enquiries']} />
                     <Bar dataKey="count" fill="#dc2626" />
                   </RechartsBarChart>
                 </ResponsiveContainer>
+                ) : <EmptyChart>No enquiries in the last 30 days</EmptyChart>}
               </div>
 
               <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Model Popularity</h3>
+                <ChartHeader title="Model Popularity" period="All time" />
+                {analyticsStatus !== 'ready' ? <EmptyChart>{analyticsStatus === 'loading' ? 'Loading…' : "Couldn't load analytics"}</EmptyChart> : hasModels ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
@@ -600,12 +631,13 @@ const AdminDashboard = () => {
                     <Tooltip />
                   </PieChart>
                 </ResponsiveContainer>
+                ) : <EmptyChart>No enquiries with a model yet</EmptyChart>}
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-white rounded-lg shadow p-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">Conversion Funnel</h4>
+                <ChartHeader as="h4" title="Conversion Funnel" period="All time" />
                 <div className="space-y-4">
                   <div className="flex justify-between items-center"><span className="text-sm text-gray-600">Total Contacts</span><span className="text-sm font-medium text-gray-900">{analytics.conversions?.total || 0}</span></div>
                   <div className="flex justify-between items-center"><span className="text-sm text-gray-600">Contacted Rate</span><span className="text-sm font-medium text-gray-900">{analytics.conversions?.contactedRate || 0}%</span></div>
@@ -614,7 +646,7 @@ const AdminDashboard = () => {
               </div>
 
               <div className="bg-white rounded-lg shadow p-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">Top Models</h4>
+                <ChartHeader as="h4" title="Top Models" period="All time" />
                 <div className="space-y-4">
                   {analytics.popularModels?.slice(0,4).map((model, index) => (
                     <div key={index} className="flex justify-between items-center">

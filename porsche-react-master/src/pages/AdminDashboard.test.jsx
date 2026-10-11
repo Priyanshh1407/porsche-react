@@ -94,3 +94,52 @@ test('each lead in the Contacts tab shows its email delivery state from the API 
     expect(within(row('p1@example.com')).getByText('Retrying (3/5)')).toBeInTheDocument();
     expect(within(row('p2@example.com')).getByText('—')).toBeInTheDocument(); // created before the outbox
 });
+
+describe('charts (reported: no graphs on the dashboard or Analytics)', () => {
+    const quietMonth = Array.from({ length: 30 }, (_, i) => ({ date: `2026-09-${String(i + 1).padStart(2, '0')}`, count: 0 }));
+    const withAnalytics = (data) => {
+        const base = global.fetch;
+        global.fetch = jest.fn((url, options) => (new URL(url, 'http://x').pathname === '/api/admin/analytics'
+            ? json({ data: { conversions: {}, peakHours: [], ...data } })
+            : base(url, options)));
+    };
+    const renderDashboard = () => render(<AuthProvider><MemoryRouter><AdminDashboard /></MemoryRouter></AuthProvider>);
+
+    test('each chart says which period it covers, on the dashboard and the Analytics tab', async () => {
+        withAnalytics({ trends: quietMonth, popularModels: [{ model: '911 GT3 RS', count: 2 }] });
+        renderDashboard();
+        expect(await screen.findAllByText('Last 30 days')).toHaveLength(1);
+        expect(screen.getAllByText('All time')).toHaveLength(1);
+        fireEvent.click(screen.getByRole('button', { name: /Analytics/ }));
+        expect(await screen.findAllByText('Last 30 days')).toHaveLength(1);
+        expect(screen.getAllByText('All time').length).toBeGreaterThanOrEqual(1);
+    });
+
+    test('with no enquiries the charts say so instead of showing a blank box', async () => {
+        withAnalytics({ trends: quietMonth, popularModels: [] });
+        renderDashboard();
+        expect(await screen.findByText('No enquiries in the last 30 days')).toBeInTheDocument();
+        expect(screen.getByText('No enquiries with a model yet')).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: /Analytics/ }));
+        expect(await screen.findByText('No enquiries in the last 30 days')).toBeInTheDocument();
+        expect(screen.getByText('No enquiries with a model yet')).toBeInTheDocument();
+    });
+
+    test('with enquiries there is no empty-state message', async () => {
+        withAnalytics({ trends: quietMonth.map((d, i) => (i === 29 ? { ...d, count: 3 } : d)), popularModels: [{ model: 'Taycan', count: 1 }] });
+        renderDashboard();
+        await waitFor(() => expect(screen.queryByText('Loading…')).not.toBeInTheDocument()); // data arrived
+        expect(screen.queryByText('No enquiries in the last 30 days')).not.toBeInTheDocument();
+        expect(screen.queryByText('No enquiries with a model yet')).not.toBeInTheDocument();
+    });
+});
+
+test('if analytics fail to load, the charts say so (not "no enquiries")', async () => {
+    const base = global.fetch;
+    global.fetch = jest.fn((url, options) => (new URL(url, 'http://x').pathname === '/api/admin/analytics'
+        ? json({ success: false }, 500)
+        : base(url, options)));
+    render(<AuthProvider><MemoryRouter><AdminDashboard /></MemoryRouter></AuthProvider>);
+    expect(await screen.findAllByText("Couldn't load analytics")).toHaveLength(2);
+    expect(screen.queryByText('No enquiries in the last 30 days')).not.toBeInTheDocument();
+});

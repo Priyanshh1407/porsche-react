@@ -274,9 +274,11 @@ router.get('/analytics', authenticateAdmin, async (req, res) => {
         // Each query is named where it starts, so a result can't land under the wrong key.
         // (BUG-02: positional destructuring of Promise.all had swapped trends and popularModels.)
         const queries = {
-            conversions: Analytics.getConversionStats(30),
+            // Funnel and popularity cover all enquiries (they must agree with the dashboard totals);
+            // trends are the last 30 days, one point per day.
+            conversions: Analytics.getConversionStats(),
             trends: Analytics.getInquiryTrends(30),
-            popularModels: Analytics.getModelPopularity(7),
+            popularModels: Analytics.getModelPopularity(),
             peakHours: Analytics.getPeakHours(30),
         };
         const keys = Object.keys(queries);

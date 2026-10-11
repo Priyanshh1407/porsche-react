@@ -121,7 +121,7 @@ describe('BUG-02: analytics returns trends and popularModels swapped', () => {
     });
 
     // Fixed in Phase 1: kept as a regression test.
-    test('popularModels holds {model, count} and trends holds {_id: {date, inquiryType}, count}', async () => {
+    test('popularModels holds {model, count} and trends holds {date, count} (one per day since the charts fix)', async () => {
         const res = await request(app)
             .get('/api/admin/analytics')
             .set('Authorization', `Bearer ${await adminToken()}`);
@@ -131,6 +131,6 @@ describe('BUG-02: analytics returns trends and popularModels swapped', () => {
         expect(popularModels.length).toBeGreaterThan(0);
         expect(popularModels[0]).toEqual(expect.objectContaining({ model: expect.any(String), count: expect.any(Number) }));
         expect(trends.length).toBeGreaterThan(0);
-        expect(trends[0]._id).toEqual(expect.objectContaining({ date: expect.any(String), inquiryType: expect.any(String) }));
+        expect(trends[0]).toEqual({ date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/), count: expect.any(Number) });
     });
 });

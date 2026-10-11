@@ -1,18 +1,38 @@
 import prisma from '../prisma/client.js';
 import { modelLabel } from '../config/contactOptions.js';
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+const isoDay = (d) => d.toISOString().split('T')[0]; // UTC, like DATE() on the stored UTC timestamps
+
+/**
+ * One { date, count } per day for the `days` days ending `today`, oldest first. Rows for the same
+ * day (e.g. one per inquiry type) are added up, days without enquiries are 0 and rows outside the
+ * window are ignored, so the chart always has a full axis.
+ */
+export function fillDailyTrend(rows, days, today = new Date()) {
+    const byDay = new Map();
+    for (let i = days - 1; i >= 0; i--) byDay.set(isoDay(new Date(today.getTime() - i * DAY_MS)), 0);
+    for (const { date, count } of rows) {
+        if (byDay.has(date)) byDay.set(date, byDay.get(date) + Number(count));
+    }
+    return [...byDay].map(([date, count]) => ({ date, count }));
+}
+
+// `timeRange` in days, or null for all time.
+const since = (timeRange) => {
+    if (timeRange == null) return {};
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - timeRange);
+    return { createdAt: { gte: startDate } };
+};
+
 class Analytics {
     // Track conversion funnel
-    static async getConversionStats(timeRange = 30) {
+    static async getConversionStats(timeRange = null) {
         try {
-            const startDate = new Date();
-            startDate.setDate(startDate.getDate() - timeRange);
-
             const stats = await prisma.contact.groupBy({
                 by: ['status'],
-                where: {
-                    createdAt: { gte: startDate }
-                },
+                where: since(timeRange),
                 _count: {
                     status: true
                 }
@@ -45,15 +65,12 @@ class Analytics {
     }
 
     // Track popular models
-    static async getModelPopularity(timeRange = 30) {
+    static async getModelPopularity(timeRange = null) {
         try {
-            const startDate = new Date();
-            startDate.setDate(startDate.getDate() - timeRange);
-
             const modelStats = await prisma.contact.groupBy({
                 by: ['modelInterest'],
                 where: {
-                    createdAt: { gte: startDate },
+                    ...since(timeRange),
                     modelInterest: { not: 'Not_specified' }
                 },
                 _count: {
@@ -76,27 +93,16 @@ class Analytics {
         }
     }
 
-    // Track inquiry trends
-    static async getInquiryTrends(days = 7) {
+    // Enquiries per day for the last `days` days (today included), every day present.
+    static async getInquiryTrends(days = 30) {
         try {
-            // Prisma doesn't have a direct grouping by DATE() function natively without raw SQL,
-            // but we can query raw or fetch and group in memory if the data isn't huge.
-            // For Postgres, we can use queryRaw.
-            const trends = await prisma.$queryRaw`
-                SELECT DATE("createdAt") as date, "inquiryType", COUNT(*) as count
+            const rows = await prisma.$queryRaw`
+                SELECT DATE("createdAt") as date, COUNT(*) as count
                 FROM "Contact"
-                WHERE "createdAt" >= NOW() - INTERVAL '1 day' * ${days}
-                GROUP BY DATE("createdAt"), "inquiryType"
-                ORDER BY date ASC
+                WHERE "createdAt" >= CURRENT_DATE - (${days} - 1) * INTERVAL '1 day'
+                GROUP BY DATE("createdAt")
             `;
-
-            return trends.map(t => ({
-                _id: {
-                    date: t.date.toISOString().split('T')[0],
-                    inquiryType: t.inquiryType
-                },
-                count: Number(t.count)
-            }));
+            return fillDailyTrend(rows.map((r) => ({ date: isoDay(r.date), count: Number(r.count) })), days);
         } catch (error) {
             console.error('Analytics inquiry trends error:', error);
             return [];
