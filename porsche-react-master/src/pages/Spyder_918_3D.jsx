@@ -1,4 +1,5 @@
 import React, { useLayoutEffect, useRef, useState, useEffect } from 'react';
+import HybridModeChips from '../components/signatures/HybridModeChips';
 import SpyderViewer3D from '../components/SpyderViewer3D';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -186,6 +187,24 @@ export default function Spyder_918_3D() {
                                 Part of the "Holy Trinity" — alongside the LaFerrari and McLaren P1.
                                 The 918 held the Nürburgring production car record at 6:57.
                             </p>
+                        </div>
+                    </div>
+                </section>
+
+                {/* ─── SIGNATURE: HYBRID MODES ─── */}
+                <section id="section-hybridmodes" className="h-screen w-full snap-center flex flex-col justify-center items-end text-right px-8 md:px-20 lg:px-32 pointer-events-none">
+                    <div className="reveal max-w-md pointer-events-auto opacity-0 translate-y-10 transition-all duration-[1500ms] delay-[800ms] ease-out">
+                        <p className="text-[10px] font-bold tracking-[0.4em] uppercase mb-4 transition-colors duration-1000" style={{ color: 'var(--theme-color)' }}>Signature · Hybrid Modes</p>
+                        <h2 className="text-3xl md:text-5xl font-black leading-[1.1] mb-5 tracking-tight text-white">
+                            One car.<br />
+                            <span className="transition-colors duration-1000" style={{ color: 'var(--theme-color)' }}>Three characters.</span>
+                        </h2>
+                        <p className="text-white/70 text-sm leading-relaxed mb-8 font-medium">
+                            Silent and electric through town, combustion and electric power together on the open road,
+                            everything at once on the track. The 918 changes its nature at the turn of a dial.
+                        </p>
+                        <div className="flex justify-end">
+                            <HybridModeChips />
                         </div>
                     </div>
                 </section>

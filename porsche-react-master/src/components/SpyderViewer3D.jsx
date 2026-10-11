@@ -6,6 +6,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import ShowroomErrorBoundary from './ShowroomErrorBoundary';
 import ShowroomLoader from './ShowroomLoader';
+import { createModeCycle } from './signatures/hybridModes';
 import fallbackImage from '../assets/918 spyder/hero.jpg';
 
 // PERF-01: disabled, not deleted. At module scope this ran on import, and every 3D page was
@@ -189,6 +190,22 @@ const SceneChoreography = () => {
                 animateTo([1.0, 0.5, 2.0], [0.15, Math.PI * 2.15, 0]);
                 animateLightColor('#42f2f5');
             }
+        });
+
+        // SIGNATURE: HYBRID MODES (car on the left; lights and page accent cycle E-Power -> Hybrid -> Race)
+        const hybridCycle = createModeCycle({
+            apply: (mode) => animateLightColor(mode.color, 1.2),
+            isAlive: () => Boolean(document.getElementById('section-hybridmodes')),
+        });
+        ScrollTrigger.create({
+            trigger: '#section-hybridmodes',
+            scroller: scroller,
+            start: startTrigger,
+            end: endTrigger,
+            onEnter: () => { animateTo([-3.3, -0.7, -2.4], [0.02, Math.PI * 0.32, 0]); hybridCycle.start(); },
+            onEnterBack: () => { animateTo([-3.3, -0.7, -2.4], [0.02, Math.PI * 0.32, 0]); hybridCycle.start(); },
+            onLeave: () => hybridCycle.stop(),
+            onLeaveBack: () => hybridCycle.stop()
         });
 
         // 4. AERODYNAMICS (Rear Wing/Diffuser)
