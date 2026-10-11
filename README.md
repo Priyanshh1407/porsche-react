@@ -15,8 +15,18 @@ six more have photo-based model pages.
 | **918 Spyder** | |
 | ![918 Spyder showroom](porsche-react-master/docs/stage-baseline/spyder/00-section-hero.png) | |
 
-*These are the pipeline's own stage screenshots (first scroll stage of each showroom), so they
-show exactly what the current code renders.*
+**Each car has its own signature moment**, a scroll section with an effect built for that car:
+
+| 911 GT3 RS: the rear wing opens (DRS) | 911 GT3 RS: brake discs glow after a lap |
+|---|---|
+| ![GT3 RS DRS wing open](porsche-react-master/docs/stage-baseline/gt3rs/02-section-drs.png) | ![GT3 RS glowing brake discs](porsche-react-master/docs/stage-baseline/gt3rs/06-section-trackheat.png) |
+| **Taycan: an 800-volt energy pulse** | **Cayenne: dust rising off the trail** |
+| ![Taycan energy pulse](porsche-react-master/docs/stage-baseline/taycan/02-section-energy.png) | ![Cayenne terrain dust](porsche-react-master/docs/stage-baseline/cayenne/02-section-terrain.png) |
+| **911 Turbo S: night falls, headlights on** | **918 Spyder: E-Power, Hybrid and Race modes** |
+| ![911 Turbo S night mode](porsche-react-master/docs/stage-baseline/turbo/04-section-nightmode.png) | ![918 Spyder hybrid modes](porsche-react-master/docs/stage-baseline/spyder/03-section-hybridmodes.png) |
+
+*All of these are the verification pipeline's own stage screenshots, so they show exactly what the
+current code renders.*
 
 ### Demo
 
@@ -33,17 +43,23 @@ database, emails in demo mode).*
 
 ## What it does
 
-- **3D showrooms (5 cars).** Each page scrolls through 8–9 sections (powertrain, brakes,
+- **3D showrooms (5 cars).** Each page scrolls through 9–10 sections (powertrain, brakes,
   cockpit, specs, ...); GSAP ScrollTrigger moves the camera and car between hand-tuned poses.
   The GT3 RS and Cayenne add post-processing (bloom, chromatic aberration, vignette).
-- **Model pages (11 cars)** with carousels and spec sections, an "All models" overview, and
-  About / Services / Experience pages.
+- **A signature section per car,** each a self-contained effect that restores everything it touches:
+  the GT3 RS's DRS wing tilts open (its blade turned about its own centre) and its brake discs
+  glow, the Taycan pulses with energy rings, the Cayenne kicks up dust, the 911 Turbo S switches
+  to night with its headlights on, and the 918 Spyder cycles through its three hybrid modes.
+  Every looping effect has a still frame for `prefers-reduced-motion`.
+- **Model pages (11 cars)** with carousels and spec sections, each with its own feature (the
+  718 Boxster's is an animated open-top sequence), an "All models" overview, and About / Services /
+  Experience pages.
 - **Contact form → lead pipeline.** Server-side validation (Latin-script names, real phone
   numbers, known models), rate limiting, and emails delivered through a **transactional outbox**
   with retries.
 - **Admin dashboard.** JWT login with rate limiting and expiry, server-side search and paging,
-  a status pipeline (new → contacted → qualified → closed), analytics, CSV export, and each lead's
-  email delivery status.
+  a status pipeline (new → contacted → qualified → closed), analytics (30-day trend, all-time
+  model popularity and funnel), CSV export, and each lead's email delivery status.
 
 ## Measured performance
 
@@ -56,7 +72,7 @@ Production build, every byte counted by Chrome (`scripts/measure-page-weight.cjs
 | `/contact` | 131.7 MB | **0.9 MB** |
 | `/models/911-gt3-rs` (heaviest showroom) | 133.2 MB | **69.7 MB** (its own 65.9 MB model) |
 | 3D models downloaded on a non-3D page | 5 of 5 | **0** |
-| `main.js`, gzipped | 670 kB | **197 kB** |
+| `main.js`, gzipped | 670 kB | **195 kB** |
 
 All five models were preloaded at module import, so every page, even `/contact`, downloaded
 ~130 MB. The showrooms are now lazy route chunks, and the admin charts no longer ship to every
@@ -77,7 +93,7 @@ flowchart LR
 
 - **The 3D choreography is treated as protected data.** The camera poses are hand-tuned; changing
   one coordinate breaks a scene. A guard hashes every choreography block, canvas and layout input
-  (33 items), and the pipeline compares 44 GPU screenshots of every scroll stage against a
+  (33 items), and the pipeline compares 49 GPU screenshots of every scroll stage against a
   baseline. Proven: a one-digit camera change in a scratch copy failed only the guard.
 - **Emails go through a transactional outbox.** A lead and one row per email are written
   atomically. A worker claims rows with `FOR UPDATE SKIP LOCKED` plus a lease, sends outside the
@@ -102,15 +118,15 @@ test database.
 
 ```bash
 npm run verify        # ~1 min: trajectory guard, backend tests, frontend tests, dependency audit, E2E
-npm run verify:full   # ~9 min: + fresh build with bundle checks, page-weight budgets for 25 routes,
+npm run verify:full   # ~20 min: + fresh build with bundle checks, page-weight budgets for 25 routes,
                       #   49 3D stage screenshots, SIGTERM shutdown inside a Linux container
 ```
 
 | Gate | What it proves |
 |---|---|
 | Trajectory guard | No choreography, canvas or layout input changed (33 hashed items) |
-| Backend tests (122) | API, validation, auth, CSV safety, email outbox (incl. concurrency), migrations on a real Postgres |
-| Frontend tests (89) | Routing, forms, auth flow, dashboard, error boundaries, credits |
+| Backend tests (127) | API, validation, auth, CSV safety, email outbox (incl. concurrency), migrations on a real Postgres |
+| Frontend tests (122) | Routing, forms, auth flow, dashboard and charts, error boundaries, credits, 3D signature effects |
 | E2E (7, Puppeteer) | Contact form → admin login → search → status change → logout, against the real backend |
 | Bundle + page weight | No admin/3D library in `main.js`; every route within its byte budget (first-party bytes) and model count |
 | Stage screenshots (49) | Every scroll stage of every showroom matches the baseline (GPU) |
@@ -136,6 +152,13 @@ npm start                       # http://localhost:5000  (GET /ready checks the 
 cd porsche-react-master
 npm install
 npm start                       # http://localhost:3000, proxies /api to :5000
+```
+
+To judge smoothness, try the production build: the dev server runs React in development mode
+(StrictMode, unminified three.js) and is noticeably less smooth.
+
+```bash
+npm run build && npm run preview   # http://localhost:3000, /api forwarded to :5000 like a real host
 ```
 
 Leave `EMAIL_PASS` empty and emails are logged to the console instead of sent. `npm start` in the frontend prints
