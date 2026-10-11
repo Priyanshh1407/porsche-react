@@ -1,5 +1,5 @@
 {
-  "_about": "UPG-04 page-weight budget, enforced by npm run verify:full. Ceilings = measured FIRST-PARTY bytes + 10% (third-party bytes such as random placeholder photos vary per load and are reported, not budgeted), from a local production build (uncompressed). Regenerate only with developer approval: node scripts/measure-page-weight.cjs --update-budget A re-base never raises a ceiling: the lower of the old and new value is kept. 2026-10-11: / and /models re-based for the background model preload (developer decision).",
+  "_about": "UPG-04 page-weight budget, enforced by npm run verify:full. Ceilings = measured FIRST-PARTY bytes + 10% (third-party bytes such as random placeholder photos vary per load and are reported, not budgeted), from a local production build (uncompressed). Regenerate only with developer approval: node scripts/measure-page-weight.cjs --update-budget A re-base never raises a ceiling: the lower of the old and new value is kept.",
   "measuredOn": "2026-10-10",
   "headroom": 0.1,
   "mainJsGzipKB": {
@@ -8,10 +8,10 @@
   },
   "routes": {
     "/": {
-      "measuredMB": 135.15,
-      "maxMB": 148.7,
+      "measuredMB": 5.18,
+      "maxMB": 5.7,
       "thirdPartyMB": 0.01,
-      "models": 5
+      "models": 0
     },
     "/contact": {
       "measuredMB": 0.92,
@@ -26,10 +26,10 @@
       "models": 0
     },
     "/models": {
-      "measuredMB": 130.77,
-      "maxMB": 143.9,
+      "measuredMB": 0.79,
+      "maxMB": 0.9,
       "thirdPartyMB": 0,
-      "models": 5
+      "models": 0
     },
     "/services": {
       "measuredMB": 0.79,

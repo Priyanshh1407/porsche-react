@@ -17,7 +17,6 @@ import RouteErrorBoundary from './components/RouteErrorBoundary';
 import RequireAdmin from './components/RequireAdmin';
 import NotFound from './pages/NotFound';
 import Credits from './pages/Credits';
-import { ShowroomPreloader } from './lib/preloadShowrooms';
 
 // PERF-02: the dashboard's charting library (recharts) is only downloaded by admins, not every visitor.
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -60,7 +59,6 @@ function App() {
       <div>
         <Toaster position="top-right" reverseOrder={false} />
         <BrowserRouter>
-          <ShowroomPreloader />
           <RouteErrorBoundary>
             <AppRoutes />
           </RouteErrorBoundary>
