@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import gsap from 'gsap';
 import useSignatureSection from './useSignatureSection';
+import { prefersReducedMotion } from './motion';
 
 // Taycan signature ("electric"): in the Energy section, electric-blue shockwave rings run out across
 // the floor from under the car, a blue under-glow beats with them and the car's own light strips
@@ -11,17 +12,30 @@ const MODEL = '/2025_porsche_taycan_turbo_gt_weissach_package.glb';
 const BEAT = 1.6; // seconds per pulse
 
 /** Builds the pulse from the scene objects it animates; returns start/stop/restore. */
-export function createEnergyPulse({ rings, light, lightMaterials }) {
+export function createEnergyPulse({ rings, light, lightMaterials, reduced = false }) {
     const original = lightMaterials.map((m) => ({ m, intensity: m.emissiveIntensity }));
     let loop = null;
     const stop = (instant = false) => {
+        frozen = false;
         if (loop) { loop.kill(); loop = null; }
         const d = instant ? 0 : 0.8;
         gsap.to(rings.map((r) => r.material), { opacity: 0, duration: d, overwrite: 'auto' });
         gsap.to(light, { intensity: 0, duration: d, overwrite: 'auto' });
         original.forEach(({ m, intensity }) => gsap.to(m, { emissiveIntensity: intensity, duration: d, overwrite: 'auto' }));
     };
+    let frozen = false;
     const start = () => {
+        if (reduced) {
+            // Reduced motion: one still frame of the pulse, three rings spreading out.
+            frozen = true;
+            rings.forEach((ring, i) => {
+                gsap.set(ring.scale, { x: 1.2 + i, y: 1.2 + i, z: 1.2 + i });
+                gsap.set(ring.material, { opacity: 0.7 - i * 0.22 });
+            });
+            gsap.set(light, { intensity: 8 });
+            original.forEach(({ m, intensity }) => gsap.set(m, { emissiveIntensity: intensity * 1.4 }));
+            return;
+        }
         if (loop) return;
         loop = gsap.timeline({ repeat: -1 });
         rings.forEach((ring, i) => {
@@ -40,7 +54,7 @@ export function createEnergyPulse({ rings, light, lightMaterials }) {
         light.intensity = 0;
         original.forEach(({ m, intensity }) => { m.emissiveIntensity = intensity; });
     };
-    return { start, stop: () => stop(false), restore, isRunning: () => loop !== null };
+    return { start, stop: () => stop(false), restore, isRunning: () => loop !== null || frozen };
 }
 
 /** The Taycan's light-strip materials (named 'emiss' in the model). */
@@ -61,6 +75,7 @@ export default function TaycanEnergyPulse({ position = [0, -1.5, 0] }) {
             rings: ringRefs.map((r) => r.current),
             light: lightRef.current,
             lightMaterials: findLightMaterials(scene),
+            reduced: prefersReducedMotion(),
         });
         return () => pulse.current.restore();
     }, [scene]); // eslint-disable-line react-hooks/exhaustive-deps -- refs are stable

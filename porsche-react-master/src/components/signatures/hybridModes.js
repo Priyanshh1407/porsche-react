@@ -14,7 +14,8 @@ export const MODE_SECONDS = 2.2;
  * MODE_EVENT is dispatched for the page. stop() ends it; it also stops by itself if `isAlive()`
  * turns false (e.g. the showroom was left without a scroll event).
  */
-export function createModeCycle({ modes = SPYDER_MODES, seconds = MODE_SECONDS, apply, isAlive = () => true, schedule = setTimeout, cancel = clearTimeout }) {
+export function createModeCycle({ modes = SPYDER_MODES, seconds = MODE_SECONDS, apply, isAlive = () => true, schedule = setTimeout, cancel = clearTimeout, reduced = false }) {
+    let resting = false;
     let timer = null;
     let index = 0;
     const show = () => {
@@ -26,14 +27,22 @@ export function createModeCycle({ modes = SPYDER_MODES, seconds = MODE_SECONDS, 
         timer = schedule(show, seconds * 1000);
     };
     function stop() {
+        resting = false;
         if (timer !== null) cancel(timer);
         timer = null;
         index = 0;
         if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(MODE_EVENT, { detail: null }));
     }
+    const rest = () => {
+        // Reduced motion: no cycling; settle on Hybrid, the mode that defines the car.
+        const mode = modes.find((m) => m.id === 'hybrid') || modes[0];
+        resting = true;
+        apply(mode);
+        if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(MODE_EVENT, { detail: mode.id }));
+    };
     return {
-        start: () => { if (timer === null) show(); },
+        start: () => { if (reduced) { rest(); return; } if (timer === null) show(); },
         stop,
-        isRunning: () => timer !== null,
+        isRunning: () => timer !== null || resting,
     };
 }

@@ -7,6 +7,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import ShowroomErrorBoundary from './ShowroomErrorBoundary';
 import ShowroomLoader from './ShowroomLoader';
 import { createModeCycle } from './signatures/hybridModes';
+import { prefersReducedMotion } from './signatures/motion';
 import fallbackImage from '../assets/918 spyder/hero.jpg';
 
 // PERF-01: disabled, not deleted. At module scope this ran on import, and every 3D page was
@@ -196,6 +197,7 @@ const SceneChoreography = () => {
         const hybridCycle = createModeCycle({
             apply: (mode) => animateLightColor(mode.color, 1.2),
             isAlive: () => Boolean(document.getElementById('section-hybridmodes')),
+            reduced: prefersReducedMotion(),
         });
         ScrollTrigger.create({
             trigger: '#section-hybridmodes',

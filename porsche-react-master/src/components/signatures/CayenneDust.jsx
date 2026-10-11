@@ -3,6 +3,7 @@ import { CanvasTexture } from 'three';
 import { useFrame } from '@react-three/fiber';
 import gsap from 'gsap';
 import useSignatureSection from './useSignatureSection';
+import { prefersReducedMotion } from './motion';
 
 // Cayenne signature ("terrain"): in the Terrain section, warm sandy dust rises from the ground around
 // the car and drifts back, as after leaving a gravel track. Its own particles only: the ambient
@@ -62,8 +63,10 @@ export default function CayenneDust({ position = [0, -1.4, 0] }) {
     const materialRef = useRef();
     const active = useRef(false);
     const { positions, speeds } = useMemo(() => seedDust(), []);
+    const still = useMemo(prefersReducedMotion, []);
 
     useFrame((_, dt) => {
+        if (still) return; // reduced motion: the haze stays where it is
         if (!active.current && (!materialRef.current || materialRef.current.opacity === 0)) return; // idle: no work
         stepDust(positions, speeds, Math.min(dt, 0.05));
         pointsRef.current.geometry.attributes.position.needsUpdate = true;

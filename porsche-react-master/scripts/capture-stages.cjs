@@ -125,6 +125,14 @@ async function waitForModelLoaded(page, label) {
 
 async function captureCar(browser, differ, base, car) {
     const page = await browser.newPage();
+
+    // Looping signature effects (Taycan pulse, Cayenne dust, 918 mode cycle) never stand still; with
+
+    // reduced motion they show one representative frame, so every stage settles deterministically.
+
+    // Nothing else on the site reacts to this setting.
+
+    await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
     await page.setViewport(VIEWPORT);
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));

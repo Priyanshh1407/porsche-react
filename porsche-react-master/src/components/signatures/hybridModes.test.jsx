@@ -47,3 +47,15 @@ test('the chip of the active mode is marked current', () => {
     act(() => { window.dispatchEvent(new CustomEvent(MODE_EVENT, { detail: null })); });
     expect(screen.queryAllByRole('listitem').filter((li) => li.getAttribute('aria-current'))).toHaveLength(0);
 });
+
+test('with reduced motion it rests on Hybrid and never schedules a cycle', () => {
+    const t = manualTimers();
+    const applied = [];
+    const cycle = createModeCycle({ apply: (m) => applied.push(m.id), schedule: t.schedule, cancel: t.cancel, reduced: true });
+    cycle.start();
+    expect(applied).toEqual(['hybrid']);
+    expect(t.has()).toBe(false);
+    expect(cycle.isRunning()).toBe(true);
+    cycle.stop();
+    expect(cycle.isRunning()).toBe(false);
+});
