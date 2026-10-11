@@ -5,7 +5,7 @@
  *
  *   npm run verify        quick (~5 min): guard, backend tests, frontend tests, dependency audit, E2E
  *   npm run verify:full   full (~13 min): + fresh production build, page-weight budget,
- *                         44 3D stage screenshots, SIGTERM shutdown in a Linux container
+ *                         49 3D stage screenshots, SIGTERM shutdown in a Linux container
  *
  * Needs Docker running. Starts the throwaway test database and stops it again at the end.
  * Every gate runs (no fail-fast) so one report shows everything; the exit code is non-zero if
@@ -155,7 +155,7 @@ try {
             return { ok: problems.length === 0, out: r.out, detail: problems.length ? problems.join('; ') : summary };
         });
 
-        gate('3D stage screenshots (44)', () => {
+        gate('3D stage screenshots (49)', () => {
             const r = node([path.join(FRONTEND, 'scripts', 'capture-stages.cjs'), '--compare']);
             const drift = r.out.split('\n').filter((l) => /DRIFT|MISSING|NEW\/RENAMED|ERROR/.test(l)).length;
             return { ok: r.code === 0, out: r.out, detail: r.code === 0 ? 'all stages match the baseline' : `${drift} stage problem(s)` };

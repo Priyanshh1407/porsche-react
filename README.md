@@ -103,7 +103,7 @@ test database.
 ```bash
 npm run verify        # ~1 min: trajectory guard, backend tests, frontend tests, dependency audit, E2E
 npm run verify:full   # ~9 min: + fresh build with bundle checks, page-weight budgets for 25 routes,
-                      #   44 3D stage screenshots, SIGTERM shutdown inside a Linux container
+                      #   49 3D stage screenshots, SIGTERM shutdown inside a Linux container
 ```
 
 | Gate | What it proves |
@@ -113,7 +113,7 @@ npm run verify:full   # ~9 min: + fresh build with bundle checks, page-weight bu
 | Frontend tests (89) | Routing, forms, auth flow, dashboard, error boundaries, credits |
 | E2E (7, Puppeteer) | Contact form → admin login → search → status change → logout, against the real backend |
 | Bundle + page weight | No admin/3D library in `main.js`; every route within its byte budget (first-party bytes) and model count |
-| Stage screenshots (44) | Every scroll stage of every showroom matches the baseline (GPU) |
+| Stage screenshots (49) | Every scroll stage of every showroom matches the baseline (GPU) |
 | SIGTERM | The API finishes in-flight requests and exits cleanly in a Linux container |
 
 ## Getting started
