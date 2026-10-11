@@ -275,6 +275,31 @@ export default function GT3RS_3D() {
                     </div>
                 </section>
 
+                {/* ─── SIGNATURE: TRACK HEAT ─── */}
+                <section id="section-trackheat" className="h-screen w-full snap-center flex flex-col justify-center items-end text-right px-8 md:px-20 lg:px-32 pointer-events-none">
+                    <div className="reveal max-w-md pointer-events-auto opacity-0 translate-y-10 transition-all duration-[1500ms] delay-[800ms] ease-out">
+                        <p className="text-[10px] font-bold tracking-[0.4em] uppercase mb-4 bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">Signature · Track Heat</p>
+                        <h2 className="text-3xl md:text-5xl font-black leading-[1.1] mb-5 tracking-tight text-white">
+                            After a flying lap,<br />
+                            <span className="text-orange-400/80">the discs glow.</span>
+                        </h2>
+                        <p className="text-orange-50/70 text-sm leading-relaxed mb-8 font-medium">
+                            Carbon-ceramic brakes keep their bite at temperatures where steel discs would fade.
+                            Lap after lap, the same pedal, the same stopping point.
+                        </p>
+                        <div className="flex gap-6 justify-end">
+                            <div className="rounded-xl px-5 py-3 shadow-[0_4px_20px_rgba(255,90,0,0.15)] bg-slate-900/50 border border-orange-500/20 backdrop-blur-md">
+                                <div className="text-lg font-black text-white">Carbon<span className="bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent text-xs ml-1">ceramic</span></div>
+                                <div className="text-[8px] text-orange-100/50 font-bold tracking-[0.2em] uppercase mt-1">Disc Material</div>
+                            </div>
+                            <div className="rounded-xl px-5 py-3 shadow-[0_4px_20px_rgba(255,90,0,0.15)] bg-slate-900/50 border border-orange-500/20 backdrop-blur-md">
+                                <div className="text-lg font-black text-white">No<span className="bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent text-xs ml-1">fade</span></div>
+                                <div className="text-[8px] text-orange-100/50 font-bold tracking-[0.2em] uppercase mt-1">Lap After Lap</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 {/* ─── COCKPIT ─── */}
                 <section id="section-cockpit" className="h-screen w-full snap-center flex flex-col justify-start pt-[15vh] items-end text-right px-8 md:px-20 lg:px-32 pointer-events-none">
                     <div className="reveal max-w-lg pointer-events-auto relative z-10 p-8 rounded-2xl bg-black/40 backdrop-blur-md border border-orange-500/20 shadow-[0_8px_32px_rgba(0,0,0,0.8)] opacity-0 translate-y-10 transition-all duration-[1500ms] delay-[800ms] ease-out">

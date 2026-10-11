@@ -7,6 +7,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import ShowroomErrorBoundary from './ShowroomErrorBoundary';
 import ShowroomLoader from './ShowroomLoader';
+import Gt3BrakeGlow from './signatures/Gt3BrakeGlow';
 import fallbackImage from '../assets/gt3rs/hero image.jpeg';
 
 // PERF-01: disabled, not deleted. At module scope this ran on import, and every 3D page was
@@ -186,6 +187,18 @@ const SceneChoreography = () => {
         });
 
         // ==========================================
+        // SIGNATURE: TRACK HEAT (low, close on the glowing front brake; Gt3BrakeGlow lights the discs)
+        // ==========================================
+        ScrollTrigger.create({
+            trigger: '#section-trackheat',
+            scroller: scroller,
+            start: startTrigger,
+            end: endTrigger,
+            onEnter: () => animateTo([-4.6, 0.9, 6.2], [0.05, Math.PI * 1.65, 0]),
+            onEnterBack: () => animateTo([-4.6, 0.9, 6.2], [0.05, Math.PI * 1.65, 0])
+        });
+
+        // ==========================================
         // STAGE 6: COCKPIT (Zoom into dashboard)
         // ==========================================
         ScrollTrigger.create({
@@ -285,6 +298,7 @@ export default function ModelViewer3D() {
             <Canvas camera={{ position: [0, 1.5, 12], fov: 38 }} dpr={[1, 2]}>
                 <React.Suspense fallback={<Loader />}>
                     <SceneChoreography />
+                    <Gt3BrakeGlow />
                 </React.Suspense>
                 
                 <EffectComposer>
