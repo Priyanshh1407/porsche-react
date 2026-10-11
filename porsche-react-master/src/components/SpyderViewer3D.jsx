@@ -65,6 +65,9 @@ const SceneChoreography = () => {
 
         const scroller = '#scroll-container';
         const startTrigger = 'top 50%';
+        // Developer request (2026-10-11): scrolling up hands over at the same mid-screen point as
+        // scrolling down (the default end was 'bottom top', so moves back fired at a different point).
+        const endTrigger = 'bottom 50%';
 
         const animateTo = (pos, rot, duration = 2.5) => {
             gsap.to(groupRef.current.position, {
@@ -139,6 +142,7 @@ const SceneChoreography = () => {
             trigger: '#section-hero',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => {
                 animateTo([-3.8, -0.4, 0], [0.08, Math.PI * 0.2, 0]);
                 animateLightColor('#ffffff'); // White
@@ -160,6 +164,7 @@ const SceneChoreography = () => {
             trigger: '#section-powertrain',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => {
                 animateTo([-1.7, -0.75, 2.5], [0.15, Math.PI * 0.9, 0]);
                 animateLightColor('#f79791'); // Red for engine heat
@@ -175,6 +180,7 @@ const SceneChoreography = () => {
             trigger: '#section-eperformance',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => {
                 animateTo([1.0, 0.5, 2.0], [0.15, Math.PI * 2.1, 0]);
                 animateLightColor('#42f2f5'); // Cyan for electric
@@ -190,6 +196,7 @@ const SceneChoreography = () => {
             trigger: '#section-aero',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => {
                 animateTo([2.5, -0.6, 2.75], [-0.1, Math.PI * 0.85, 0]);
                 animateLightColor('#e2e8f0'); // Silver/White
@@ -209,6 +216,7 @@ const SceneChoreography = () => {
             trigger: '#section-roof',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => {
                 animateTo([-3.0, 0.0, 0.8], [0.3, Math.PI * 0.3, 0]);
                 animateLightColor('#fbbf24'); // Warm gold for interior luxury
@@ -224,6 +232,7 @@ const SceneChoreography = () => {
             trigger: '#section-chassis',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => {
                 animateTo([3.0, -0.2, 0], [0.05, Math.PI * 1.8, 0]);
                 animateLightColor('#8b5cf6'); // Purple/Dark Blue for carbon tech
@@ -239,6 +248,7 @@ const SceneChoreography = () => {
             trigger: '#section-specs',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => {
                 animateTo([0, -0.8, 0], [0.08, Math.PI * 1.5, 0]);
                 animateLightColor('#a3e635'); // Acid Green for stats
@@ -254,6 +264,7 @@ const SceneChoreography = () => {
             trigger: '#section-cta',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => {
                 animateTo([-3.8, -0.4, 0], [0.06, Math.PI * 2.3, 0]);
                 animateLightColor('#ffffff'); // Pure white

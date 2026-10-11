@@ -82,21 +82,25 @@ const SceneChoreography = () => {
 
         const scroller = '#scroll-container';
         const startTrigger = 'top 50%';
+        // Developer request (2026-10-11): scrolling up hands over at the same mid-screen point as
+        // scrolling down (the default end was 'bottom top', so moves back fired at a different point).
+        const endTrigger = 'bottom 50%';
 
-        // Helper function for discrete animations - GT3 RS is fast, snappy, aggressive
-        const animateTo = (pos, rot, duration = 1.2) => {
+        // Helper function for discrete animations. Developer request (2026-10-11): slower and smoother,
+        // same pacing as the other four showrooms (was 1.2 s power4.out). Positions are unchanged.
+        const animateTo = (pos, rot, duration = 2.5) => {
             gsap.to(groupRef.current.position, {
                 x: pos[0], y: pos[1], z: pos[2],
-                duration, ease: 'power4.out', overwrite: 'auto'
+                duration, ease: 'power3.inOut', overwrite: 'auto'
             });
             gsap.to(groupRef.current.rotation, {
                 x: rot[0], y: rot[1], z: rot[2],
-                duration, ease: 'power4.out', overwrite: 'auto'
+                duration, ease: 'power3.inOut', overwrite: 'auto'
             });
             // Ensure camera resets to default position for most sections
             gsap.to(camera.position, {
                 x: 0, y: 1.5, z: 12,
-                duration, ease: 'power4.out', overwrite: 'auto'
+                duration, ease: 'power3.inOut', overwrite: 'auto'
             });
         };
 
@@ -107,6 +111,7 @@ const SceneChoreography = () => {
             trigger: '#section-hero',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => {
                 animateTo([-3.8, -0.2, 0], [0.08, Math.PI * 0.2, 0]); // Car shifted left
                 gsap.to(headlightLeftRef.current, { intensity: 100, duration: 0.2, ease: 'power2.in', overwrite: 'auto' });
@@ -127,6 +132,7 @@ const SceneChoreography = () => {
             trigger: '#section-powertrain',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => animateTo([-2.3, -0.3, -0.5], [0.05, Math.PI * 0.55, 0]),
             onEnterBack: () => animateTo([-2.3, -0.3, 0], [0.05, Math.PI * 0.55, 0])
         });
@@ -138,6 +144,7 @@ const SceneChoreography = () => {
             trigger: '#section-drs',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => animateTo([1.4, 0.0, 3.3], [-0.18, Math.PI * 1.1, 0]), // Camera elevated above bumper, looking at wing
             onEnterBack: () => animateTo([1.4, 0.0, 3.3], [-0.18, Math.PI * 1.1, 0])
         });
@@ -149,6 +156,7 @@ const SceneChoreography = () => {
             trigger: '#section-stats',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => animateTo([0, -0.8, 0], [0.08, Math.PI * 1.75, 0]), // Shifted up slightly
             onEnterBack: () => animateTo([0, -0.8, 0], [0.08, Math.PI * 1.75, 0])
         });
@@ -160,6 +168,7 @@ const SceneChoreography = () => {
             trigger: '#section-radiator',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => animateTo([-2.8, 0.9, 1.5], [0.2, Math.PI * 2.13, 0]), // Pure front view, shifted left
             onEnterBack: () => animateTo([-2.8, 0.9, 1.5], [0.2, Math.PI * 2.13, 0])
         });
@@ -171,6 +180,7 @@ const SceneChoreography = () => {
             trigger: '#section-brakes',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => animateTo([3.5, 0.8, 7], [0.05, Math.PI * 0.35, 0]),
             onEnterBack: () => animateTo([3.5, 0.8, 7], [0.05, Math.PI * 0.35, 0])
         });
@@ -182,6 +192,7 @@ const SceneChoreography = () => {
             trigger: '#section-cockpit',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => {
                 // Shift the car to align the door, and open it
                 animateTo([-1.0, 0.08, 9.1], [-0.1, Math.PI * 1.0, 0]);
@@ -213,6 +224,7 @@ const SceneChoreography = () => {
             trigger: '#section-specs',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => animateTo([-2.0, -0.5, 0], [0.05, Math.PI * 0.8, 0]), // Shifted further left
             onEnterBack: () => animateTo([-2.0, -0.5, 0], [0.05, Math.PI * 0.8, 0])
         });
@@ -224,6 +236,7 @@ const SceneChoreography = () => {
             trigger: '#section-cta',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => animateTo([-3.8, -0.4, 0], [0.06, Math.PI * 2.3, 0]), // Restored fine position
             onEnterBack: () => animateTo([-3.8, -0.4, 0], [0.06, Math.PI * 2.3, 0])
         });

@@ -84,6 +84,9 @@ const SceneChoreography = () => {
 
         const scroller = '#scroll-container';
         const startTrigger = 'top 50%';
+        // Developer request (2026-10-11): scrolling up hands over at the same mid-screen point as
+        // scrolling down (the default end was 'bottom top', so moves back fired at a different point).
+        const endTrigger = 'bottom 50%';
 
         // ==========================================
         // STAGE 0: HERO (Car on the left, facing right)
@@ -92,6 +95,7 @@ const SceneChoreography = () => {
             trigger: '#section-hero',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => {
                 animateTo([-3.8, -0.2, 0], [0.08, Math.PI * 0.2, 0]); // Car shifted left
                 gsap.to(headlightLeftRef.current, { intensity: 50, duration: 0.2, ease: 'power2.in', overwrite: 'auto' });
@@ -114,6 +118,7 @@ const SceneChoreography = () => {
             trigger: '#section-powertrain',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => animateTo([-1.3, 0.0, 3.5], [0.1, 0, 0]),
             onEnterBack: () => animateTo([-1.3, 0.0, 3.5], [0.1, 0, 0])
         });
@@ -125,6 +130,7 @@ const SceneChoreography = () => {
             trigger: '#section-cockpit',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => {
                 animateTo([-0.25, 0.5, 10.3], [-0.1, Math.PI * 1.03, 0]);
             },
@@ -140,6 +146,7 @@ const SceneChoreography = () => {
             trigger: '#section-radiator',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => animateTo([-2.0, 0.5, 1.5], [0.05, Math.PI * 1.05, 0]), // Show the rear titanium exhaust
             onEnterBack: () => animateTo([-2.0, 0.5, 1.5], [0.05, Math.PI * 1.05, 0])
         });
@@ -151,6 +158,7 @@ const SceneChoreography = () => {
             trigger: '#section-brakes',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => animateTo([4.0, 1.35, 8], [0.05, Math.PI * 0.35, 0]), // Car on right, showing wheel
             onEnterBack: () => animateTo([4.0, 1.35, 8], [0.05, Math.PI * 0.35, 0])
         });
@@ -162,6 +170,7 @@ const SceneChoreography = () => {
             trigger: '#section-family',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => animateTo([2.5, -0.3, -2], [0.05, Math.PI * 0.25, 0]), // Show full side profile, car on right
             onEnterBack: () => animateTo([2.5, -0.3, -2], [0.05, Math.PI * 0.25, 0])
         });
@@ -173,6 +182,7 @@ const SceneChoreography = () => {
             trigger: '#section-stats',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => animateTo([0, -0.8, 1], [0.08, Math.PI * 0.5, 0]),
             onEnterBack: () => animateTo([0, -0.8, 0], [0.08, Math.PI * 1.75, 0])
         });
@@ -184,6 +194,7 @@ const SceneChoreography = () => {
             trigger: '#section-specs',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => animateTo([-2.0, -0.5, 0], [0.05, Math.PI * 0.8, 0]),
             onEnterBack: () => animateTo([-2.0, -0.5, 0], [0.05, Math.PI * 0.8, 0])
         });
@@ -195,6 +206,7 @@ const SceneChoreography = () => {
             trigger: '#section-cta',
             scroller: scroller,
             start: startTrigger,
+            end: endTrigger,
             onEnter: () => animateTo([-3.8, -0.4, 0], [0.06, Math.PI * 0.3, 0]),
             onEnterBack: () => animateTo([-3.8, -0.4, 0], [0.06, Math.PI * 0.3, 0])
         });
