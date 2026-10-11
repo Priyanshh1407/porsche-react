@@ -197,6 +197,31 @@ export default function Taycan_3D() {
                     </div>
                 </section>
 
+                {/* ─── SIGNATURE: ENERGY ─── */}
+                <section id="section-energy" className="h-screen w-full snap-center flex flex-col justify-center items-start px-8 md:px-20 lg:px-32 pointer-events-none">
+                    <div className="reveal max-w-md pointer-events-auto opacity-0 translate-y-10 transition-all duration-[1500ms] delay-[800ms] ease-out">
+                        <p className="text-[10px] font-bold tracking-[0.4em] uppercase mb-4 bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">Signature · Energy</p>
+                        <h2 className="text-3xl md:text-5xl font-black leading-[1.1] mb-5 tracking-tight text-white">
+                            No engine.<br />
+                            <span className="text-sky-300/80">Just a pulse.</span>
+                        </h2>
+                        <p className="text-cyan-50/70 text-sm leading-relaxed mb-8 font-medium">
+                            An 800-volt architecture moves energy from battery to wheels without a single combustion stroke.
+                            What you feel is current, not vibration.
+                        </p>
+                        <div className="flex gap-10">
+                            <div>
+                                <div className="text-2xl font-black text-white">800<span className="bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent text-sm ml-1">V</span></div>
+                                <div className="text-[9px] text-cyan-100/50 font-bold tracking-[0.3em] uppercase mt-1">Architecture</div>
+                            </div>
+                            <div>
+                                <div className="text-2xl font-black text-white">0<span className="bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent text-sm ml-1">g CO₂</span></div>
+                                <div className="text-[9px] text-cyan-100/50 font-bold tracking-[0.3em] uppercase mt-1">At The Tailpipe</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 {/* ─── DRS ─── */}
                 <section id="section-drs" className="h-screen w-full snap-center flex flex-col justify-center items-start px-8 md:px-20 lg:px-32 pointer-events-none">
                     <div className="reveal max-w-md pointer-events-auto opacity-0 translate-y-10 transition-all duration-[1500ms] delay-[800ms] ease-out">

@@ -6,6 +6,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import ShowroomErrorBoundary from './ShowroomErrorBoundary';
 import ShowroomLoader from './ShowroomLoader';
+import TaycanEnergyPulse from './signatures/TaycanEnergyPulse';
 import fallbackImage from '../assets/taycan/hero.jpeg';
 
 // PERF-01: disabled, not deleted. At module scope this ran on import, and every 3D page was
@@ -136,6 +137,18 @@ const SceneChoreography = () => {
             end: endTrigger,
             onEnter: () => animateTo([-2.3, -0.3, 0], [0.05, Math.PI * 0.55, 0]),
             onEnterBack: () => animateTo([-2.3, -0.3, 0], [0.05, Math.PI * 0.55, 0])
+        });
+
+        // ==========================================
+        // SIGNATURE: ENERGY (car on the right, floor visible; TaycanEnergyPulse runs the rings)
+        // ==========================================
+        ScrollTrigger.create({
+            trigger: '#section-energy',
+            scroller: scroller,
+            start: startTrigger,
+            end: endTrigger,
+            onEnter: () => animateTo([2.8, -0.7, -2.5], [0.1, Math.PI * 1.8, 0]),
+            onEnterBack: () => animateTo([2.8, -0.7, -2.5], [0.1, Math.PI * 1.8, 0])
         });
 
         // ==========================================
@@ -317,6 +330,7 @@ export default function TaycanViewer3D() {
             <Canvas camera={{ position: [0, 1.5, 12], fov: 38 }} dpr={[1, 2]}>
                 <React.Suspense fallback={<Loader />}>
                     <SceneChoreography />
+                    <TaycanEnergyPulse position={[2.3, -1.55, -1.9]} />
                 </React.Suspense>
             </Canvas>
             </ShowroomErrorBoundary>
