@@ -54,7 +54,9 @@ jest.mock('@react-three/drei', () => {
     useGLTF.preload = () => {};
     const named = { useGLTF, useProgress: () => ({ progress: 100, active: false }) };
     return new Proxy({ __esModule: true }, {
-        get: (target, key) => (key in target ? target[key] : key in named ? named[key] : stub),
+        // 'then' must stay undefined: otherwise `await import('@react-three/drei')` treats the mock
+        // as a promise, calls the stub as its then(), and never resolves.
+        get: (target, key) => (key === 'then' ? undefined : key in target ? target[key] : key in named ? named[key] : stub),
     });
 });
 

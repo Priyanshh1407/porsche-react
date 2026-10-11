@@ -52,15 +52,18 @@ Production build, every byte counted by Chrome (`scripts/measure-page-weight.cjs
 
 | | Before | Now |
 |---|---|---|
-| `/` (home) | 135.9 MB | **5.2 MB** |
-| `/contact` | 131.7 MB | **0.9 MB** |
+| `/contact`, `/about`, `/services`, model pages (no 3D) | ~130 MB each | **0.8–13 MB, no 3D models** |
+| `/` (home) and `/models` | 135.9 MB | 5.2 MB for the page, then **~130 MB of models in the background** |
 | `/models/911-gt3-rs` (heaviest showroom) | 133.2 MB | **69.7 MB** (its own 65.9 MB model) |
-| 3D models downloaded on a non-3D page | 5 of 5 | **0** |
+| GT3 RS on screen after 20 s on home, then a click | 7.1–7.6 s | **6.9–7.5 s** |
 | `main.js`, gzipped | 670 kB | **197 kB** |
 
-All five models were preloaded at module import, so every page, even `/contact`, downloaded
-~130 MB. The showrooms are now lazy route chunks, and the admin charts no longer ship to every
-visitor. Every route has a byte budget that the verification pipeline enforces (below).
+All five models used to be preloaded at module import, so every page, even `/contact`, downloaded
+~130 MB. The showrooms are now lazy route chunks, and only the two pages people open showrooms
+from (home and All Models) download the models: in the background, after the page has loaded and
+the browser is idle, and not on Save-Data or slow connections. Without that, opening a showroom
+from home took 12–15 s instead of ~7 s (measured; the remaining ~7 s is the GPU preparing the
+scene). Every route has a byte budget that the verification pipeline enforces (below).
 
 ## Architecture
 

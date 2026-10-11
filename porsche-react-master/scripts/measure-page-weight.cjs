@@ -32,6 +32,7 @@ const HEADROOM = 0.10;
 // fails both attempts.
 const IDLE_TIMEOUT_MS = 120000;
 const ATTEMPTS = 2;
+const DEFERRED_START_MS = 6000; // > the preload's 5 s requestIdleCallback timeout (src/lib/preloadShowrooms.js)
 
 const args = process.argv.slice(2);
 const opt = (name, dflt) => { const i = args.indexOf(name); return i === -1 ? dflt : args[i + 1]; };
@@ -82,6 +83,12 @@ async function measureOnce(browser, base, route) {
     let note = '';
     try {
         await page.goto(base + encodeURI(route), { waitUntil: 'networkidle0', timeout: IDLE_TIMEOUT_MS });
+        // Downloads deferred until the browser is idle (the background model preload on Home and All
+        // Models) start after the first quiet moment, up to 5 s later (its requestIdleCallback
+        // timeout). Wait past that, then for a longer quiet period, so a deferred download is always
+        // counted instead of racing the measurement.
+        await new Promise((r) => setTimeout(r, DEFERRED_START_MS));
+        await page.waitForNetworkIdle({ idleTime: 1500, timeout: IDLE_TIMEOUT_MS });
     } catch (err) {
         const stuck = [...pending].map((id) => (urls[id] || '?').replace(base, '')).slice(0, 5);
         note = `did not reach network idle: ${err.message.split('\n')[0]}; still pending: ${stuck.join(', ') || 'none tracked'}`;
