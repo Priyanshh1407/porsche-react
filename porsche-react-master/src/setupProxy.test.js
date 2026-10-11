@@ -17,7 +17,7 @@ beforeAll((done) => {
         run(0);
     }).listen(0, () => { base = `http://127.0.0.1:${server.address().port}`; done(); });
 });
-afterAll((done) => server.close(done));
+afterAll(() => new Promise((resolve) => { server.close(resolve); }));
 
 const GLB = '2024_manthey_racing_porsche_911_gt3_rs.glb';
 // Node's http client (the jsdom test environment has no fetch); the body is drained and counted.
