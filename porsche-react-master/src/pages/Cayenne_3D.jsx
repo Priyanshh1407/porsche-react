@@ -196,6 +196,31 @@ export default function Cayenne_3D() {
                     </div>
                 </section>
 
+                {/* ─── SIGNATURE: TERRAIN ─── */}
+                <section id="section-terrain" className="h-screen w-full snap-center flex flex-col justify-center items-start px-8 md:px-20 lg:px-32 pointer-events-none">
+                    <div className="reveal max-w-md pointer-events-auto opacity-0 translate-y-10 transition-all duration-[1500ms] delay-[800ms] ease-out">
+                        <p className="text-[10px] font-bold tracking-[0.4em] uppercase mb-4 bg-gradient-to-r from-amber-300 to-orange-500 bg-clip-text text-transparent">Signature · Terrain</p>
+                        <h2 className="text-3xl md:text-5xl font-black leading-[1.1] mb-5 tracking-tight text-white">
+                            Where the road ends,<br />
+                            <span className="text-amber-200/80">the weekend starts.</span>
+                        </h2>
+                        <p className="text-amber-50/70 text-sm leading-relaxed mb-8 font-medium">
+                            Gravel, sand or a muddy track to the lake: all-wheel drive and adaptive air suspension
+                            keep the whole family moving when the tarmac runs out.
+                        </p>
+                        <div className="flex gap-10">
+                            <div>
+                                <div className="text-2xl font-black text-white">AWD</div>
+                                <div className="text-[9px] text-amber-100/50 font-bold tracking-[0.3em] uppercase mt-1">All Four Wheels</div>
+                            </div>
+                            <div>
+                                <div className="text-2xl font-black text-white">Air<span className="bg-gradient-to-r from-amber-300 to-orange-500 bg-clip-text text-transparent text-sm ml-1">suspension</span></div>
+                                <div className="text-[9px] text-amber-100/50 font-bold tracking-[0.3em] uppercase mt-1">Raise For The Trail</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 {/* ─── COCKPIT ─── */}
                 <section id="section-cockpit" className="h-screen w-full snap-center flex flex-col justify-start pt-[15vh] items-end text-right px-8 md:px-20 lg:px-32 pointer-events-none">
                     <div className="reveal max-w-lg pointer-events-auto relative z-10 p-8 rounded-2xl bg-black/40 backdrop-blur-md border border-slate-400/20 shadow-[0_8px_32px_rgba(0,0,0,0.8)] opacity-0 translate-y-10 transition-all duration-[1500ms] delay-[800ms] ease-out">

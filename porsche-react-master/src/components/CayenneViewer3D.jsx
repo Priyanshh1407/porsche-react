@@ -7,6 +7,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import ShowroomErrorBoundary from './ShowroomErrorBoundary';
 import ShowroomLoader from './ShowroomLoader';
+import CayenneDust from './signatures/CayenneDust';
 import fallbackImage from '../assets/cayenne/hero.jpg';
 
 // PERF-01: disabled, not deleted. At module scope this ran on import, and every 3D page was
@@ -121,6 +122,18 @@ const SceneChoreography = () => {
             end: endTrigger,
             onEnter: () => animateTo([-1.3, 0.0, 3.5], [0.1, 0, 0]),
             onEnterBack: () => animateTo([-1.3, 0.0, 3.5], [0.1, 0, 0])
+        });
+
+        // ==========================================
+        // SIGNATURE: TERRAIN (low three-quarter view on the right; CayenneDust raises the dust)
+        // ==========================================
+        ScrollTrigger.create({
+            trigger: '#section-terrain',
+            scroller: scroller,
+            start: startTrigger,
+            end: endTrigger,
+            onEnter: () => animateTo([3.3, -0.4, -1.2], [-0.04, Math.PI * 1.78, 0]),
+            onEnterBack: () => animateTo([3.3, -0.4, -1.2], [-0.04, Math.PI * 1.78, 0])
         });
 
         // ==========================================
@@ -271,6 +284,7 @@ export default function CayenneViewer3D() {
             <Canvas camera={{ position: [0, 1.5, 12], fov: 38 }} dpr={[1, 2]}>
                 <React.Suspense fallback={<Loader />}>
                     <SceneChoreography />
+                    <CayenneDust position={[3.3, -1.65, -1.2]} />
                 </React.Suspense>
 
                 <EffectComposer>
