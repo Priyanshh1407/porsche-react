@@ -254,6 +254,31 @@ export default function Turbo_3D() {
                     </div>
                 </section>
 
+                {/* ─── SIGNATURE: NIGHT MODE ─── */}
+                <section id="section-nightmode" className="h-screen w-full snap-center flex flex-col justify-center items-start px-8 md:px-20 lg:px-32 pointer-events-none">
+                    <div className="reveal max-w-md pointer-events-auto opacity-0 translate-y-10 transition-all duration-[1500ms] delay-[800ms] ease-out">
+                        <p className="text-[10px] font-bold tracking-[0.4em] uppercase mb-4 bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent">Signature · Night Mode</p>
+                        <h2 className="text-3xl md:text-5xl font-black leading-[1.1] mb-5 tracking-tight text-white">
+                            Daily driver by day.<br />
+                            <span className="text-sky-200/80">Something else by night.</span>
+                        </h2>
+                        <p className="text-amber-50/70 text-sm leading-relaxed mb-8 font-medium">
+                            The same car that took you to work in comfort lights up the empty roads after dark.
+                            One key, two personalities.
+                        </p>
+                        <div className="flex gap-10">
+                            <div>
+                                <div className="text-2xl font-black text-white">650<span className="bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent text-sm ml-1">PS</span></div>
+                                <div className="text-[9px] text-amber-100/50 font-bold tracking-[0.3em] uppercase mt-1">After Dark</div>
+                            </div>
+                            <div>
+                                <div className="text-2xl font-black text-white">LED<span className="bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent text-sm ml-1">matrix</span></div>
+                                <div className="text-[9px] text-amber-100/50 font-bold tracking-[0.3em] uppercase mt-1">Lights The Way</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 {/* ─── CENTRAL RADIATOR ─── */}
                 <section id="section-radiator" className="h-screen w-full snap-center flex flex-col justify-center items-end px-8 md:px-20 lg:px-32 pointer-events-none">
                     <div className="reveal max-w-md text-right pointer-events-auto opacity-0 translate-y-10 transition-all duration-[1500ms] delay-[800ms] ease-out">

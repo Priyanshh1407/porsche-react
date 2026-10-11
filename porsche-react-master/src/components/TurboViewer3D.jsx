@@ -6,6 +6,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import ShowroomErrorBoundary from './ShowroomErrorBoundary';
 import ShowroomLoader from './ShowroomLoader';
+import TurboNightMode from './signatures/TurboNightMode';
 import fallbackImage from '../assets/turboS/hero.avif';
 
 // PERF-01: disabled, not deleted. At module scope this ran on import, and every 3D page was
@@ -152,6 +153,18 @@ const SceneChoreography = () => {
         });
 
         // ==========================================
+        // SIGNATURE: NIGHT MODE (front three-quarter, headlights to camera; TurboNightMode brings the night)
+        // ==========================================
+        ScrollTrigger.create({
+            trigger: '#section-nightmode',
+            scroller: scroller,
+            start: startTrigger,
+            end: endTrigger,
+            onEnter: () => animateTo([2.9, -0.5, -2.5], [0.06, Math.PI * 1.25, 0]),
+            onEnterBack: () => animateTo([2.9, -0.5, -2.5], [0.06, Math.PI * 1.25, 0])
+        });
+
+        // ==========================================
         // STAGE 4: TRANSMISSION (Zoom onto rear)
         // ==========================================
         ScrollTrigger.create({
@@ -267,6 +280,7 @@ export default function TurboViewer3D() {
             <Canvas camera={{ position: [0, 1.5, 12], fov: 38 }} dpr={[1, 2]}>
                 <React.Suspense fallback={<Loader />}>
                     <SceneChoreography />
+                    <TurboNightMode />
                 </React.Suspense>
             </Canvas>
             </ShowroomErrorBoundary>
