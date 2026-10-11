@@ -8,6 +8,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import ShowroomErrorBoundary from './ShowroomErrorBoundary';
 import ShowroomLoader from './ShowroomLoader';
 import Gt3BrakeGlow from './signatures/Gt3BrakeGlow';
+import Gt3DrsWing from './signatures/Gt3DrsWing';
 import fallbackImage from '../assets/gt3rs/hero image.jpeg';
 
 // PERF-01: disabled, not deleted. At module scope this ran on import, and every 3D page was
@@ -299,6 +300,7 @@ export default function ModelViewer3D() {
                 <React.Suspense fallback={<Loader />}>
                     <SceneChoreography />
                     <Gt3BrakeGlow />
+                    <Gt3DrsWing />
                 </React.Suspense>
                 
                 <EffectComposer>
