@@ -31,3 +31,22 @@ export async function apiFetch(path, { json, auth = false, headers = {}, ...opti
     }
     return response;
 }
+
+/** The response body as JSON, or null when it isn't JSON (e.g. a proxy's plain-text error page). */
+export async function readJson(response) {
+    try {
+        return await response.json();
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Shown when the API can't be reached at all. Locally that almost always means the backend isn't
+ * running; the dev server's proxy then answers with a plain-text 500.
+ */
+export function serverUnreachableMessage() {
+    return process.env.NODE_ENV === 'development'
+        ? "Can't reach the server. Is the backend running? Start it with: cd porsche-backend && npm start"
+        : "Can't reach the server right now. Please try again in a moment.";
+}

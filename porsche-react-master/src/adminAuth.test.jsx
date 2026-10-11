@@ -132,3 +132,19 @@ test('the login page does not advertise credentials that do not exist (Phase 7)'
     expect(screen.queryByText(/Demo Credentials/i)).not.toBeInTheDocument();
     expect(screen.getByText(/ADMIN_EMAIL/)).toBeInTheDocument(); // says where the login really comes from
 });
+
+describe('login page when the server is unreachable', () => {
+    // The dev-server proxy answers a stopped backend with a plain-text 500; that used to show a
+    // misleading "Network error. Please check your connection".
+    test.each([
+        ['the proxy answers with a non-JSON 500', () => Promise.resolve({ ok: false, status: 500, json: async () => { throw new SyntaxError('Unexpected token P'); } })],
+        ['the request fails outright', () => Promise.reject(new TypeError('Failed to fetch'))],
+    ])('%s -> says the server cannot be reached', async (_, reply) => {
+        global.fetch = jest.fn(reply);
+        jest.spyOn(console, 'error').mockImplementation(() => {});
+        renderApp('/admin/login');
+        signIn('admin@test.local', 'whatever');
+        expect(await screen.findByText(/can.t reach the server/i)).toBeInTheDocument();
+        expect(screen.queryByText(/check your connection/i)).not.toBeInTheDocument();
+    });
+});

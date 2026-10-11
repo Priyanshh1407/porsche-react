@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Lock, Mail, Car, Shield, ArrowLeft } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { apiFetch } from '../lib/api';
+import { apiFetch, readJson, serverUnreachableMessage } from '../lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -71,8 +71,13 @@ const AdminLogin = () => {
                 json: formData,
             });
             
-            const data = await response.json();
-            
+            const data = await readJson(response);
+            if (!data) {
+                // Not the API answering (e.g. the backend is stopped and a proxy replied instead).
+                setError(serverUnreachableMessage());
+                return;
+            }
+
             if (response.ok && data.success) {
                 login(data.token, formData.email);
                 navigate(returnTo, { replace: true });
@@ -82,7 +87,7 @@ const AdminLogin = () => {
             }
         } catch (error) {
             console.error('Login error:', error);
-            setError('Network error. Please check your connection and try again.');
+            setError(serverUnreachableMessage());
         } finally {
             setIsLoading(false);
         }
