@@ -68,6 +68,12 @@ and a live `lead.triaged` notification. The model sees the enquiry (type, model,
 preferences), never the visitor's name, email, phone or IP, and is told to ignore instructions
 inside the message.
 
+**Resilience:** a transient error (overload 503, rate limit 429, 5xx, timeout) on the main model is
+retried on fallback models in order (`GEMINI_FALLBACK_MODEL`, default `gemini-3.6-flash,gemini-3.5-flash-lite`;
+free-tier quotas are per model). The SDK's own retries are off, so a visitor never waits through
+five attempts; each attempt has a 15 s timeout. Thinking is set to `low`: thinking tokens count
+against the output cap. Triage stores the model that actually answered.
+
 **Turning it on:** set `GEMINI_API_KEY` in `.env` and restart. Without a key nothing calls the API;
 jobs stay queued (the admin shows "AI off") and are triaged once a key is set. Leads created before
 this feature have no job. Tests always use a scripted fake client, never the real API.

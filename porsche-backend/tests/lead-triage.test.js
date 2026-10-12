@@ -52,7 +52,7 @@ const fakeModel = (reply) => {
         generateJson: jest.fn(async ({ prompt, schema }) => {
             prompts.push(prompt);
             expect(schema).toBe(triage.TRIAGE_SCHEMA); // structured output is always requested
-            return reply(prompt);
+            return { value: await reply(prompt), model: 'fake-gemini' };
         }),
     };
 };
@@ -152,4 +152,11 @@ test('validateTriage trims and accepts exactly the schema', () => {
         .toEqual({ score: 'warm', summary: 'Asks about leasing.', nextStep: 'Send offer.' });
     expect(() => triage.validateTriage({ score: 'warm', summary: '', nextStep: 'x' })).toThrow();
     expect(() => triage.validateTriage(null)).toThrow();
+});
+
+test('the stored model is the one that answered (e.g. the fallback)', async () => {
+    const id = await newLead();
+    const client = { model: 'gemini-3.8-flash', generateJson: async () => ({ value: good(), model: 'gemini-3.6-flash' }) };
+    await triage.runTriageOnce({ client, contactIds: [id] });
+    expect((await row(id)).model).toBe('gemini-3.6-flash');
 });

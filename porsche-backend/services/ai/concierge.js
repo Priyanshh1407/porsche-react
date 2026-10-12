@@ -6,7 +6,7 @@ import { TOOL_DECLARATIONS, runTool, modelBySlug } from './tools.js';
 export const MAX_MESSAGES = 24;          // 12 visitor turns + 12 replies
 export const MAX_MESSAGE_CHARS = 2000;
 export const MAX_TOOL_CALLS = 4;         // per reply
-const MAX_OUTPUT_TOKENS = 600;
+const MAX_OUTPUT_TOKENS = 2048; // includes the model's (low) thinking tokens
 
 export const SYSTEM_PROMPT = [
     'You are the concierge of an unofficial Porsche showroom website (a portfolio project, not Porsche AG).',
@@ -43,10 +43,12 @@ export async function converse({ client, messages, context }) {
     const seen = new Set();
     let booking;
     let toolCalls = 0;
+    let pinned; // the model that answered first serves the rest of this reply (thought signatures)
 
     for (;;) {
         const tools = toolCalls < MAX_TOOL_CALLS ? TOOL_DECLARATIONS : [];
-        const turn = await client.chat({ system: SYSTEM_PROMPT, contents, tools, maxOutputTokens: MAX_OUTPUT_TOKENS });
+        const turn = await client.chat({ system: SYSTEM_PROMPT, contents, tools, maxOutputTokens: MAX_OUTPUT_TOKENS, model: pinned });
+        pinned ||= turn.model;
         const calls = tools.length ? turn.functionCalls : [];
         if (calls.length === 0) {
             const reply = turn.text.trim() || 'Sorry, I could not answer that. Could you rephrase, or use the contact form?';

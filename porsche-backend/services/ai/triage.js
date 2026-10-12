@@ -96,12 +96,12 @@ async function triageOne(row, client) {
     try {
         const contact = await prisma.contact.findUnique({ where: { id: row.contactId } });
         if (!contact) return; // deleted meanwhile; the job went with it (cascade)
-        const raw = await client.generateJson({ system: SYSTEM, prompt: buildPrompt(contact), schema: TRIAGE_SCHEMA, maxOutputTokens: 400 });
-        const result = validateTriage(raw);
+        const { value, model } = await client.generateJson({ system: SYSTEM, prompt: buildPrompt(contact), schema: TRIAGE_SCHEMA });
+        const result = validateTriage(value);
         await prisma.$transaction(async (tx) => {
             const { count } = await tx.leadTriage.updateMany({
                 where: { id: row.id, status: 'pending' },
-                data: { ...result, status: 'done', attempts, model: client.model, lockedUntil: null, lastError: null },
+                data: { ...result, status: 'done', attempts, model: model || client.model, lockedUntil: null, lastError: null }, // the model that answered (may be the fallback)
             });
             if (count === 0) return;
             await audit({ actor: 'ai', action: 'lead_triaged', contactId: contact.id, after: { score: result.score, summary: result.summary } }, tx);
