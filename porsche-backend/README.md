@@ -7,7 +7,7 @@ cp .env.example .env         # see the comments in it
 npm install                  # postinstall runs `prisma generate`
 npx prisma migrate deploy    # apply migrations (see prisma/MIGRATIONS.md)
 npm start                    # http://localhost:5000
-npm test                     # needs the Docker test DB: npm run test:db:up
+npm test                     # starts its own throwaway PostgreSQL; no Docker needed
 ```
 
 The server refuses to start without `DATABASE_URL`, `JWT_SECRET`, `ADMIN_EMAIL` and
@@ -39,6 +39,9 @@ attempts. Delivery is at-least-once. With `EMAIL_PASS` empty, emails are logged 
 
 ## Tests
 
-`tests/` runs against a throwaway PostgreSQL in Docker (`docker-compose.yml` at the repo root;
-data in tmpfs). `tests/test-env.cjs` refuses any database not named `porsche_test`.
-`scripts/measure-submit-latency.mjs` measures submit latency against that same test database.
+`tests/` runs against a throwaway, real PostgreSQL chosen by `scripts/test-db.mjs`:
+`DATABASE_URL_TEST` if set, else the Docker test-db on :5433 if it is already running
+(`npm run test:db:up`, optional), else an **embedded PostgreSQL 17** started in a temp folder for the
+run and removed afterwards (no Docker, no admin rights). `npm run test:db` keeps one running for
+manual work. `tests/test-env.cjs` refuses any database not named `porsche_test`.
+`scripts/measure-submit-latency.mjs` measures submit latency against the same kind of test database.

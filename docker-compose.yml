@@ -1,5 +1,7 @@
-# Throwaway Postgres for backend tests only. Data lives in a tmpfs, so every
-# `docker compose down` / restart starts empty. Never point this at real data.
+# OPTIONAL throwaway Postgres for backend tests. Not required: without Docker the tests start an
+# embedded PostgreSQL (porsche-backend/scripts/test-db.mjs). If this container is running, the tests
+# and `npm run verify` use it instead. Data lives in a tmpfs, so every `docker compose down` /
+# restart starts empty. Never point this at real data.
 #   docker compose up -d test-db
 services:
   test-db:

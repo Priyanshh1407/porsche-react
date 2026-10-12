@@ -4,17 +4,20 @@
  * this one command is what "the build is green" means.
  *
  *   npm run verify        quick (~5 min): guard, backend tests, frontend tests, dependency audit, E2E
- *   npm run verify:full   full (~13 min): + fresh production build, page-weight budget,
- *                         49 3D stage screenshots, SIGTERM shutdown in a Linux container
+ *   npm run verify:full   full (~20 min): + fresh production build, page-weight budget,
+ *                         49 3D stage screenshots, SIGTERM shutdown check
  *
- * Needs Docker running. Starts the throwaway test database and stops it again at the end.
+ * Docker is optional. The throwaway test database is the Docker test-db when Docker is running,
+ * otherwise an embedded PostgreSQL (porsche-backend/scripts/test-db.mjs); either is stopped at the
+ * end. The SIGTERM check runs in a Linux container with Docker, natively on Linux/macOS, and is
+ * reported as SKIP on Windows without Docker.
  * Every gate runs (no fail-fast) so one report shows everything; the exit code is non-zero if
  * any gate failed. Each gate's full output is saved under .verify-logs/.
  */
 import { spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const FRONTEND = path.join(ROOT, 'porsche-react-master');
@@ -52,10 +55,11 @@ function gate(name, fn) {
     process.stdout.write(`- ${name} ... `);
     const started = Date.now();
     let ok = false;
+    let skip = false;
     let detail = '';
     let out = '';
     try {
-        ({ ok, detail = '', out = '' } = fn());
+        ({ ok, skip = false, detail = '', out = '' } = fn());
     } catch (err) {
         out = String(err.stack || err);
         detail = err.message;
@@ -63,8 +67,9 @@ function gate(name, fn) {
     const secs = (Date.now() - started) / 1000;
     const logFile = path.join(LOGS, `${results.length + 1}-${name.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.log`);
     fs.writeFileSync(logFile, out);
-    results.push({ name, ok, secs, detail, logFile, out });
-    console.log(`${ok ? 'PASS' : 'FAIL'} (${secs.toFixed(0)} s)${detail ? `  ${detail}` : ''}`);
+    if (skip) ok = true; // a skipped gate is reported, never counted as a failure
+    results.push({ name, ok, skip, secs, detail, logFile, out });
+    console.log(`${skip ? 'SKIP' : ok ? 'PASS' : 'FAIL'} (${secs.toFixed(0)} s)${detail ? `  ${detail}` : ''}`);
 }
 
 const lastLine = (text, re) => (text.split('\n').filter((l) => re.test(l)).pop() || '').trim();
@@ -72,16 +77,27 @@ const lastLine = (text, re) => (text.split('\n').filter((l) => re.test(l)).pop()
 // ------------------------------------------------------------------ gates
 console.log(`Verification pipeline: ${FULL ? 'FULL' : 'quick'}\n`);
 
-const dockerOk = run('docker', ['info', '--format', '{{.ServerVersion}}']).code === 0;
-if (!dockerOk) {
-    console.log('Docker is not running. Start Docker Desktop and run again.');
-    process.exit(1);
+// The test database: Docker's test-db if Docker is running (optional), else embedded PostgreSQL.
+const { startEmbedded, DOCKER_TEST_DB } = await import(pathToFileURL(path.join(BACKEND, 'scripts', 'test-db.mjs')).href);
+let testDb = null;
+if (run('docker', ['info', '--format', '{{.ServerVersion}}']).code === 0) {
+    const up = run('docker', ['compose', '-f', 'docker-compose.yml', 'up', '-d', '--wait', 'test-db']);
+    if (up.code === 0) {
+        testDb = { url: DOCKER_TEST_DB, label: 'Docker test-db', stop: async () => { run('docker', ['compose', '-f', 'docker-compose.yml', 'down']); } };
+    } else {
+        console.log('Docker is running but the test-db container did not start; using embedded PostgreSQL instead.');
+    }
 }
-const dbUp = run('docker', ['compose', '-f', 'docker-compose.yml', 'up', '-d', '--wait', 'test-db']);
-if (dbUp.code !== 0) {
-    console.log(`Could not start the test database:\n${dbUp.out}`);
-    process.exit(1);
+if (!testDb) {
+    try {
+        testDb = { ...(await startEmbedded()), label: 'embedded PostgreSQL (no Docker)' };
+    } catch (err) {
+        console.log(`Could not start a test database: ${err.message}`);
+        process.exit(1);
+    }
 }
+process.env.DATABASE_URL_TEST = testDb.url; // every gate's child process inherits it
+console.log(`Test database: ${testDb.label}\n`);
 
 try {
     gate('3D trajectory guard', () => {
@@ -161,21 +177,23 @@ try {
             return { ok: r.code === 0, out: r.out, detail: r.code === 0 ? 'all stages match the baseline' : `${drift} stage problem(s)` };
         });
 
-        gate('SIGTERM shutdown (Linux container)', () => {
+        gate('SIGTERM shutdown', () => {
             const r = node([path.join(ROOT, 'e2e', 'sigterm-check.mjs')]);
+            if (r.code === 3) return { skip: true, out: r.out, detail: 'Windows without Docker has no real SIGTERM (runs with Docker, or on Linux/macOS)' };
             return { ok: r.code === 0, out: r.out, detail: lastLine(r.out, /shut down in|FAIL/) };
         });
     }
 } finally {
-    run('docker', ['compose', '-f', 'docker-compose.yml', 'down']);
+    await testDb.stop();
 }
 
 // ------------------------------------------------------------------ report
 const failed = results.filter((r) => !r.ok);
 const total = results.reduce((s, r) => s + r.secs, 0);
 console.log(`\n${'Gate'.padEnd(38)} Result  Time`);
-for (const r of results) console.log(`${r.name.padEnd(38)} ${r.ok ? 'PASS  ' : 'FAIL  '}  ${r.secs.toFixed(0).padStart(4)} s`);
-console.log(`\n${failed.length ? `FAILED: ${failed.length} of ${results.length} gates` : `ALL ${results.length} GATES PASSED`} in ${(total / 60).toFixed(1)} min. Logs: .verify-logs/`);
+for (const r of results) console.log(`${r.name.padEnd(38)} ${r.skip ? 'SKIP  ' : r.ok ? 'PASS  ' : 'FAIL  '}  ${r.secs.toFixed(0).padStart(4)} s`);
+const skipped = results.filter((r) => r.skip).length;
+console.log(`\n${failed.length ? `FAILED: ${failed.length} of ${results.length} gates` : `ALL ${results.length - skipped} GATES PASSED${skipped ? ` (${skipped} skipped)` : ''}`} in ${(total / 60).toFixed(1)} min. Logs: .verify-logs/`);
 for (const f of failed) {
     console.log(`\n--- ${f.name} (last 25 lines of ${path.relative(ROOT, f.logFile)}):`);
     console.log(f.out.trim().split('\n').slice(-25).join('\n'));

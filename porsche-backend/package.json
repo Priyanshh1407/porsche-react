@@ -12,7 +12,8 @@
     "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
     "test:db:up": "docker compose -f ../docker-compose.yml up -d --wait test-db",
     "test:db:down": "docker compose -f ../docker-compose.yml down",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "test:db": "node scripts/test-db.mjs"
   },
   "jest": {
     "testEnvironment": "node",
@@ -22,7 +23,8 @@
     "globalSetup": "<rootDir>/tests/global-setup.cjs",
     "setupFilesAfterEnv": [
       "<rootDir>/tests/require-assertions.cjs"
-    ]
+    ],
+    "globalTeardown": "<rootDir>/tests/global-teardown.cjs"
   },
   "keywords": [
     "porsche",
@@ -51,6 +53,7 @@
     "prisma": "^7.8.0"
   },
   "devDependencies": {
+    "embedded-postgres": "17.10.0-beta.17",
     "jest": "^30.0.5",
     "nodemon": "^3.1.10",
     "supertest": "^7.1.4"

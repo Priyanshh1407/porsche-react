@@ -4,7 +4,9 @@
  * Chrome (Puppeteer). Each test is independent and tags its data with a unique run id, which is
  * deleted afterwards.
  *
- *   docker compose up -d --wait test-db      (from the repo root; `npm run verify` does this)
+ * Uses DATABASE_URL_TEST (set by `npm run verify`). Run on its own without it, it starts its own
+ * test database (porsche-backend/scripts/test-db.mjs: the Docker test-db if running, else embedded
+ * PostgreSQL), applies the migrations and stops it again. Docker is optional.
  *   node e2e/run-e2e.mjs
  *
  * The frontend build is rebuilt automatically when any file in src/ is newer than it.
@@ -16,7 +18,7 @@ import { createRequire } from 'module';
 import fs from 'fs';
 import http from 'http';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 const require = createRequire(import.meta.url);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -30,7 +32,7 @@ const ADMIN = { email: 'admin@e2e.local', password: 'e2e-admin-password' };
 const BACKEND_ENV = {
     PATH: process.env.PATH, SystemRoot: process.env.SystemRoot,
     NODE_ENV: 'development', PORT: '0',
-    DATABASE_URL: process.env.DATABASE_URL_TEST || 'postgresql://porsche_test:porsche_test@localhost:5433/porsche_test',
+    DATABASE_URL: '', // set in main() from DATABASE_URL_TEST or an own test database
     JWT_SECRET: 'e2e-only-jwt-secret-0123456789abcdef0123',
     ADMIN_EMAIL: ADMIN.email, ADMIN_PASSWORD: ADMIN.password,
     EMAIL_PASS: '', // demo mode: no real email
@@ -112,7 +114,27 @@ async function test(name, fn) {
 const assert = (cond, msg) => { if (!cond) throw new Error(msg); };
 
 // ---------------------------------------------------------------- tests
+async function ownTestDb() {
+    const { ensureTestDb } = await import(pathToFileURL(path.join(BACKEND, 'scripts', 'test-db.mjs')).href);
+    const db = await ensureTestDb({ log: console.log });
+    const env = { ...process.env, DATABASE_URL: db.url };
+    const r = spawnSync('npx', ['prisma', 'migrate', 'deploy'], { cwd: BACKEND, shell: true, encoding: 'utf8', env });
+    if (r.status !== 0) { await db.stop(); throw new Error(`migrating the test database failed:
+${(r.stdout + r.stderr).slice(-1500)}`); }
+    return db;
+}
+
 async function main() {
+    const ownDb = process.env.DATABASE_URL_TEST ? null : await ownTestDb();
+    BACKEND_ENV.DATABASE_URL = process.env.DATABASE_URL_TEST || ownDb.url;
+    try {
+        await runAll();
+    } finally {
+        if (ownDb) await ownDb.stop();
+    }
+}
+
+async function runAll() {
     ensureBuild();
     const backend = await startBackend();
     const web = await startWeb(backend.port);

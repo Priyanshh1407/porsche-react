@@ -1,112 +1,179 @@
 #!/usr/bin/env node
 /*
- * Verifies the backend's graceful shutdown (ERR-02) with a REAL SIGTERM, which Windows can't send.
- * Runs the backend in a Linux container (node:22-alpine) on the test-db's Docker network:
+ * Verifies the backend's graceful shutdown (ERR-02) with a REAL SIGTERM:
  *
  *   1. start the server, wait until it is listening
  *   2. begin a request and send only half of its body, so it is genuinely in flight
- *   3. `docker stop` (sends SIGTERM), then finish sending the body
+ *   3. send SIGTERM, then finish sending the body
  *   4. expect: the in-flight request still gets its response, the logs show the shutdown
- *      sequence, and the container exits with code 0 (not 137 = killed, not 143 = unhandled)
+ *      sequence, and the process exits with code 0 (not killed, not an unhandled SIGTERM)
  *
- * Needs the test DB running (docker compose up -d --wait test-db). The backend source is copied
- * into the container without node_modules (installed fresh for Linux) and without .env.
+ * Where it runs (Docker is optional):
+ *   - Docker running: in a Linux container (node:22-alpine) on the test-db's Docker network, installed
+ *     like a production deploy (runtime dependencies only, no .env);
+ *   - otherwise on Linux/macOS: natively, as a child process, against DATABASE_URL_TEST;
+ *   - otherwise (Windows without Docker): skipped, exit code 3. Windows has no real SIGTERM.
+ *   Force one with --mode docker|native.
  */
-import { execFileSync, spawn } from 'child_process';
+import { execFileSync, spawn, spawnSync } from 'child_process';
 import http from 'http';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const BACKEND = path.join(ROOT, 'porsche-backend').replace(/\\/g, '/');
-const NAME = 'porsche-sigterm-check';
-const NETWORK = 'porsche_default'; // created by docker-compose.yml for test-db
-const IMAGE = 'node:22-alpine';
-
-const docker = (args, opts = {}) => execFileSync('docker', args, { encoding: 'utf8', ...opts }).trim();
+const BACKEND = path.join(ROOT, 'porsche-backend');
+export const SKIPPED = 3;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const results = [];
-const check = (ok, msg) => { results.push(ok); console.log(`  ${ok ? 'ok  ' : 'FAIL'}  ${msg}`); };
+const ENV = {
+    NODE_ENV: 'production', PORT: '5000',
+    JWT_SECRET: 'sigterm-check-secret-0123456789abcdef0123',
+    ADMIN_EMAIL: 'admin@sigterm.local', ADMIN_PASSWORD: 'sigterm-check', EMAIL_PASS: '',
+};
 
-async function main() {
-    try { docker(['rm', '-f', NAME], { stdio: 'ignore' }); } catch { /* not running */ }
+const dockerAvailable = () => spawnSync('docker', ['info', '--format', '{{.ServerVersion}}'], { stdio: 'ignore' }).status === 0;
 
-    const startScript = [
-        'mkdir -p /app',
-        // copy the source, excluding host node_modules (Windows binaries) and the secret .env
-        "tar -C /src --exclude=./node_modules --exclude=./.env -cf - . | tar -C /app -xf -",
-        'cd /app',
-        // Installed exactly like a production deploy: runtime dependencies only, and no manual
-        // "prisma generate" (the backend's postinstall must produce the client by itself).
-        'npm ci --omit=dev --no-audit --no-fund --loglevel=error',
-        'exec node server.js',
-    ].join(' && ');
-
-    console.log(`starting backend in ${IMAGE} (first run downloads the image and installs packages)...`);
-    docker(['run', '-d', '--name', NAME, '--network', NETWORK, '-p', '127.0.0.1::5000',
-        '-v', `${BACKEND}:/src:ro`, '-v', 'porsche-sigterm-node-modules:/app/node_modules',
-        '-e', 'NODE_ENV=production', '-e', 'PORT=5000',
-        '-e', 'DATABASE_URL=postgresql://porsche_test:porsche_test@test-db:5432/porsche_test',
-        '-e', 'JWT_SECRET=sigterm-check-secret-0123456789abcdef0123',
-        '-e', 'ADMIN_EMAIL=admin@sigterm.local', '-e', 'ADMIN_PASSWORD=sigterm-check',
-        '-e', 'EMAIL_PASS=',
-        IMAGE, 'sh', '-c', startScript]);
-
-    // Wait until it listens.
-    const deadline = Date.now() + 240000;
-    while (!docker(['logs', NAME], { stdio: ['ignore', 'pipe', 'pipe'] }).includes('Server running on port')) {
-        if (Date.now() > deadline) throw new Error(`server did not start:\n${docker(['logs', NAME])}`);
-        if (docker(['inspect', '-f', '{{.State.Running}}', NAME]) !== 'true') throw new Error(`container exited:\n${docker(['logs', NAME])}`);
-        await sleep(1000);
-    }
-    const port = Number(docker(['port', NAME, '5000/tcp']).split(':').pop());
-    console.log(`server listening (host port ${port}); kernel: ${docker(['exec', NAME, 'uname', '-sr'])}`);
-
-    // A request that is genuinely in flight: send headers + half the JSON body, then pause.
-    const body = JSON.stringify({
-        firstName: 'Graceful', lastName: 'Shutdown', email: `sigterm-${Date.now()}@example.com`,
-        phone: '5550142', inquiryType: 'Sales', message: 'Submitted while the server was shutting down.',
-    });
-    const half = Math.floor(body.length / 2);
-    const response = new Promise((resolve, reject) => {
-        const req = http.request({ host: '127.0.0.1', port, path: '/api/contact/submit', method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } }, (res) => {
-            let data = '';
-            res.on('data', (d) => { data += d; });
-            res.on('end', () => resolve({ status: res.statusCode, data }));
-        });
-        req.on('error', reject);
-        req.write(body.slice(0, half));
-        globalThis.finishRequest = () => req.end(body.slice(half));
-    });
-    await sleep(500);
-
-    // SIGTERM (docker stop waits up to 20 s before SIGKILL).
-    const started = Date.now();
-    const stopped = new Promise((resolve) => spawn('docker', ['stop', '-t', '20', NAME]).on('exit', resolve));
-    await sleep(1000); // the server is now shutting down with our request still open
-    globalThis.finishRequest();
-
-    const res = await response;
-    await stopped;
-    const elapsed = Date.now() - started;
-    const exitCode = Number(docker(['inspect', '-f', '{{.State.ExitCode}}', NAME]));
-    const logs = docker(['logs', NAME]);
-
-    check(res.status === 201, `in-flight request completed during shutdown (HTTP ${res.status})`);
-    check(logs.includes('SIGTERM received: shutting down'), 'SIGTERM handler ran');
-    check(logs.includes('Database connection closed'), 'database pool closed');
-    check(exitCode === 0, `container exit code ${exitCode} (0 = clean; 137 = killed; 143 = unhandled SIGTERM)`);
-    // ~1 s of this is the deliberate pause above. A lingering keep-alive connection would push it
-    // to about 6 s (5 s keep-alive timeout + this pause), which is what this limit catches.
-    check(elapsed < 5000, `shut down in ${(elapsed / 1000).toFixed(1)} s (limit 5 s; force-exit fallback is 10 s)`);
+/** The backend in a Linux container on the test-db's Docker network. */
+function dockerRunner() {
+    const NAME = 'porsche-sigterm-check';
+    const docker = (args, opts = {}) => execFileSync('docker', args, { encoding: 'utf8', ...opts }).trim();
+    const remove = () => { try { docker(['rm', '-f', NAME], { stdio: 'ignore' }); } catch { /* not there */ } };
+    return {
+        label: 'Linux container',
+        async start() {
+            remove();
+            const startScript = [
+                'mkdir -p /app',
+                // copy the source, excluding host node_modules (Windows binaries) and the secret .env
+                "tar -C /src --exclude=./node_modules --exclude=./.env -cf - . | tar -C /app -xf -",
+                'cd /app',
+                // Installed exactly like a production deploy: runtime dependencies only, and no manual
+                // "prisma generate" (the backend's postinstall must produce the client by itself).
+                'npm ci --omit=dev --no-audit --no-fund --loglevel=error',
+                'exec node server.js',
+            ].join(' && ');
+            console.log('starting backend in node:22-alpine (first run downloads the image and installs packages)...');
+            const env = { ...ENV, DATABASE_URL: 'postgresql://porsche_test:porsche_test@test-db:5432/porsche_test' };
+            docker(['run', '-d', '--name', NAME, '--network', 'porsche_default', '-p', '127.0.0.1::5000',
+                '-v', `${BACKEND.replace(/\\/g, '/')}:/src:ro`, '-v', 'porsche-sigterm-node-modules:/app/node_modules',
+                ...Object.entries(env).flatMap(([k, v]) => ['-e', `${k}=${v}`]),
+                'node:22-alpine', 'sh', '-c', startScript]);
+            const deadline = Date.now() + 240000;
+            while (!this.logs().includes('Server running on port')) {
+                if (Date.now() > deadline) throw new Error(`server did not start:\n${this.logs()}`);
+                if (docker(['inspect', '-f', '{{.State.Running}}', NAME]) !== 'true') throw new Error(`container exited:\n${this.logs()}`);
+                await sleep(1000);
+            }
+            console.log(`kernel: ${docker(['exec', NAME, 'uname', '-sr'])}`);
+            return Number(docker(['port', NAME, '5000/tcp']).split(':').pop());
+        },
+        // docker stop sends SIGTERM and waits up to 20 s before SIGKILL.
+        sigterm: () => new Promise((resolve) => spawn('docker', ['stop', '-t', '20', NAME]).on('exit', resolve)),
+        logs: () => docker(['logs', NAME], { stdio: ['ignore', 'pipe', 'pipe'] }),
+        exitCode: () => Number(docker(['inspect', '-f', '{{.State.ExitCode}}', NAME])),
+        cleanup: remove,
+    };
 }
 
-main()
-    .catch((err) => { console.log(`  FAIL  ${err.message}`); results.push(false); })
-    .finally(() => {
-        try { docker(['rm', '-f', NAME], { stdio: 'ignore' }); } catch { /* already gone */ }
-        const ok = results.length > 0 && results.every(Boolean);
-        console.log(`\nSIGTERM check: ${ok ? 'passed' : 'FAILED'}`);
-        process.exitCode = ok ? 0 : 1;
-    });
+/** The backend as a child process on this machine (Linux/macOS: a real SIGTERM). */
+function nativeRunner() {
+    let child;
+    let output = '';
+    let exited;
+    return {
+        label: `native ${process.platform} process`,
+        async start() {
+            if (!process.env.DATABASE_URL_TEST) throw new Error('native mode needs DATABASE_URL_TEST (npm run verify sets it)');
+            child = spawn(process.execPath, ['server.js'], {
+                cwd: BACKEND,
+                env: { PATH: process.env.PATH, ...ENV, PORT: '0', DATABASE_URL: process.env.DATABASE_URL_TEST },
+            });
+            exited = new Promise((resolve) => child.on('exit', (code, signal) => resolve(code ?? (signal ? 128 : 1))));
+            const collect = (d) => { output += d; };
+            child.stdout.on('data', collect);
+            child.stderr.on('data', collect);
+            const deadline = Date.now() + 30000;
+            let m;
+            while (!(m = output.match(/Server running on port:(\d+)/))) {
+                if (Date.now() > deadline || child.exitCode !== null) throw new Error(`server did not start:\n${output}`);
+                await sleep(200);
+            }
+            return Number(m[1]);
+        },
+        sigterm: async () => { child.kill('SIGTERM'); await exited; },
+        logs: () => output,
+        exitCode: () => child.exitCode ?? child.signalCode, // e.g. 'SIGTERM' if the signal was not handled
+        cleanup: () => { if (child && child.exitCode === null) child.kill('SIGKILL'); },
+    };
+}
+
+function pickMode() {
+    const i = process.argv.indexOf('--mode');
+    if (i !== -1) return process.argv[i + 1];
+    if (dockerAvailable()) return 'docker';
+    return process.platform === 'win32' ? 'skip' : 'native';
+}
+
+async function check(runner) {
+    const results = [];
+    const ok = (pass, msg) => { results.push(pass); console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${msg}`); };
+    try {
+        const port = await runner.start();
+        console.log(`server listening on port ${port} (${runner.label})`);
+
+        // A request that is genuinely in flight: send headers + half the JSON body, then pause.
+        const body = JSON.stringify({
+            firstName: 'Graceful', lastName: 'Shutdown', email: `sigterm-${Date.now()}@example.com`,
+            phone: '5550142', inquiryType: 'Sales', message: 'Submitted while the server was shutting down.',
+        });
+        const half = Math.floor(body.length / 2);
+        let finish;
+        // Never rejects: a dropped connection is a result to report ("HTTP error ECONNRESET"), and it
+        // can happen before this promise is awaited.
+        const response = new Promise((resolve) => {
+            const req = http.request({ host: '127.0.0.1', port, path: '/api/contact/submit', method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } }, (res) => {
+                let data = '';
+                res.on('data', (d) => { data += d; });
+                res.on('end', () => resolve({ status: res.statusCode, data }));
+            });
+            req.on('error', (err) => resolve({ status: `error ${err.code || err.message}`, data: '' }));
+            req.write(body.slice(0, half));
+            finish = () => req.end(body.slice(half));
+        });
+        await sleep(500);
+
+        const started = Date.now();
+        const stopped = runner.sigterm();
+        await sleep(1000); // the server is now shutting down with our request still open
+        finish();
+
+        const res = await response;
+        await stopped;
+        const elapsed = Date.now() - started;
+        const logs = runner.logs();
+        const exitCode = runner.exitCode();
+
+        ok(res.status === 201, `in-flight request completed during shutdown (HTTP ${res.status})`);
+        ok(logs.includes('SIGTERM received: shutting down'), 'SIGTERM handler ran');
+        ok(logs.includes('Database connection closed'), 'database pool closed');
+        ok(exitCode === 0, `exit code ${exitCode} (0 = clean; 137 = killed; 143 = unhandled SIGTERM)`);
+        // ~1 s of this is the deliberate pause above. A lingering keep-alive connection would push it
+        // to about 6 s (5 s keep-alive timeout + this pause), which is what this limit catches.
+        ok(elapsed < 5000, `shut down in ${(elapsed / 1000).toFixed(1)} s (limit 5 s; force-exit fallback is 10 s)`);
+    } catch (err) {
+        ok(false, err.message);
+    } finally {
+        runner.cleanup();
+    }
+    return results.length > 0 && results.every(Boolean);
+}
+
+const mode = pickMode();
+if (mode === 'skip') {
+    console.log('SIGTERM check: skipped (Windows has no real SIGTERM and Docker is not running; it runs in a Linux container when Docker is available, and natively on Linux/macOS)');
+    process.exitCode = SKIPPED;
+} else {
+    const passed = await check(mode === 'docker' ? dockerRunner() : nativeRunner());
+    console.log(`\nSIGTERM check (${mode}): ${passed ? 'passed' : 'FAILED'}`);
+    process.exitCode = passed ? 0 : 1;
+}

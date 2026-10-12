@@ -113,29 +113,30 @@ flowchart LR
 
 ## Verification
 
-One command per depth, run locally (no hosted CI by choice). Both need Docker for the throwaway
-test database.
+One command per depth, run locally (no hosted CI by choice). **No Docker needed:** the throwaway
+test database is a real PostgreSQL started for the run (embedded, via `embedded-postgres`) and
+removed afterwards. If Docker happens to be running, the pipeline uses its test-db container instead.
 
 ```bash
 npm run verify        # ~1 min: trajectory guard, backend tests, frontend tests, dependency audit, E2E
 npm run verify:full   # ~20 min: + fresh build with bundle checks, page-weight budgets for 25 routes,
-                      #   49 3D stage screenshots, SIGTERM shutdown inside a Linux container
+                      #   49 3D stage screenshots, SIGTERM shutdown check
 ```
 
 | Gate | What it proves |
 |---|---|
 | Trajectory guard | No choreography, canvas or layout input changed (33 hashed items) |
-| Backend tests (127) | API, validation, auth, CSV safety, email outbox (incl. concurrency), migrations on a real Postgres |
+| Backend tests (130) | API, validation, auth, CSV safety, email outbox (incl. concurrency), migrations and UTC sessions on a real Postgres |
 | Frontend tests (122) | Routing, forms, auth flow, dashboard and charts, error boundaries, credits, 3D signature effects |
 | E2E (7, Puppeteer) | Contact form → admin login → search → status change → logout, against the real backend |
 | Bundle + page weight | No admin/3D library in `main.js`; every route within its byte budget (first-party bytes) and model count |
 | Stage screenshots (49) | Every scroll stage of every showroom matches the baseline (GPU) |
-| SIGTERM | The API finishes in-flight requests and exits cleanly in a Linux container |
+| SIGTERM | The API finishes in-flight requests and exits cleanly on a real SIGTERM (in a Linux container with Docker, natively on Linux/macOS; skipped on Windows without Docker, which has no real SIGTERM) |
 
 ## Getting started
 
 **Prerequisites:** Node.js `^20.19 || ^22.12 || >=24`, PostgreSQL, a WebGL-capable GPU for the 3D
-pages, and Docker if you want to run the tests.
+pages. Docker is optional (tests start their own PostgreSQL).
 
 ```bash
 git clone https://github.com/Priyanshh1407/porsche-react.git
@@ -192,7 +193,7 @@ database created with `prisma db push`? Follow
 **Frontend:** React 19, React Router 7, Three.js, React Three Fiber, Drei, React Postprocessing,
 GSAP ScrollTrigger, Tailwind CSS, Recharts. **Backend:** Node.js, Express 5, Prisma 7 with the `pg`
 adapter, PostgreSQL, express-validator, express-rate-limit, helmet, nodemailer, morgan.
-**Testing:** Jest, React Testing Library, Supertest, Puppeteer, Docker.
+**Testing:** Jest, React Testing Library, Supertest, Puppeteer, embedded PostgreSQL (Docker optional).
 
 ## Credits and licences
 

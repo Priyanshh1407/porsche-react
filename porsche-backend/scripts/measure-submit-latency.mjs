@@ -1,20 +1,28 @@
 #!/usr/bin/env node
 /*
  * Contact-submit latency (UPG-03 evidence): runs the real Express app on an ephemeral port against
- * the Docker TEST database and times N sequential POST /api/contact/submit round trips.
+ * the TEST database and times N sequential POST /api/contact/submit round trips.
  *
- *   npm run test:db:up && node scripts/measure-submit-latency.mjs [--n 200] [--warmup 20]
+ *   node scripts/measure-submit-latency.mjs [--n 200] [--warmup 20]
+ *
+ * The test database comes from scripts/test-db.mjs (DATABASE_URL_TEST, the Docker test-db if it is
+ * running, or an embedded PostgreSQL started and stopped here); Docker is optional.
  *
  * Uses tests/test-env.cjs, which refuses any database not named porsche_test, so it can never
  * write to a real database. Every lead it creates is deleted afterwards. Email is in demo mode
  * (no SMTP), so this measures the request path only, which is the point: the visitor's wait.
  */
 import { createRequire } from 'module';
+import { execSync } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { ensureTestDb } from './test-db.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
+const testDb = await ensureTestDb({ log: console.log });
+process.env.DATABASE_URL_TEST = testDb.url;
 createRequire(import.meta.url)(path.join(here, '..', 'tests', 'test-env.cjs'));
+if (testDb.source === 'embedded') execSync('npx prisma migrate deploy', { cwd: path.join(here, '..'), env: process.env, stdio: 'pipe' });
 process.env.NODE_ENV = 'test'; // import the app without server.js start() (no port 5000, no worker)
 process.env.TRUST_PROXY = '1'; // one client IP per request, so the 5-per-hour limiter stays out of it
 
@@ -25,7 +33,7 @@ const WARMUP = opt('--warmup', 20);
 const TAG = `latency-${Date.now()}`;
 
 const { default: app } = await import('../server.js');
-const { default: prisma } = await import('../prisma/client.js');
+const { default: prisma, pool } = await import('../prisma/client.js');
 const server = await new Promise((resolve) => { const s = app.listen(0, () => resolve(s)); });
 const base = `http://127.0.0.1:${server.address().port}`;
 
@@ -62,4 +70,6 @@ try {
     await prisma.contact.deleteMany({ where: { email: { endsWith: '@latency.test' } } });
     server.close();
     await prisma.$disconnect();
+    await pool.end(); // the driver adapter does not own the pool, so close it before the DB stops
+    await testDb.stop();
 }
