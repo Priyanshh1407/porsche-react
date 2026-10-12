@@ -57,3 +57,27 @@ describe('Contact form (BUG-01)', () => {
         expect(await screen.findByText('Please enter a valid mobile number')).toBeInTheDocument();
     });
 });
+
+// Phase 12: the configurator's "Request this spec" pre-fills the form from the URL.
+describe('pre-fill from the configurator', () => {
+    const renderWith = (query) => render(<MemoryRouter initialEntries={[`/contact?${query}`]}><Contact /></MemoryRouter>);
+
+    it('takes a known model and turns the spec into the message', () => {
+        renderWith(new URLSearchParams({ model: 'TurboS_911', spec: '911 Turbo S in GT Silver, matte finish' }).toString());
+        expect(screen.getByLabelText(/Model Interest/)).toHaveValue('TurboS_911');
+        expect(screen.getByLabelText(/Inquiry Type/)).toHaveValue('Sales');
+        expect(screen.getByLabelText(/^Message/).value).toMatch(/^I'd like to request this build: 911 Turbo S in GT Silver, matte finish\./);
+    });
+
+    it('ignores an unknown model and caps the spec', () => {
+        renderWith(new URLSearchParams({ model: 'Ferrari', spec: 'x'.repeat(500) }).toString());
+        expect(screen.getByLabelText(/Model Interest/)).toHaveValue('');
+        expect(screen.getByLabelText(/^Message/).value).toContain('x'.repeat(200));
+        expect(screen.getByLabelText(/^Message/).value).not.toContain('x'.repeat(201));
+    });
+
+    it('without a query the form starts empty', () => {
+        renderWith('');
+        expect(screen.getByLabelText(/^Message/)).toHaveValue('');
+    });
+});

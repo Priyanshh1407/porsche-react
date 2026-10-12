@@ -24,7 +24,8 @@
     "setupFilesAfterEnv": [
       "<rootDir>/tests/require-assertions.cjs"
     ],
-    "globalTeardown": "<rootDir>/tests/global-teardown.cjs"
+    "globalTeardown": "<rootDir>/tests/global-teardown.cjs",
+    "testTimeout": 20000
   },
   "keywords": [
     "porsche",

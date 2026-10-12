@@ -4,14 +4,32 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { carThemes } from '../data/carThemes';
 import showroom from "../assets/home/showroom..jpeg";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
+
+// Phase 12: /contact?model=Taycan&spec=... (from the configurator's "Request this spec") pre-fills
+// the form. Only a model the dropdown offers is taken; the spec is plain text, capped and stripped of
+// control characters. The visitor still reviews everything before sending.
+const MODEL_VALUES = ['911', '718_Cayman', '718_Boxster', 'Cayenne', 'Macan', 'Panamera', 'Taycan', 'CarreraGT',
+    'Cayman_GT4RS', 'GT2RS_911', 'GT3RS', 'Spyder_918', 'TurboS_911', 'Other'];
+
+export function prefillFromQuery(params) {
+    const model = params.get('model');
+    // eslint-disable-next-line no-control-regex
+    const spec = (params.get('spec') || '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 200);
+    return {
+        modelInterest: MODEL_VALUES.includes(model) ? model : '',
+        inquiryType: spec ? 'Sales' : '',
+        message: spec ? `I'd like to request this build: ${spec}. Please contact me about availability and pricing.` : '',
+    };
+}
 
 const Contact = () => {
     const selectedTheme = carThemes.home;
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
 
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState(() => ({
         firstName: '',
         lastName: '',
         email: '',
@@ -21,7 +39,8 @@ const Contact = () => {
         preferredContactMethod: '',
         preferredContactTime: '',
         message: '',
-    });
+        ...prefillFromQuery(searchParams),
+    }));
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState({});

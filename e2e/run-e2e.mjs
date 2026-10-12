@@ -346,6 +346,30 @@ async function runAll() {
             assert(triageReq && !JSON.stringify(triageReq.body).includes(email), 'triage request missing, or it contained the email');
             await page.close();
         });
+
+        await test('configurator: pick a car, paint and finish -> "Request this spec" pre-fills the contact form (Phase 12)', async () => {
+            const page = await newPage();
+            await page.goto(`${base}/configurator`, { waitUntil: 'domcontentloaded' });
+            const press = (label) => page.evaluate((l) => [...document.querySelectorAll('main aside button')].find((b) => (b.getAttribute('aria-label') || b.textContent.trim()) === l).click(), label);
+            await page.waitForFunction(() => [...document.querySelectorAll('main aside button')].some((b) => b.textContent.trim() === '918 Spyder'));
+            await press('918 Spyder');
+            await press('Python Green');
+            await press('Matte');
+            await page.waitForFunction(() => location.search === '?car=918-spyder&paint=python-green&finish=matte');
+            await waitForText(page, '918 Spyder in Python Green, matte finish');
+            await page.evaluate(() => [...document.querySelectorAll('a')].find((a) => a.textContent.trim() === 'Request this spec').click());
+            await page.waitForFunction(() => location.pathname === '/contact');
+            await page.waitForSelector('#modelInterest');
+            const form = await page.evaluate(() => ({
+                model: document.querySelector('#modelInterest').value,
+                inquiry: document.querySelector('#inquiryType').value,
+                message: document.querySelector('#message').value,
+            }));
+            assert(form.model === 'Spyder_918', `model not pre-filled: ${form.model}`);
+            assert(form.inquiry === 'Sales', `inquiry type not pre-filled: ${form.inquiry}`);
+            assert(form.message.includes('918 Spyder in Python Green, matte finish'), `message not pre-filled: ${form.message}`);
+            await page.close();
+        });
     } finally {
         // Clean up this run's leads through the admin API (exercises DELETE too).
         try {

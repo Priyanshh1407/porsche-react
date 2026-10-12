@@ -44,10 +44,11 @@
       "models": 0
     },
     "/configurator": {
-      "measuredMB": 0.89,
-      "maxMB": 1,
-      "thirdPartyMB": 0.05,
-      "models": 0
+      "measuredMB": 15.17,
+      "maxMB": 16.7,
+      "thirdPartyMB": 0,
+      "models": 1,
+      "note": "Phase 12 (approved 2026-10-12): the 3D configurator loads one car; default Taycan (13.3 MB GLB). Other cars load only when picked."
     },
     "/credits": {
       "measuredMB": 0.79,

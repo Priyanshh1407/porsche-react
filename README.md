@@ -109,6 +109,12 @@ flowchart LR
   is stored. The job is queued in the lead's own transaction and worked off like the email outbox
   (lease, `SKIP LOCKED`, retries), so it survives crashes, and it waits harmlessly until an API key
   is configured. The model never sees the visitor's contact details.
+- **A 3D configurator that can't break the showrooms.** Pick one of four cars, eight paints and
+  three finishes (gloss / satin / matte through roughness and clear coat), orbit the car, share the
+  build by URL, and send it to the contact form pre-filled. The showrooms render the same cached
+  models, so the configurator repaints a clone with its own copies of only the paint materials
+  (unit-tested: the original scene is untouched). Paint materials were found by scanning the GLBs;
+  the GT3 RS is left out because its paint is a livery texture.
 - **An AI concierge that can't make things up or skip the rules.** The chat answers through
   Gemini function calling over a catalogue **generated from the site's own model data** (a test
   fails if they drift), and books test drives through the same lead pipeline and validation as the
@@ -145,8 +151,8 @@ npm run verify:full   # ~20 min: + fresh build with bundle checks, page-weight b
 |---|---|
 | Trajectory guard | No choreography, canvas or layout input changed (33 hashed items) |
 | Backend tests (189) | API, validation, auth, CSV safety, email outbox (incl. concurrency), audit log (same-transaction rollback, keyset paging), live events (commit-only delivery, single-use tickets), AI triage and concierge with a fake model (schema validation, retries, no double triage, tool loop, booking rules, limits), the real Gemini SDK against a fake REST server, catalogue and migration drift, UTF-8 database, migrations and UTC sessions on a real Postgres |
-| Frontend tests (162) | Routing, forms, auth flow, dashboard, charts, lead timeline, live updates (reconnect with a fresh ticket), AI triage badges, concierge widget, error boundaries, credits, 3D signature effects |
-| E2E (9, Puppeteer) | Contact form → admin login → search → status change → logout, a live new-lead toast, and a phone-width concierge chat that books a test drive which the AI then triages, against the real backend and a local fake Gemini |
+| Frontend tests (175) | Routing, forms, auth flow, dashboard, charts, lead timeline, live updates (reconnect with a fresh ticket), AI triage badges, concierge widget, configurator (clone repaint, URL, contact pre-fill), error boundaries, credits, 3D signature effects |
+| E2E (10, Puppeteer) | Contact form → admin login → search → status change → logout, a live new-lead toast, a phone-width concierge chat that books a test drive which the AI then triages, and configurator → pre-filled contact form, against the real backend and a local fake Gemini |
 | Bundle + page weight | No admin/3D library in `main.js`; every route within its byte budget (first-party bytes) and model count |
 | Stage screenshots (49) | Every scroll stage of every showroom matches the baseline (GPU) |
 | SIGTERM | The API finishes in-flight requests, ends open live-event streams and exits cleanly on a real SIGTERM (in a Linux container with Docker, natively on Linux/macOS; skipped on Windows without Docker, which has no real SIGTERM) |
