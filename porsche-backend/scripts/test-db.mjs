@@ -67,7 +67,12 @@ export async function startEmbedded({ log = () => {} } = {}) {
     const port = await freePort();
     const databaseDir = fs.mkdtempSync(path.join(os.tmpdir(), DIR_PREFIX));
     fs.rmSync(databaseDir, { recursive: true, force: true }); // initdb wants to create it itself
-    const server = new EmbeddedPostgres({ databaseDir, port, user: USER, password: PASSWORD, persistent: false, onLog: () => {}, onError: () => {} });
+    // UTF8 like every real deployment: initdb otherwise takes the OS code page (WIN1252 on Windows),
+    // and storing e.g. a Cyrillic name fails with "has no equivalent in encoding WIN1252".
+    const server = new EmbeddedPostgres({
+        databaseDir, port, user: USER, password: PASSWORD, persistent: false, onLog: () => {}, onError: () => {},
+        initdbFlags: ['--encoding=UTF8', '--locale=C'],
+    });
     const started = Date.now();
     await server.initialise();
     await server.start();

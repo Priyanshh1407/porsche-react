@@ -19,6 +19,7 @@ import fs from 'fs';
 import http from 'http';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
+import { startFakeGemini } from './fake-gemini.mjs';
 
 const require = createRequire(import.meta.url);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -137,6 +138,9 @@ async function main() {
 
 async function runAll() {
     ensureBuild();
+    // AI on, against a local fake Gemini (real SDK + tools + triage worker; no key, no network).
+    const gemini = await startFakeGemini();
+    Object.assign(BACKEND_ENV, { GEMINI_API_KEY: 'e2e-fake-key', GEMINI_BASE_URL: gemini.url });
     const backend = await startBackend();
     const web = await startWeb(backend.port);
     const base = `http://127.0.0.1:${web.address().port}`;
@@ -307,6 +311,41 @@ async function runAll() {
             await waitForText(page, 'Livia Echtzeit', 5000);
             await page.close();
         });
+
+        await test('concierge: answers from the catalogue, books a test drive, and the lead is AI-triaged (Phases 10-11)', async () => {
+            const page = await newPage({ width: 390, height: 844 }); // phone width
+            await page.goto(`${base}/models`, { waitUntil: 'domcontentloaded' });
+            await page.waitForSelector('button[aria-label="Open the Porsche concierge chat"]', { timeout: 8000 });
+            await page.click('button[aria-label="Open the Porsche concierge chat"]');
+            await page.waitForSelector('#concierge-input');
+            await page.type('#concierge-input', 'Which electric cars do you have?');
+            await page.keyboard.press('Enter');
+            await waitForText(page, 'The Taycan is our electric model, with 761 HP.');
+            assert(await page.$('[role="dialog"] a[href="/models/taycan"]'), 'reply should link the Taycan page');
+
+            const email = `${RUN_ID}-concierge@example.com`;
+            await page.type('#concierge-input', `Yes, book the Taycan test drive for Elena Kurz, ${email}`);
+            await page.keyboard.press('Enter');
+            await waitForText(page, 'Test drive request sent for the Taycan');
+            const noHorizontalScroll = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
+            assert(noHorizontalScroll, 'chat panel causes horizontal scrolling at phone width');
+
+            // The booking is a real lead: source Concierge, and the triage worker scored it via "Gemini".
+            const { token } = await (await api('/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(ADMIN) })).json();
+            let lead;
+            for (let i = 0; i < 40 && lead?.triage?.status !== 'done'; i++) {
+                const list = await (await api(`/api/admin/contacts?q=${encodeURIComponent(email)}`, { headers: { Authorization: `Bearer ${token}` } })).json();
+                lead = list.data?.[0];
+                if (lead?.triage?.status !== 'done') await sleep(250);
+            }
+            assert(lead && lead.source === 'Concierge' && lead.inquiryType === 'Test_Drive' && lead.modelInterest === 'Taycan', `concierge lead missing or wrong: ${JSON.stringify(lead)}`);
+            assert(lead.triage?.status === 'done' && lead.triage.score === 'hot', `lead was not triaged: ${JSON.stringify(lead.triage)}`);
+            // What reached "Gemini": our key, the system prompt and tools, and no contact details in triage.
+            assert(gemini.requests.every((r) => r.key === 'e2e-fake-key'), 'API key header missing');
+            const triageReq = gemini.requests.find((r) => r.body.generationConfig?.responseJsonSchema && JSON.stringify(r.body).includes('website assistant'));
+            assert(triageReq && !JSON.stringify(triageReq.body).includes(email), 'triage request missing, or it contained the email');
+            await page.close();
+        });
     } finally {
         // Clean up this run's leads through the admin API (exercises DELETE too).
         try {
@@ -321,6 +360,7 @@ async function runAll() {
         }
         await browser.close();
         web.close();
+        gemini.server.close();
         backend.child.kill();
     }
 

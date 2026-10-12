@@ -109,6 +109,11 @@ flowchart LR
   is stored. The job is queued in the lead's own transaction and worked off like the email outbox
   (lease, `SKIP LOCKED`, retries), so it survives crashes, and it waits harmlessly until an API key
   is configured. The model never sees the visitor's contact details.
+- **An AI concierge that can't make things up or skip the rules.** The chat answers through
+  Gemini function calling over a catalogue **generated from the site's own model data** (a test
+  fails if they drift), and books test drives through the same lead pipeline and validation as the
+  contact form, only after the visitor confirms. Hard limits on turns, tool calls, input size and
+  rate. The real SDK path is tested end to end against a local fake Gemini, so no key is needed.
 - **Live admin dashboard without polling.** New leads and changes reach every open dashboard
   over Server-Sent Events. The event is a Postgres `NOTIFY` sent inside the change's transaction,
   so it arrives only after commit and works across several API instances; the browser authenticates
@@ -139,9 +144,9 @@ npm run verify:full   # ~20 min: + fresh build with bundle checks, page-weight b
 | Gate | What it proves |
 |---|---|
 | Trajectory guard | No choreography, canvas or layout input changed (33 hashed items) |
-| Backend tests (159) | API, validation, auth, CSV safety, email outbox (incl. concurrency), audit log (same-transaction rollback, keyset paging), live events (commit-only delivery, single-use tickets), AI triage with a fake model (schema validation, retries, no double triage), migration drift, migrations and UTC sessions on a real Postgres |
-| Frontend tests (144) | Routing, forms, auth flow, dashboard, charts, lead timeline, live updates (reconnect with a fresh ticket), AI triage badges, error boundaries, credits, 3D signature effects |
-| E2E (8, Puppeteer) | Contact form → admin login → search → status change → logout, and a live new-lead toast, against the real backend |
+| Backend tests (189) | API, validation, auth, CSV safety, email outbox (incl. concurrency), audit log (same-transaction rollback, keyset paging), live events (commit-only delivery, single-use tickets), AI triage and concierge with a fake model (schema validation, retries, no double triage, tool loop, booking rules, limits), the real Gemini SDK against a fake REST server, catalogue and migration drift, UTF-8 database, migrations and UTC sessions on a real Postgres |
+| Frontend tests (162) | Routing, forms, auth flow, dashboard, charts, lead timeline, live updates (reconnect with a fresh ticket), AI triage badges, concierge widget, error boundaries, credits, 3D signature effects |
+| E2E (9, Puppeteer) | Contact form → admin login → search → status change → logout, a live new-lead toast, and a phone-width concierge chat that books a test drive which the AI then triages, against the real backend and a local fake Gemini |
 | Bundle + page weight | No admin/3D library in `main.js`; every route within its byte budget (first-party bytes) and model count |
 | Stage screenshots (49) | Every scroll stage of every showroom matches the baseline (GPU) |
 | SIGTERM | The API finishes in-flight requests, ends open live-event streams and exits cleanly on a real SIGTERM (in a Linux container with Docker, natively on Linux/macOS; skipped on Windows without Docker, which has no real SIGTERM) |

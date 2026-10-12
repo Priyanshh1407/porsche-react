@@ -29,6 +29,8 @@ The server refuses to start without `DATABASE_URL`, `JWT_SECRET`, `ADMIN_EMAIL` 
 | GET | `/api/admin/stats`, `/api/admin/analytics` | Admin |
 | GET | `/api/admin/export` | Admin. CSV, safe against spreadsheet formula injection |
 | GET | `/api/admin/contacts/:id/timeline` | Admin. The lead's audit events and emails, oldest first (works for deleted leads) |
+| GET | `/api/concierge/status` | Whether the AI concierge is available (`GEMINI_API_KEY` set) |
+| POST | `/api/concierge/chat` | `{ messages: [{ role, text }] }` -> `{ reply, models, booking? }`; 20 requests / 10 min per IP |
 | POST | `/api/admin/events/ticket` | Admin. A single-use ticket (30 s) for the live-event stream |
 | GET | `/api/admin/events?ticket=` | Live events (Server-Sent Events): `lead.created`, `lead.updated`, `lead.deleted`, `lead.triaged` |
 | GET | `/api/admin/audit` | Admin. Whole audit log, newest first; keyset paging with `limit` and `cursor` (`nextCursor`) |
@@ -69,6 +71,31 @@ inside the message.
 **Turning it on:** set `GEMINI_API_KEY` in `.env` and restart. Without a key nothing calls the API;
 jobs stay queued (the admin shows "AI off") and are triaged once a key is set. Leads created before
 this feature have no job. Tests always use a scripted fake client, never the real API.
+
+## AI concierge (Gemini, optional)
+
+`routes/concierge.js`, `services/ai/{concierge,tools}.js`. The chat on the model, contact and
+configurator pages sends the whole conversation (the server keeps no chat state). Gemini answers
+through **function calling**, and this code runs the tools:
+- `search_models`, `get_model` and `compare_models` read `data/catalogue.json`. That file is
+  **generated from the frontend's own model data and list prices** (`node scripts/build-catalogue.mjs`;
+  a test fails if it is stale), so the assistant can only quote what the site shows.
+- `book_test_drive` creates a real lead through `createLead`, so it gets the outbox emails, the
+  triage job, the audit event (actor `ai`) and the live notification. It runs the **contact form's
+  own validation rules** (`middleware/contactValidation.js`), only with `confirmed: true` after the
+  visitor confirmed a summary, and at most 3 per IP per hour (counted in the database).
+
+Limits:
+- at most 24 messages per conversation and 2000 characters per message;
+- at most 4 tool calls per reply, then the model must answer without tools;
+- an output token cap and a 20 s timeout;
+- 20 requests per 10 minutes per IP;
+- no conversation content is logged.
+
+The system prompt keeps it to this site's models, forbids invented facts and treats visitor text as
+questions, not instructions. Without `GEMINI_API_KEY`, `/status` says unavailable and the launcher
+stays hidden. `GEMINI_BASE_URL` (optional) points the SDK at a proxy; the E2E tests use it for a
+local fake Gemini, so the real SDK path is tested without a key.
 
 ## Email outbox
 

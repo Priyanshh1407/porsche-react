@@ -35,3 +35,7 @@ export const MODEL_PAGES = {
     'macan-gts': { Page: Macan },
     panamera: { Page: Panamera },
 };
+
+// The 3D showrooms (lazy Page above): screens that stay exactly as designed, with no overlays
+// (the concierge chat launcher is not shown on them).
+export const SHOWROOM_SLUGS = new Set(['911-gt3-rs', '911-turbo-s', '918-spyder', 'cayenne', 'taycan']);

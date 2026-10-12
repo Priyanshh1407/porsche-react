@@ -18,8 +18,9 @@ const TIMEOUT_MS = 20_000;
 export const aiEnabled = (env = process.env) => Boolean(env.GEMINI_API_KEY && env.GEMINI_API_KEY.trim());
 export const aiModel = (env = process.env) => (env.GEMINI_MODEL && env.GEMINI_MODEL.trim()) || DEFAULT_MODEL;
 
-export function createGeminiClient({ apiKey, model }) {
-    const ai = new GoogleGenAI({ apiKey, httpOptions: { timeout: TIMEOUT_MS } });
+export function createGeminiClient({ apiKey, model, baseUrl }) {
+    // baseUrl: optional (GEMINI_BASE_URL), for a proxy or the local fake Gemini the E2E tests use.
+    const ai = new GoogleGenAI({ apiKey, httpOptions: { timeout: TIMEOUT_MS, ...(baseUrl ? { baseUrl } : {}) } });
     return {
         model,
         async generateJson({ system, prompt, schema, maxOutputTokens = 512 }) {
@@ -67,7 +68,7 @@ export function getAiClient() {
     if (override !== undefined) return override;
     if (!aiEnabled()) return null;
     const model = aiModel();
-    if (!cached || cached.model !== model) cached = createGeminiClient({ apiKey: process.env.GEMINI_API_KEY.trim(), model });
+    if (!cached || cached.model !== model) cached = createGeminiClient({ apiKey: process.env.GEMINI_API_KEY.trim(), model, baseUrl: process.env.GEMINI_BASE_URL || undefined });
     return cached;
 }
 

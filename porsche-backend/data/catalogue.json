@@ -1,0 +1,198 @@
+[
+  {
+    "slug": "911-turbo-s",
+    "name": "911 Turbo S",
+    "fullName": "Porsche 911 Turbo S",
+    "category": "Sports Cars",
+    "description": "Everyday supercar",
+    "url": "/models/911-turbo-s",
+    "contactValue": "TurboS_911",
+    "specs": {
+      "engine": "3.8L Twin-Turbo Flat-6",
+      "power": "640 HP",
+      "torque": "800 Nm",
+      "transmission": "8-Speed PDK",
+      "topSpeed": "330 km/h",
+      "acceleration": "2.7s (0-100 km/h)"
+    },
+    "listPrice": "$207,000"
+  },
+  {
+    "slug": "718-cayman-gt4-rs",
+    "name": "718 Cayman GT4 RS",
+    "fullName": "Porsche 718 Cayman GT4 RS",
+    "category": "Sports Cars",
+    "description": "Mid-engine coupe",
+    "url": "/models/718-cayman-gt4-rs",
+    "contactValue": "Cayman_GT4RS",
+    "specs": {
+      "engine": "4.0L Flat-6",
+      "power": "500 HP",
+      "torque": "450 Nm",
+      "transmission": "7-Speed PDK",
+      "topSpeed": "315 km/h",
+      "acceleration": "3.4s (0-100 km/h)"
+    },
+    "listPrice": null
+  },
+  {
+    "slug": "718-boxster-s",
+    "name": "718 Boxster S",
+    "fullName": "Porsche 718 Boxster S",
+    "category": "Sports Cars",
+    "description": "Convertible roadster",
+    "url": "/models/718-boxster-s",
+    "contactValue": "718_Boxster",
+    "specs": {
+      "power": "350 HP",
+      "torque": "420 Nm",
+      "acceleration": "4.4s (0-100 km/h)",
+      "topSpeed": "285 km/h"
+    },
+    "listPrice": "$73,000"
+  },
+  {
+    "slug": "911-gt3-rs",
+    "name": "911 GT3 RS",
+    "fullName": "Porsche 911 GT3 RS",
+    "category": "GT Cars",
+    "description": "Ultimate track weapon",
+    "url": "/models/911-gt3-rs",
+    "contactValue": "GT3RS",
+    "specs": {
+      "engine": "4.0L Flat-6",
+      "power": "518 HP",
+      "torque": "465 Nm",
+      "transmission": "7-Speed PDK",
+      "topSpeed": "296 km/h",
+      "acceleration": "3.2s (0-100 km/h)"
+    },
+    "listPrice": "$223,800"
+  },
+  {
+    "slug": "911-gt2-rs",
+    "name": "911 GT2 RS",
+    "fullName": "Porsche 911 GT2 RS",
+    "category": "GT Cars",
+    "description": "Most powerful 911",
+    "url": "/models/911-gt2-rs",
+    "contactValue": "GT2RS_911",
+    "specs": {
+      "engine": "3.8L Twin-Turbo Flat-6",
+      "power": "700 HP",
+      "torque": "750 Nm",
+      "transmission": "7-Speed PDK",
+      "topSpeed": "340 km/h",
+      "acceleration": "2.7s (0-100 km/h)"
+    },
+    "listPrice": "$293,000"
+  },
+  {
+    "slug": "carrera-gt",
+    "name": "Carrera GT",
+    "fullName": "Porsche Carrera GT",
+    "category": "Supercars",
+    "description": "Analog V10 icon",
+    "url": "/models/carrera-gt",
+    "contactValue": "CarreraGT",
+    "specs": {
+      "engine": "5.7L V10",
+      "power": "612 HP",
+      "torque": "590 Nm",
+      "transmission": "6-Speed Manual",
+      "topSpeed": "330 km/h",
+      "acceleration": "3.9s (0-100 km/h)"
+    },
+    "listPrice": "$448,000"
+  },
+  {
+    "slug": "918-spyder",
+    "name": "918 Spyder",
+    "fullName": "Porsche 918 Spyder",
+    "category": "Supercars",
+    "description": "Hybrid hypercar",
+    "url": "/models/918-spyder",
+    "contactValue": "Spyder_918",
+    "specs": {
+      "engine": "4.6L V8 + 2 Electric Motors",
+      "power": "887 HP",
+      "torque": "1280 Nm",
+      "transmission": "7-Speed PDK",
+      "topSpeed": "340 km/h",
+      "acceleration": "2.6s (0-100 km/h)"
+    },
+    "listPrice": "$845,000"
+  },
+  {
+    "slug": "cayenne",
+    "name": "Cayenne",
+    "fullName": "Porsche Cayenne Turbo",
+    "category": "SUVs",
+    "description": "Full-size luxury SUV",
+    "url": "/models/cayenne",
+    "contactValue": "Cayenne",
+    "specs": {
+      "engine": "4.0L Twin-Turbo V8",
+      "power": "541 HP",
+      "torque": "770 Nm",
+      "transmission": "8-Speed Tiptronic S",
+      "topSpeed": "286 km/h",
+      "acceleration": "3.9s (0-100 km/h)"
+    },
+    "listPrice": "$182,000"
+  },
+  {
+    "slug": "macan-gts",
+    "name": "Macan GTS",
+    "fullName": "Porsche Macan GTS",
+    "category": "SUVs",
+    "description": "Compact luxury SUV",
+    "url": "/models/macan-gts",
+    "contactValue": "Macan",
+    "specs": {
+      "engine": "2.9L Twin-Turbo V6",
+      "power": "434 HP",
+      "torque": "550 Nm",
+      "transmission": "7-Speed PDK",
+      "topSpeed": "272 km/h",
+      "acceleration": "4.5s (0-100 km/h)"
+    },
+    "listPrice": "$69,000"
+  },
+  {
+    "slug": "taycan",
+    "name": "Taycan",
+    "fullName": "Porsche Taycan Turbo S",
+    "category": "Electric",
+    "description": "Pure electric performance",
+    "url": "/models/taycan",
+    "contactValue": "Taycan",
+    "specs": {
+      "engine": "Dual Electric Motors",
+      "power": "761 HP",
+      "torque": "1050 Nm",
+      "transmission": "2-Speed Automatic",
+      "topSpeed": "260 km/h",
+      "acceleration": "2.8s (0-100 km/h)"
+    },
+    "listPrice": "$185,000"
+  },
+  {
+    "slug": "panamera",
+    "name": "Panamera",
+    "fullName": "Porsche Panamera Turbo S E-Hybrid",
+    "category": "Sedans",
+    "description": "Luxury sports sedan",
+    "url": "/models/panamera",
+    "contactValue": "Panamera",
+    "specs": {
+      "engine": "4.0L Twin-Turbo V8 + Electric Motor",
+      "power": "700 HP",
+      "torque": "870 Nm",
+      "transmission": "8-Speed PDK",
+      "topSpeed": "315 km/h",
+      "acceleration": "3.2s (0-100 km/h)"
+    },
+    "listPrice": "$204,000"
+  }
+]

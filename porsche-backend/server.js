@@ -22,6 +22,7 @@ try {
 import contactRoutes from "./routes/contact.js";
 import adminRoutes from "./routes/admin.js";
 import eventRoutes from "./routes/events.js";
+import conciergeRoutes from "./routes/concierge.js";
 import { closeLiveEvents } from "./utils/events.js";
 import { startTriageWorker } from "./services/ai/triage.js";
 
@@ -68,6 +69,7 @@ app.get('/ready', async (req, res) => {
 });
 
 app.use('/api/contact', contactRoutes);
+app.use('/api/concierge', conciergeRoutes);
 app.use('/api/admin/events', eventRoutes);
 app.use('/api/admin', adminRoutes);
 

@@ -17,6 +17,7 @@ import RouteErrorBoundary from './components/RouteErrorBoundary';
 import RequireAdmin from './components/RequireAdmin';
 import NotFound from './pages/NotFound';
 import Credits from './pages/Credits';
+import ConciergeLauncher from './components/concierge/ConciergeLauncher';
 
 // PERF-02: the dashboard's charting library (recharts) is only downloaded by admins, not every visitor.
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -61,6 +62,8 @@ function App() {
         <BrowserRouter>
           <RouteErrorBoundary>
             <AppRoutes />
+            {/* Phase 11: AI concierge (only on some pages; never on / or the 3D showrooms). */}
+            <ConciergeLauncher />
           </RouteErrorBoundary>
         </BrowserRouter>
       </div>
