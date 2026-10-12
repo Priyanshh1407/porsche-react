@@ -183,3 +183,24 @@ describe('live updates', () => {
         expect(await screen.findByTestId('live-status')).toHaveTextContent('Offline');
     });
 });
+
+// Phase 10: AI triage in the Contacts tab.
+test('the AI score filter is sent to the server and the triage badge shows', async () => {
+    const base = global.fetch;
+    global.fetch = jest.fn((url, options) => {
+        const u = new URL(url, 'http://x');
+        if (u.pathname === '/api/admin/contacts' && u.searchParams.get('page')) {
+            return base(url, options).then(async (r) => {
+                const body = await r.json();
+                body.data[0].triage = { status: 'done', score: 'hot', summary: 'Ready to buy.', nextStep: 'Call today.' };
+                body.ai = { enabled: true, model: 'gemini-3.8-flash' };
+                return { ok: true, status: 200, json: async () => body };
+            });
+        }
+        return base(url, options);
+    });
+    await openContactsTab();
+    expect(await screen.findByTitle('Ready to buy.')).toHaveTextContent('Hot');
+    fireEvent.change(screen.getByRole('combobox', { name: 'AI score' }), { target: { value: 'hot' } });
+    await waitFor(() => expect(global.fetch.mock.calls.some(([u]) => u === '/api/admin/contacts?page=1&limit=20&score=hot')).toBe(true));
+});

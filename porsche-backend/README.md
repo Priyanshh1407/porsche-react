@@ -22,7 +22,7 @@ The server refuses to start without `DATABASE_URL`, `JWT_SECRET`, `ADMIN_EMAIL` 
 | POST | `/api/contact/submit` | Validated; 5 per hour per IP; saves the lead and its emails atomically |
 | GET | `/api/contact/models` | Model options for the form |
 | POST | `/api/admin/login` | Returns a JWT; 5 failed attempts per 15 min per IP |
-| GET | `/api/admin/contacts` | Admin. Server-side search (`q`), filters (`status`, `inquiryType`), paging (`page`, `limit`) |
+| GET | `/api/admin/contacts` | Admin. Server-side search (`q`), filters (`status`, `inquiryType`, AI `score`), paging (`page`, `limit`); each lead carries its AI `triage` |
 | GET | `/api/admin/contacts/:id/details` | Admin |
 | PUT | `/api/admin/contacts/:id` | Admin. Status: `new`, `contacted`, `qualified`, `closed` |
 | DELETE | `/api/admin/contacts/:id` | Admin (its pending emails are deleted too) |
@@ -53,6 +53,22 @@ streams. EventSource can't send a JWT and a JWT in a URL ends up in logs, so the
 trades it for a ticket: random, single use, valid 30 s, stored hashed in memory (with several
 instances, use sticky sessions or a shared ticket store). Streams send a heartbeat every 25 s, end
 when the admin's JWT expires, and are ended on shutdown (the SIGTERM check holds one open).
+
+## AI lead triage (Gemini, optional)
+
+`services/ai/triage.js`, `services/ai/client.js`, table `LeadTriage`. Every lead gets a triage job
+in the lead's own transaction. A worker claims due jobs (lease + `FOR UPDATE SKIP LOCKED`, as in the
+email outbox) and asks Google Gemini (`gemini-3.8-flash`, override with `GEMINI_MODEL`) for
+**structured JSON** (`responseJsonSchema`): a score (hot / warm / cold), a one-line summary and a
+next step. The answer is validated again in code; invalid output or an API error is never stored,
+the job retries with backoff (4 attempts). The result is stored with an audit event (actor `ai`)
+and a live `lead.triaged` notification. The model sees the enquiry (type, model, message,
+preferences), never the visitor's name, email, phone or IP, and is told to ignore instructions
+inside the message.
+
+**Turning it on:** set `GEMINI_API_KEY` in `.env` and restart. Without a key nothing calls the API;
+jobs stay queued (the admin shows "AI off") and are triaged once a key is set. Leads created before
+this feature have no job. Tests always use a scripted fake client, never the real API.
 
 ## Email outbox
 

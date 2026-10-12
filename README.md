@@ -104,6 +104,11 @@ flowchart LR
   exports and admin logins each write an audit event (who, what, before/after) inside the
   transaction that makes the change, so the log can't disagree with the data. Each lead has a
   timeline; the full log pages with a keyset cursor.
+- **AI lead triage as a durable job.** Each lead is scored hot / warm / cold by Google Gemini with a
+  one-line summary and next step, through structured JSON output that is validated again before it
+  is stored. The job is queued in the lead's own transaction and worked off like the email outbox
+  (lease, `SKIP LOCKED`, retries), so it survives crashes, and it waits harmlessly until an API key
+  is configured. The model never sees the visitor's contact details.
 - **Live admin dashboard without polling.** New leads and changes reach every open dashboard
   over Server-Sent Events. The event is a Postgres `NOTIFY` sent inside the change's transaction,
   so it arrives only after commit and works across several API instances; the browser authenticates
@@ -134,8 +139,8 @@ npm run verify:full   # ~20 min: + fresh build with bundle checks, page-weight b
 | Gate | What it proves |
 |---|---|
 | Trajectory guard | No choreography, canvas or layout input changed (33 hashed items) |
-| Backend tests (146) | API, validation, auth, CSV safety, email outbox (incl. concurrency), audit log (same-transaction rollback, keyset paging), live events (commit-only delivery, single-use tickets), migrations and UTC sessions on a real Postgres |
-| Frontend tests (137) | Routing, forms, auth flow, dashboard, charts, lead timeline and live updates (reconnect with a fresh ticket), error boundaries, credits, 3D signature effects |
+| Backend tests (159) | API, validation, auth, CSV safety, email outbox (incl. concurrency), audit log (same-transaction rollback, keyset paging), live events (commit-only delivery, single-use tickets), AI triage with a fake model (schema validation, retries, no double triage), migration drift, migrations and UTC sessions on a real Postgres |
+| Frontend tests (144) | Routing, forms, auth flow, dashboard, charts, lead timeline, live updates (reconnect with a fresh ticket), AI triage badges, error boundaries, credits, 3D signature effects |
 | E2E (8, Puppeteer) | Contact form → admin login → search → status change → logout, and a live new-lead toast, against the real backend |
 | Bundle + page weight | No admin/3D library in `main.js`; every route within its byte budget (first-party bytes) and model count |
 | Stage screenshots (49) | Every scroll stage of every showroom matches the baseline (GPU) |
@@ -170,7 +175,9 @@ To judge smoothness, try the production build: the dev server runs React in deve
 npm run build && npm run preview   # http://localhost:3000, /api forwarded to :5000 like a real host
 ```
 
-Leave `EMAIL_PASS` empty and emails are logged to the console instead of sent. `npm start` in the frontend prints
+Leave `EMAIL_PASS` empty and emails are logged to the console instead of sent. The AI features
+(lead triage, concierge chat) are off until you set `GEMINI_API_KEY` in `porsche-backend/.env` and
+restart the backend; nothing else is needed. `npm start` in the frontend prints
 "Failed to parse source map … @mediapipe/tasks-vision": that's harmless (a dependency of Drei ships
 without its source map). Tested from a fresh clone: about 5 minutes to a working site. Upgrading an older
 database created with `prisma db push`? Follow

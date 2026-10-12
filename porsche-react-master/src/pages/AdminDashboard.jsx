@@ -9,6 +9,7 @@ import { apiFetch } from '../lib/api';
 import EmailDeliveryBadge from '../components/EmailDeliveryBadge';
 import LeadTimeline from '../components/LeadTimeline';
 import LiveStatus from '../components/LiveStatus';
+import TriageBadge from '../components/TriageBadge';
 import { connectLiveEvents } from '../lib/liveEvents';
 import { useAuth } from '../context/AuthContext';
 
@@ -45,6 +46,8 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [scoreFilter, setScoreFilter] = useState('all'); // Phase 10: AI triage score
+  const [aiInfo, setAiInfo] = useState({ enabled: false, model: null });
   // BUG-05: the dashboard card shows the newest 5; the Contacts tab pages through ALL contacts
   // on the server (search/filter used to run in the browser over one page of 10).
   const [recentContacts, setRecentContacts] = useState([]);
@@ -195,7 +198,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, statusFilter]);
+  }, [debouncedSearch, statusFilter, scoreFilter]);
 
   useEffect(() => {
     if (activeTab !== 'contacts') return;
@@ -203,19 +206,23 @@ const AdminDashboard = () => {
     const params = new URLSearchParams({ page: String(page), limit: String(PAGE_SIZE) });
     if (statusFilter !== 'all') params.set('status', statusFilter);
     if (debouncedSearch) params.set('q', debouncedSearch);
+    if (scoreFilter !== 'all') params.set('score', scoreFilter);
     (async () => {
       try {
         const res = await apiFetch(`/api/admin/contacts?${params}`, { auth: true });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         // Ignore a response that arrives after a newer search/page was requested.
-        if (!cancelled) setContactsPage({ items: data.data, pagination: data.pagination });
+        if (!cancelled) {
+          setContactsPage({ items: data.data, pagination: data.pagination });
+          if (data.ai) setAiInfo(data.ai);
+        }
       } catch (err) {
         if (!cancelled) showToast('Failed to load contacts');
       }
     })();
     return () => { cancelled = true; };
-  }, [activeTab, page, statusFilter, debouncedSearch, listVersion]);
+  }, [activeTab, page, statusFilter, scoreFilter, debouncedSearch, listVersion]);
 
   const refreshLists = () => {
     fetchData();
@@ -337,6 +344,13 @@ const AdminDashboard = () => {
                 <label className="block text-sm font-medium text-gray-700">Message</label>
                 <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">{showContactDetails.message}</p>
               </div>
+              {showContactDetails.triage?.status === 'done' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">AI triage <TriageBadge triage={showContactDetails.triage} aiEnabled={aiInfo.enabled} /></label>
+                  <p className="text-sm text-gray-900">{showContactDetails.triage.summary}</p>
+                  <p className="text-sm text-gray-600">Next step: {showContactDetails.triage.nextStep}</p>
+                </div>
+              )}
               <LeadTimeline contactId={showContactDetails.id} />
             </div>
           </div>
@@ -552,6 +566,17 @@ const AdminDashboard = () => {
                   <option value="qualified">Qualified</option>
                   <option value="closed">Closed</option>
                 </select>
+                <select
+                  aria-label="AI score"
+                  value={scoreFilter}
+                  onChange={(e) => setScoreFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600"
+                >
+                  <option value="all">All AI scores</option>
+                  <option value="hot">Hot</option>
+                  <option value="warm">Warm</option>
+                  <option value="cold">Cold</option>
+                </select>
                 <button onClick={handleExport} className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
                   <Download className="h-4 w-4" />
                 </button>
@@ -575,7 +600,7 @@ const AdminDashboard = () => {
                     {contactsPage.items.length === 0 && (
                       <tr>
                         <td colSpan={6} className="px-6 py-8 text-center text-sm text-gray-500">
-                          {debouncedSearch || statusFilter !== 'all' ? 'No contacts match this search.' : 'No contacts yet.'}
+                          {debouncedSearch || statusFilter !== 'all' || scoreFilter !== 'all' ? 'No contacts match this search.' : 'No contacts yet.'}
                         </td>
                       </tr>
                     )}
@@ -592,6 +617,7 @@ const AdminDashboard = () => {
                           <div className="flex flex-col items-start gap-1">
                             {getStatusBadge(contact.status)}
                             <EmailDeliveryBadge emails={contact.emails} />
+                            <TriageBadge triage={contact.triage} aiEnabled={aiInfo.enabled} />
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(contact.createdAt).toLocaleDateString()}</td>

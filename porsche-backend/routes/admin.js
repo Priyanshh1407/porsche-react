@@ -11,6 +11,8 @@ import { handleValidationErrors } from "../middleware/validation.js";
 import { CONTACT_STATUSES, INQUIRY_TYPES } from "../config/contactOptions.js";
 import { audit, actorFor, decodeCursor, encodeCursor } from "../utils/audit.js";
 import { publish } from "../utils/events.js";
+import { SCORES } from "../services/ai/triage.js";
+import { aiEnabled, aiModel } from "../services/ai/client.js";
 
 const router = express.Router();
 
@@ -24,6 +26,7 @@ const validListQuery = [
     query('status').optional().isIn([...CONTACT_STATUSES, 'all']).withMessage(`status must be one of: all, ${CONTACT_STATUSES.join(', ')}`),
     query('inquiryType').optional().isIn(INQUIRY_TYPES).withMessage(`inquiryType must be one of: ${INQUIRY_TYPES.join(', ')}`),
     query('q').optional().trim().isLength({ max: 100 }).withMessage('search term can be at most 100 characters'),
+    query('score').optional().isIn(SCORES).withMessage(`score must be one of: ${SCORES.join(', ')}`),
 ];
 const validContactUpdate = [
     body('status').optional().isIn(CONTACT_STATUSES).withMessage(`status must be one of: ${CONTACT_STATUSES.join(', ')}`),
@@ -134,6 +137,7 @@ router.get('/contacts', authenticateAdmin, validListQuery, handleValidationError
         const where = {};
         if (status && status !== 'all') where.status = status;
         if (inquiryType) where.inquiryType = inquiryType;
+        if (req.query.score) where.triage = { is: { score: req.query.score } };
         // BUG-05: search runs on the server over all contacts (it used to filter one page of 10
         // in the browser). Case-insensitive match on name, email or phone.
         if (q) {
@@ -148,7 +152,11 @@ router.get('/contacts', authenticateAdmin, validListQuery, handleValidationError
                 where,
                 // UPG-03: delivery state for the dashboard badge. Never lastError: SMTP error text
                 // can name internal hosts and doesn't belong in the browser.
-                include: { emails: { select: { kind: true, status: true, attempts: true } } },
+                include: {
+                    emails: { select: { kind: true, status: true, attempts: true } },
+                    // Phase 10: never lastError (API error text) in the browser either.
+                    triage: { select: { status: true, score: true, summary: true, nextStep: true, model: true } }
+                },
                 orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
                 take: limit,
                 skip: (page - 1) * limit
@@ -159,6 +167,8 @@ router.get('/contacts', authenticateAdmin, validListQuery, handleValidationError
         res.json({
             success: true,
             data: contacts,
+            // Phase 10: lets the dashboard explain a pending triage (no API key configured yet).
+            ai: { enabled: aiEnabled(), model: aiEnabled() ? aiModel() : null },
             pagination: {
                 current: page,
                 pages: Math.ceil(total / limit),

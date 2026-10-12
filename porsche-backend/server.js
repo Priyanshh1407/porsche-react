@@ -23,6 +23,7 @@ import contactRoutes from "./routes/contact.js";
 import adminRoutes from "./routes/admin.js";
 import eventRoutes from "./routes/events.js";
 import { closeLiveEvents } from "./utils/events.js";
+import { startTriageWorker } from "./services/ai/triage.js";
 
 const app = express();
 
@@ -115,13 +116,15 @@ async function start() {
     });
     // UPG-03: delivers the emails recorded in the outbox (and retries failures).
     const emailWorker = startEmailWorker();
+    // Phase 10: AI lead triage (idle, with a log line, while GEMINI_API_KEY is unset).
+    const triageWorker = startTriageWorker();
 
     const shutdown = (signal) => {
         console.log(`\n${signal} received: shutting down...`);
         // Stop accepting new connections, let in-flight requests finish, let an email that is being
         // sent finish, then close the pool. If the force-exit below fires first, that email's lease
         // simply expires and it is retried after restart (at-least-once delivery).
-        const workerStopped = emailWorker.stop();
+        const workerStopped = Promise.all([emailWorker.stop(), triageWorker.stop()]);
         // Live-event streams never finish on their own: end them, so their connections go idle
         // and close with the rest. Browsers reconnect to another instance (or after the restart).
         const liveEventsClosed = closeLiveEvents();

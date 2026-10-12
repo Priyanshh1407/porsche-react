@@ -25,5 +25,8 @@ process.env.EMAIL_PORT = '';
 process.env.EMAIL_USER = '';
 process.env.EMAIL_PASS = '';
 process.env.EMAIL_FROM = 'noreply@test.local';
+// Never call the real Gemini API from tests (even if .env has a key): AI tests inject a fake client.
+process.env.GEMINI_API_KEY = '';
+process.env.GEMINI_MODEL = '';
 
 module.exports = { DEFAULT_TEST_DB };

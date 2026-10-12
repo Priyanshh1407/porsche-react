@@ -34,6 +34,7 @@ model Contact {
   createdAt              DateTime      @default(now())
   updatedAt              DateTime      @default(now()) @updatedAt
   emails                 EmailOutbox[]
+  triage                 LeadTriage?
 
   @@index([email])
   @@index([createdAt])
@@ -102,4 +103,39 @@ model AuditEvent {
 
   @@index([contactId, at])
   @@index([at, id])
+}
+
+// Phase 10: AI lead triage. One durable job per lead, written in the lead's transaction and worked
+// off by services/ai/triage.js (lease + SKIP LOCKED, like the email outbox). Without an API key the
+// rows stay pending until one is configured.
+enum TriageStatus {
+  pending
+  done
+  failed
+}
+
+enum LeadScore {
+  hot
+  warm
+  cold
+}
+
+model LeadTriage {
+  id            String       @id @default(uuid())
+  contactId     String       @unique
+  contact       Contact      @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  status        TriageStatus @default(pending)
+  attempts      Int          @default(0)
+  nextAttemptAt DateTime     @default(now())
+  lockedUntil   DateTime?
+  score         LeadScore?
+  summary       String?      @db.VarChar(200)
+  nextStep      String?      @db.VarChar(200)
+  model         String?      @db.VarChar(80)
+  lastError     String?      @db.VarChar(500)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @default(now()) @updatedAt
+
+  @@index([status, nextAttemptAt])
+  @@index([score])
 }
