@@ -20,6 +20,7 @@ import PorscheExperience from "../assets/home/PorscheExperience.avif";
 import Motorsport from "../assets/home/Motorsport.jpg";
 import { useNavigate } from 'react-router-dom';
 import { modelPath } from '../data/models';
+import { configuratorPathFor } from '../components/configurator/options';
 
 const Home = () => {
     const [activeHero, setActiveHero] = useState(0);
@@ -257,7 +258,7 @@ const Home = () => {
                                 <button onClick={() => navigate(heroSlides[activeHero].route)} className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-full transition-all duration-300 hover:scale-105 flex items-center gap-2">
                                     {heroSlides[activeHero].cta} <ChevronRight className="w-4 h-4" />
                                 </button>
-                                <button className="border border-white/30 hover:border-white text-white px-8 py-3 rounded-full transition-all duration-300 hover:bg-white hover:text-black">
+                                <button onClick={() => navigate(configuratorPathFor(heroSlides[activeHero].title))} className="border border-white/30 hover:border-white text-white px-8 py-3 rounded-full transition-all duration-300 hover:bg-white hover:text-black">
                                     Configure
                                 </button>
                             </div>

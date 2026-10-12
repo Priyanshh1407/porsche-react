@@ -4,6 +4,8 @@
 // Cars: the four showroom models whose body paint is a plain material (found by scanning each GLB:
 // node scripts listed in FIX_LOG). The GT3 RS is not offered: its paint carries the Manthey Racing
 // livery as a texture, so a colour change would tint the livery, not repaint the car.
+import { findModel } from '../../data/models';
+
 export const CARS = [
     {
         id: 'taycan', name: 'Taycan Turbo GT', contactValue: 'Taycan', modelSlug: 'taycan',
@@ -61,6 +63,16 @@ export const paramsFor = ({ car, paint, finish }) => ({ car: car.id, paint: pain
 
 /** One line describing the build, as sent to the contact form ("Request this spec"). */
 export const specLine = ({ car, paint, finish }) => `${car.name} in ${paint.name}, ${finish.name.toLowerCase()} finish`;
+
+/**
+ * The configurator for a model shown elsewhere ("Configure" buttons on the home page and /models):
+ * preset to that car when the configurator offers it, otherwise the configurator's default.
+ */
+export function configuratorPathFor(modelName) {
+    const slug = findModel(modelName || '')?.slug;
+    const car = CARS.find((c) => c.modelSlug === slug);
+    return car ? `/configurator?car=${car.id}` : '/configurator';
+}
 
 /** /contact link that pre-fills the model and the message. */
 export function contactLinkFor(selection) {

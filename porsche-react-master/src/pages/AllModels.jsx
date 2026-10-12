@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Loader from '../components/Loader';
 import { useScrollPosition } from '../data/useScrollPosition';
 import { pathForName } from '../data/models';
+import { configuratorPathFor } from '../components/configurator/options';
 
 const AllModels = () => {
   const [activeModel, setActiveModel] = useState(0);
@@ -393,7 +394,7 @@ const AllModels = () => {
 
               {/* CTA & Explore Button */}
               <div className={`flex justify-start gap-4 animate-float-up-delay-3 ${animateElements ? 'animate' : ''}`}>
-                <button className={`group bg-gradient-to-r ${currentModel.color} hover:shadow-2xl hover:shadow-current/25 text-black font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center space-x-2`}>
+                <button onClick={() => navigate(configuratorPathFor(currentModel.name))} className={`group bg-gradient-to-r ${currentModel.color} hover:shadow-2xl hover:shadow-current/25 text-black font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center space-x-2`}>
                   <span>CONFIGURE NOW</span>
                   <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
