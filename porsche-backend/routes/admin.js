@@ -9,6 +9,7 @@ import { authenticateAdmin } from "../middleware/auth.js";
 import { body, param, query } from "express-validator";
 import { handleValidationErrors } from "../middleware/validation.js";
 import { CONTACT_STATUSES, INQUIRY_TYPES } from "../config/contactOptions.js";
+import { audit, actorFor, decodeCursor, encodeCursor } from "../utils/audit.js";
 
 const router = express.Router();
 
@@ -84,7 +85,13 @@ router.post('/login', loginLimiter, async (req, res) => {
         const emailMatches = safeEqual(email.trim().toLowerCase(), adminEmail.trim().toLowerCase());
         const passwordMatches = safeEqual(password, adminPassword);
 
+        // AUD-01: every login attempt is recorded (the email tried, never the password). A login is
+        // not a data change, so a failed audit write is logged instead of blocking the admin.
+        const recordLogin = (action, actor) => audit({ actor, action, meta: { email: email.trim().toLowerCase().slice(0, 254) }, ip: req.ip })
+            .catch((err) => console.error('Audit write failed (login):', err.message));
+
         if (emailMatches && passwordMatches) {
+            await recordLogin('login_ok', `admin:${adminEmail}`);
             const token = jwt.sign(
                 { email: adminEmail, role: 'admin' },
                 process.env.JWT_SECRET,
@@ -97,6 +104,7 @@ router.post('/login', loginLimiter, async (req, res) => {
                 token: token
             });
         } else {
+            await recordLogin('login_failed', 'public');
             res.status(401).json({
                 success: false,
                 message: 'Invalid credentials'
@@ -170,14 +178,26 @@ router.put('/contacts/:id', authenticateAdmin, validContactId, validContactUpdat
     try {
         const { status, notes } = req.body;
 
-        const updateData = {};
-        if (status) updateData.status = status;
-        if (notes !== undefined) updateData.notes = notes;
-        if (status === 'contacted') updateData.contactedAt = new Date();
+        // AUD-01: read, update and record in one transaction. One event per field that really
+        // changed; if an event can't be written, the update is rolled back.
+        const contact = await prisma.$transaction(async (tx) => {
+            const before = await tx.contact.findUnique({ where: { id: req.params.id }, select: { status: true, notes: true } });
+            if (!before) throw Object.assign(new Error('Contact not found'), { code: 'P2025' });
 
-        const contact = await prisma.contact.update({
-            where: { id: req.params.id },
-            data: updateData
+            const updateData = {};
+            if (status) updateData.status = status;
+            if (notes !== undefined) updateData.notes = notes;
+            if (status === 'contacted' && before.status !== 'contacted') updateData.contactedAt = new Date();
+
+            const updated = await tx.contact.update({ where: { id: req.params.id }, data: updateData });
+            const actor = actorFor(req);
+            if (status && status !== before.status) {
+                await audit({ actor, action: 'status_changed', contactId: updated.id, before: { status: before.status }, after: { status }, ip: req.ip }, tx);
+            }
+            if (notes !== undefined && (notes ?? null) !== (before.notes ?? null)) {
+                await audit({ actor, action: 'notes_changed', contactId: updated.id, before: { notes: before.notes }, after: { notes: notes ?? null }, ip: req.ip }, tx);
+            }
+            return updated;
         });
 
         res.json({
@@ -309,8 +329,14 @@ router.get('/export', authenticateAdmin, validExportQuery, handleValidationError
             filters.createdAt.$lte = new Date(req.query.endDate);
         }
 
-        await ExportService.exportToCSV(filters, res);
+        // AUD-01: the export is recorded before any data leaves; no record, no file.
+        const { csv, rows } = await ExportService.buildCsv(filters);
+        const recorded = Object.fromEntries(['status', 'inquiryType', 'startDate', 'endDate']
+            .filter((key) => req.query[key]).map((key) => [key, req.query[key]]));
+        await audit({ actor: actorFor(req), action: 'export', meta: { filters: recorded, rows }, ip: req.ip });
+        ExportService.sendCsv(res, csv);
     } catch (error) {
+        console.error('CSV export error:', error);
         res.status(500).json({
             success: false,
             message: 'Failed to export contacts'
@@ -345,8 +371,15 @@ router.get('/contacts/:id/details', authenticateAdmin, validContactId, handleVal
 // DELETE /api/admin/contacts/:id - Delete a contact
 router.delete('/contacts/:id', authenticateAdmin, validContactId, handleValidationErrors, async (req, res) => {
     try {
-        const contact = await prisma.contact.delete({
-            where: { id: req.params.id }
+        // AUD-01: the event keeps a non-personal summary of what was deleted; the history (no
+        // foreign key) outlives the lead.
+        await prisma.$transaction(async (tx) => {
+            const contact = await tx.contact.delete({
+                where: { id: req.params.id },
+                select: { id: true, status: true, inquiryType: true, modelInterest: true, source: true, createdAt: true }
+            });
+            const { id, ...summary } = contact;
+            await audit({ actor: actorFor(req), action: 'lead_deleted', contactId: id, before: summary, ip: req.ip }, tx);
         });
 
         res.json({
@@ -367,6 +400,58 @@ router.delete('/contacts/:id', authenticateAdmin, validContactId, handleValidati
     }
 });
 
+// GET /api/admin/contacts/:id/timeline - Everything that happened to one lead, oldest first
+// (audit events + its emails). Works for deleted leads too: their events outlive them.
+router.get('/contacts/:id/timeline', authenticateAdmin, validContactId, handleValidationErrors, async (req, res) => {
+    try {
+        const [events, emails] = await Promise.all([
+            prisma.auditEvent.findMany({
+                where: { contactId: req.params.id },
+                select: { id: true, at: true, actor: true, action: true, before: true, after: true, meta: true },
+                orderBy: [{ at: 'asc' }, { id: 'asc' }]
+            }),
+            // Never lastError: SMTP error text can name internal hosts (as in GET /contacts).
+            prisma.emailOutbox.findMany({
+                where: { contactId: req.params.id },
+                select: { kind: true, status: true, attempts: true, sentAt: true, createdAt: true },
+                orderBy: { createdAt: 'asc' }
+            })
+        ]);
+        res.json({ success: true, data: { events, emails } });
+    } catch (error) {
+        console.error('Timeline error:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch the timeline' });
+    }
+});
 
+// GET /api/admin/audit - The whole audit log, newest first. Keyset paging: `cursor` is the
+// position of the last event seen, so pages never repeat or skip events while new ones arrive.
+const validAuditQuery = [
+    query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('limit must be between 1 and 100').toInt(),
+    query('cursor').optional().custom((value) => decodeCursor(value) !== null).withMessage('cursor is not valid'),
+];
+router.get('/audit', authenticateAdmin, validAuditQuery, handleValidationErrors, async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 50; // Express 5: req.query is read-only, so .toInt() can't convert it
+        const after = req.query.cursor ? decodeCursor(req.query.cursor) : null;
+        const where = after
+            ? { OR: [{ at: { lt: after.at } }, { at: after.at, id: { lt: after.id } }] }
+            : {};
+        const events = await prisma.auditEvent.findMany({
+            where,
+            orderBy: [{ at: 'desc' }, { id: 'desc' }],
+            take: limit + 1 // one extra tells whether there is a next page
+        });
+        const page = events.slice(0, limit);
+        res.json({
+            success: true,
+            data: page,
+            nextCursor: events.length > limit ? encodeCursor(page[page.length - 1]) : null
+        });
+    } catch (error) {
+        console.error('Audit log error:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch the audit log' });
+    }
+});
 
 export default router;

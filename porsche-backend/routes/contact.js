@@ -1,8 +1,7 @@
 import express from "express";
 import { body, validationResult } from "express-validator";
 import rateLimit from "express-rate-limit";
-import prisma from "../prisma/client.js";
-import { contactEmailsNestedWrite, nudgeEmailWorker } from "../utils/emailOutbox.js";
+import { createLead } from "../services/leads.js";
 import { INQUIRY_TYPES, MODEL_OPTIONS, MODEL_VALUES } from "../config/contactOptions.js";
 
 const router = express.Router();
@@ -120,13 +119,10 @@ router.post('/submit', contactLimiter, contactValidation, async (req, res) => {
             status: 'new'
         };
 
-        // UPG-03: the lead and the emails it needs are saved atomically (one nested write), so a lead
-        // can never exist without its emails being recorded. The outbox worker delivers (and
-        // retries) them; the visitor's request never waits on SMTP (ERR-03).
-        const contact = await prisma.contact.create({
-            data: { ...contactData, emails: contactEmailsNestedWrite() },
-        });
-        nudgeEmailWorker();
+        // UPG-03 + AUD-01: the lead, the emails it needs and its audit event are saved in one
+        // transaction (services/leads.js), so a lead can never exist without them. The outbox worker
+        // delivers (and retries) the emails; the visitor's request never waits on SMTP (ERR-03).
+        const contact = await createLead(contactData, { actor: 'public', ip: clientip });
 
         // Success response
         res.status(201).json({

@@ -7,6 +7,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
 import EmailDeliveryBadge from '../components/EmailDeliveryBadge';
+import LeadTimeline from '../components/LeadTimeline';
 import { useAuth } from '../context/AuthContext';
 
 const COLORS = ['#dc2626', '#ea580c', '#ca8a04', '#65a30d', '#0284c7', '#7c3aed', '#db2777'];
@@ -265,7 +266,7 @@ const AdminDashboard = () => {
       {/* Contact Details Modal */}
       {showContactDetails && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Contact Details</h3>
               <button 
@@ -296,6 +297,7 @@ const AdminDashboard = () => {
                 <label className="block text-sm font-medium text-gray-700">Message</label>
                 <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">{showContactDetails.message}</p>
               </div>
+              <LeadTimeline contactId={showContactDetails.id} />
             </div>
           </div>
         </div>

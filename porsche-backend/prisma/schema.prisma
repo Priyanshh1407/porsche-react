@@ -74,3 +74,32 @@ model EmailOutbox {
   @@unique([contactId, kind])
   @@index([status, nextAttemptAt])
 }
+
+// Audit log: who changed what and when. Written in the same transaction as the change it records.
+// Deliberately no relation to Contact: a deleted lead's history must outlive it. No personal data is
+// copied here (no visitor email/phone; logins record the email tried, never the password).
+enum AuditAction {
+  lead_created
+  status_changed
+  notes_changed
+  lead_deleted
+  export
+  login_ok
+  login_failed
+  lead_triaged
+}
+
+model AuditEvent {
+  id        String      @id @default(uuid())
+  at        DateTime    @default(now())
+  actor     String      @db.VarChar(120) // 'public' | 'ai' | 'admin:<email>'
+  action    AuditAction
+  contactId String?
+  before    Json?
+  after     Json?
+  meta      Json?
+  ip        String?     @db.VarChar(64)
+
+  @@index([contactId, at])
+  @@index([at, id])
+}

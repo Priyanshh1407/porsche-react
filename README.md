@@ -100,6 +100,10 @@ flowchart LR
   transaction, and retries each email on its own (exponential backoff, 5 attempts). A crash never
   loses an email, and a retry never re-sends one that already went out (at-least-once delivery).
   Cost measured: about +2.5 ms p50 per submit.
+- **Every change is audited in the same transaction.** Status and notes changes, deletions, CSV
+  exports and admin logins each write an audit event (who, what, before/after) inside the
+  transaction that makes the change, so the log can't disagree with the data. Each lead has a
+  timeline; the full log pages with a keyset cursor.
 - **Texture compression was evaluated, not shipped.** A texture-only WebP pass took the GT3 RS
   model from 65.9 to 46.6 MB, with geometry proven byte-identical and every stage screenshot
   matching, but the original was kept by choice. Geometry compression (Draco/Meshopt) was ruled
@@ -126,8 +130,8 @@ npm run verify:full   # ~20 min: + fresh build with bundle checks, page-weight b
 | Gate | What it proves |
 |---|---|
 | Trajectory guard | No choreography, canvas or layout input changed (33 hashed items) |
-| Backend tests (130) | API, validation, auth, CSV safety, email outbox (incl. concurrency), migrations and UTC sessions on a real Postgres |
-| Frontend tests (122) | Routing, forms, auth flow, dashboard and charts, error boundaries, credits, 3D signature effects |
+| Backend tests (139) | API, validation, auth, CSV safety, email outbox (incl. concurrency), audit log (same-transaction rollback, keyset paging), migrations and UTC sessions on a real Postgres |
+| Frontend tests (129) | Routing, forms, auth flow, dashboard, charts and lead timeline, error boundaries, credits, 3D signature effects |
 | E2E (7, Puppeteer) | Contact form → admin login → search → status change → logout, against the real backend |
 | Bundle + page weight | No admin/3D library in `main.js`; every route within its byte budget (first-party bytes) and model count |
 | Stage screenshots (49) | Every scroll stage of every showroom matches the baseline (GPU) |

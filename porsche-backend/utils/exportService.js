@@ -41,39 +41,36 @@ export function toCsv(contacts) {
 }
 
 class ExportService {
-    // Export contacts to CSV format
-    static async exportToCSV(filters = {}, res) {
-        try {
-            // map the export filters to Prisma where clauses
-            const where = {};
-            if (filters.status) where.status = filters.status;
-            if (filters.inquiryType) where.inquiryType = filters.inquiryType;
-            if (filters.createdAt) {
-                where.createdAt = {};
-                if (filters.createdAt.$gte) where.createdAt.gte = filters.createdAt.$gte;
-                if (filters.createdAt.$lte) where.createdAt.lte = filters.createdAt.$lte;
-            }
-
-            const contacts = await prisma.contact.findMany({
-                where,
-                orderBy: { createdAt: 'desc' }
-            });
-
-            const csvContent = toCsv(contacts);
-
-            // Set response headers for file download
-            res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-            res.setHeader(
-                'Content-Disposition',
-                `attachment; filename=porsche-contacts-${new Date().toISOString().split('T')[0]}.csv`
-            );
-
-            return res.send(csvContent);
-
-        } catch (error) {
-            console.error('CSV export error:', error);
-            throw error;
+    /**
+     * The CSV for contacts matching the export filters. Returns the text and the row count, so the
+     * caller can record the export (AUD-01) before anything is sent.
+     */
+    static async buildCsv(filters = {}) {
+        // map the export filters to Prisma where clauses
+        const where = {};
+        if (filters.status) where.status = filters.status;
+        if (filters.inquiryType) where.inquiryType = filters.inquiryType;
+        if (filters.createdAt) {
+            where.createdAt = {};
+            if (filters.createdAt.$gte) where.createdAt.gte = filters.createdAt.$gte;
+            if (filters.createdAt.$lte) where.createdAt.lte = filters.createdAt.$lte;
         }
+
+        const contacts = await prisma.contact.findMany({
+            where,
+            orderBy: { createdAt: 'desc' }
+        });
+        return { csv: toCsv(contacts), rows: contacts.length };
+    }
+
+    /** Sends CSV text as a file download. */
+    static sendCsv(res, csv) {
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader(
+            'Content-Disposition',
+            `attachment; filename=porsche-contacts-${new Date().toISOString().split('T')[0]}.csv`
+        );
+        return res.send(csv);
     }
 
     // Export specific contact details
