@@ -65,7 +65,7 @@ export default function ConciergePanel({ onClose }) {
         <div
             role="dialog"
             aria-label="Porsche concierge"
-            className="fixed inset-x-4 bottom-4 z-50 flex max-h-[80vh] flex-col overflow-hidden rounded-2xl bg-neutral-950 text-white shadow-2xl ring-1 ring-white/15 sm:inset-x-auto sm:right-4 sm:w-96"
+            className="fixed inset-x-4 bottom-4 z-50 flex max-h-[80vh] flex-col overflow-hidden rounded-2xl bg-neutral-950 [color-scheme:dark] text-white shadow-2xl ring-1 ring-white/15 sm:inset-x-auto sm:right-4 sm:w-96"
         >
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
                 <div>
@@ -77,11 +77,11 @@ export default function ConciergePanel({ onClose }) {
                 </button>
             </div>
 
-            <ol ref={listRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-3 text-sm" aria-live="polite">
+            <ol ref={listRef} className="flex-1 space-y-3 overflow-y-auto overflow-x-hidden px-4 py-3 text-sm [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.25)_transparent]" aria-live="polite">
                 <li className="max-w-[85%] rounded-2xl bg-white/10 px-3 py-2">{GREETING}</li>
                 {messages.map((m, i) => (
                     <li key={i} className={m.role === 'user' ? 'ml-auto max-w-[85%] rounded-2xl bg-red-700 px-3 py-2' : 'max-w-[85%] rounded-2xl bg-white/10 px-3 py-2'}>
-                        <p className="whitespace-pre-line">{m.text}</p>
+                        <p className="whitespace-pre-line [overflow-wrap:anywhere]">{m.text}</p>
                         {m.models?.length > 0 && (
                             <div className="mt-2 flex flex-wrap gap-1">
                                 {m.models.map((model) => (
@@ -124,7 +124,7 @@ export default function ConciergePanel({ onClose }) {
                         onChange={(e) => setDraft(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) send(e); }}
                         placeholder="Ask about a model…"
-                        className="max-h-28 flex-1 resize-none rounded-xl bg-white/10 px-3 py-2 text-sm placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-red-600"
+                        className="max-h-28 flex-1 resize-none rounded-xl [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.25)_transparent] [overflow-wrap:anywhere] bg-white/10 px-3 py-2 text-sm placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-red-600"
                     />
                     <button type="submit" disabled={busy || !draft.trim()} aria-label="Send" className="rounded-xl bg-red-700 p-2 hover:bg-red-600 disabled:opacity-40">
                         <Send className="h-4 w-4" aria-hidden="true" />
