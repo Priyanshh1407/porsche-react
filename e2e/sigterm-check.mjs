@@ -7,6 +7,8 @@
  *   3. send SIGTERM, then finish sending the body
  *   4. expect: the in-flight request still gets its response, the logs show the shutdown
  *      sequence, and the process exits with code 0 (not killed, not an unhandled SIGTERM)
+ *   An admin live-event stream (Phase 9) is open throughout: it never ends by itself, so shutdown
+ *   must end it, or the server would wait for the 10 s force-exit.
  *
  * Where it runs (Docker is optional):
  *   - Docker running: in a Linux container (node:22-alpine) on the test-db's Docker network, installed
@@ -120,6 +122,21 @@ async function check(runner) {
         const port = await runner.start();
         console.log(`server listening on port ${port} (${runner.label})`);
 
+        // An open live-event stream (SSE), as an admin dashboard would hold.
+        const post = (urlPath, payload, headers = {}) => fetch(`http://127.0.0.1:${port}${urlPath}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(payload),
+        }).then((r) => r.json());
+        const { token } = await post('/api/admin/login', { email: ENV.ADMIN_EMAIL, password: ENV.ADMIN_PASSWORD });
+        const { ticket } = await post('/api/admin/events/ticket', {}, { Authorization: `Bearer ${token}` });
+        const stream = await new Promise((resolve, reject) => {
+            http.get(`http://127.0.0.1:${port}/api/admin/events?ticket=${ticket}`, (res) => {
+                const s = { status: res.statusCode, ended: new Promise((done) => { res.on('end', () => done(true)); res.on('error', () => done(false)); res.on('close', () => done(false)); }) };
+                res.resume();
+                resolve(s);
+            }).on('error', reject);
+        });
+        ok(stream.status === 200, `live-event stream open (HTTP ${stream.status})`);
+
         // A request that is genuinely in flight: send headers + half the JSON body, then pause.
         const body = JSON.stringify({
             firstName: 'Graceful', lastName: 'Shutdown', email: `sigterm-${Date.now()}@example.com`,
@@ -154,6 +171,7 @@ async function check(runner) {
         const exitCode = runner.exitCode();
 
         ok(res.status === 201, `in-flight request completed during shutdown (HTTP ${res.status})`);
+        ok(await stream.ended, 'live-event stream ended cleanly by the server');
         ok(logs.includes('SIGTERM received: shutting down'), 'SIGTERM handler ran');
         ok(logs.includes('Database connection closed'), 'database pool closed');
         ok(exitCode === 0, `exit code ${exitCode} (0 = clean; 137 = killed; 143 = unhandled SIGTERM)`);

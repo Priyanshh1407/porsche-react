@@ -37,6 +37,8 @@ http.createServer((req, res) => {
             res.writeHead(502, { 'Content-Type': 'text/plain' });
             res.end(`Backend not reachable on port ${API_PORT}. Start it: cd porsche-backend && npm start`);
         });
+        // A closed browser tab must also close the backend connection (live-event streams never end).
+        res.on('close', () => upstream.destroy());
         req.pipe(upstream);
         return;
     }

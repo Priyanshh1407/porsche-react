@@ -10,6 +10,7 @@ import { body, param, query } from "express-validator";
 import { handleValidationErrors } from "../middleware/validation.js";
 import { CONTACT_STATUSES, INQUIRY_TYPES } from "../config/contactOptions.js";
 import { audit, actorFor, decodeCursor, encodeCursor } from "../utils/audit.js";
+import { publish } from "../utils/events.js";
 
 const router = express.Router();
 
@@ -197,6 +198,9 @@ router.put('/contacts/:id', authenticateAdmin, validContactId, validContactUpdat
             if (notes !== undefined && (notes ?? null) !== (before.notes ?? null)) {
                 await audit({ actor, action: 'notes_changed', contactId: updated.id, before: { notes: before.notes }, after: { notes: notes ?? null }, ip: req.ip }, tx);
             }
+            if (updated.status !== before.status || (updated.notes ?? null) !== (before.notes ?? null)) {
+                await publish(tx, 'lead.updated', { id: updated.id, status: updated.status });
+            }
             return updated;
         });
 
@@ -380,6 +384,7 @@ router.delete('/contacts/:id', authenticateAdmin, validContactId, handleValidati
             });
             const { id, ...summary } = contact;
             await audit({ actor: actorFor(req), action: 'lead_deleted', contactId: id, before: summary, ip: req.ip }, tx);
+            await publish(tx, 'lead.deleted', { id });
         });
 
         res.json({

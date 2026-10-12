@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Car, Users, BarChart, Search, Mail, Eye, Trash2, Download,
   User, TrendingUp, Plus, CheckCircle, Clock, XCircle, ArrowLeft
@@ -8,6 +8,8 @@ import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
 import EmailDeliveryBadge from '../components/EmailDeliveryBadge';
 import LeadTimeline from '../components/LeadTimeline';
+import LiveStatus from '../components/LiveStatus';
+import { connectLiveEvents } from '../lib/liveEvents';
 import { useAuth } from '../context/AuthContext';
 
 const COLORS = ['#dc2626', '#ea580c', '#ca8a04', '#65a30d', '#0284c7', '#7c3aed', '#db2777'];
@@ -75,6 +77,41 @@ const AdminDashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Phase 9: live updates. A new lead shows a toast; any change refreshes the cards and the list.
+  // Refreshes are coalesced (a burst of events = one refetch), and after a reconnect everything is
+  // refetched once, because events sent while disconnected are not replayed.
+  const [liveStatus, setLiveStatus] = useState('connecting');
+  const refreshTimer = useRef(null);
+  useEffect(() => {
+    const refresh = () => {
+      clearTimeout(refreshTimer.current);
+      refreshTimer.current = setTimeout(() => {
+        fetchData();
+        setListVersion((v) => v + 1);
+      }, 300);
+    };
+    let wasLive = false;
+    const disconnect = connectLiveEvents({
+      onStatus: (status) => {
+        if (status === 'live' && wasLive) refresh();
+        if (status === 'live') wasLive = true;
+        setLiveStatus(status);
+      },
+      onEvent: (type, data) => {
+        if (type === 'lead.created') {
+          const model = data.modelInterest && data.modelInterest !== 'Not_specified' ? ` · ${data.modelInterest.replace(/_/g, ' ')}` : '';
+          showToast(`New lead: ${data.name}${model}`);
+        }
+        refresh();
+      },
+    });
+    return () => {
+      disconnect();
+      clearTimeout(refreshTimer.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const fetchData = async () => {
     try {
       const [contactsRes, statsRes, analyticsRes] = await Promise.all([
@@ -114,10 +151,13 @@ const AdminDashboard = () => {
     }
   };
 
+  const toastTimer = useRef(null);
   const showToast = (message) => {
     setToastMessage(message);
-    setTimeout(() => setToastMessage(''), 3000);
+    clearTimeout(toastTimer.current); // a newer toast gets its full 3 s
+    toastTimer.current = setTimeout(() => setToastMessage(''), 3000);
   };
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
 
   // Clears the token AND the email (the old logout left the email behind, so AuthContext still
   // thought the admin was logged in).
@@ -258,7 +298,7 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-4 right-4 z-50 bg-green-600 text-white px-4 py-2 rounded-md shadow-lg">
+        <div role="status" className="fixed top-4 right-4 z-50 bg-green-600 text-white px-4 py-2 rounded-md shadow-lg">
           {toastMessage}
         </div>
       )}
@@ -320,6 +360,7 @@ const AdminDashboard = () => {
               <h1 className="text-xl font-bold text-gray-900">Porsche Admin</h1>
             </div>
             <div className="flex items-center space-x-4">
+              <LiveStatus status={liveStatus} />
               <button onClick={handleLogout} className="flex items-center space-x-2 px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50">
                 <User className="h-4 w-4" />
                 <span>Logout</span>

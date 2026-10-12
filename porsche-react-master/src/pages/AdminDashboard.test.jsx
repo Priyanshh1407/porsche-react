@@ -143,3 +143,43 @@ test('if analytics fail to load, the charts say so (not "no enquiries")', async 
     expect(await screen.findAllByText("Couldn't load analytics")).toHaveLength(2);
     expect(screen.queryByText('No enquiries in the last 30 days')).not.toBeInTheDocument();
 });
+
+// Phase 9: live updates.
+describe('live updates', () => {
+    class FakeEventSource {
+        static last;
+        constructor(url) { this.url = url; this.listeners = {}; FakeEventSource.last = this; }
+        addEventListener(type, fn) { (this.listeners[type] ||= []).push(fn); }
+        emit(type, data) { (this.listeners[type] || []).forEach((fn) => fn({ data: JSON.stringify(data) })); }
+        close() {}
+    }
+    beforeEach(() => {
+        global.EventSource = FakeEventSource;
+        FakeEventSource.last = null;
+        const base = global.fetch;
+        global.fetch = jest.fn((url, options = {}) => (url === '/api/admin/events/ticket'
+            ? json({ ticket: 'tk', expiresIn: 30 }, 201)
+            : base(url, options)));
+    });
+    afterEach(() => { delete global.EventSource; });
+
+    test('shows Live once connected, and a new lead pops a toast and refreshes the dashboard', async () => {
+        render(<AuthProvider><MemoryRouter><AdminDashboard /></MemoryRouter></AuthProvider>);
+        await waitFor(() => expect(FakeEventSource.last).not.toBeNull());
+        expect(FakeEventSource.last.url).toBe('/api/admin/events?ticket=tk');
+        FakeEventSource.last.onopen();
+        expect(await screen.findByTestId('live-status')).toHaveTextContent('Live');
+
+        const statsCalls = () => global.fetch.mock.calls.filter(([u]) => u === '/api/admin/stats').length;
+        const before = statsCalls();
+        FakeEventSource.last.emit('lead.created', { id: 'n1', name: 'Ana Lee', modelInterest: 'Taycan' });
+        expect(await screen.findByRole('status')).toHaveTextContent('New lead: Ana Lee · Taycan');
+        await waitFor(() => expect(statsCalls()).toBe(before + 1));
+    });
+
+    test('without EventSource the dashboard says Offline', async () => {
+        delete global.EventSource;
+        render(<AuthProvider><MemoryRouter><AdminDashboard /></MemoryRouter></AuthProvider>);
+        expect(await screen.findByTestId('live-status')).toHaveTextContent('Offline');
+    });
+});

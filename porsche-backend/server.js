@@ -21,6 +21,8 @@ try {
 //Routes
 import contactRoutes from "./routes/contact.js";
 import adminRoutes from "./routes/admin.js";
+import eventRoutes from "./routes/events.js";
+import { closeLiveEvents } from "./utils/events.js";
 
 const app = express();
 
@@ -65,6 +67,7 @@ app.get('/ready', async (req, res) => {
 });
 
 app.use('/api/contact', contactRoutes);
+app.use('/api/admin/events', eventRoutes);
 app.use('/api/admin', adminRoutes);
 
 //Basic Routing 
@@ -119,7 +122,11 @@ async function start() {
         // sent finish, then close the pool. If the force-exit below fires first, that email's lease
         // simply expires and it is retried after restart (at-least-once delivery).
         const workerStopped = emailWorker.stop();
+        // Live-event streams never finish on their own: end them, so their connections go idle
+        // and close with the rest. Browsers reconnect to another instance (or after the restart).
+        const liveEventsClosed = closeLiveEvents();
         server.close(async () => {
+            await liveEventsClosed;
             await workerStopped;
             await prisma.$disconnect();
             console.log('Database connection closed');

@@ -87,6 +87,7 @@ function startWeb(apiPort) {
                     r.pipe(res);
                 });
                 upstream.on('error', () => { res.statusCode = 502; res.end(); });
+                res.on('close', () => upstream.destroy()); // live-event streams end with the tab
                 req.pipe(upstream);
                 return;
             }
@@ -286,6 +287,24 @@ async function runAll() {
             await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Logout').click());
             await page.waitForFunction(() => location.pathname === '/admin/login', { timeout: 5000 });
             assert(await page.evaluate(() => localStorage.getItem('adminToken')) === null, 'token still stored after logout');
+            await page.close();
+        });
+
+        await test('admin: the dashboard goes Live and a new lead pops up without a refresh (Phase 9)', async () => {
+            const page = await newPage();
+            await page.goto(`${base}/admin/login`, { waitUntil: 'domcontentloaded' });
+            await login(page, ADMIN.password);
+            await page.waitForFunction(() => location.pathname === '/admin/dashboard', { timeout: 8000 });
+            await page.waitForFunction(() => document.querySelector('[data-testid="live-status"]')?.textContent.trim() === 'Live', { timeout: 8000 });
+
+            const created = await api('/api/contact/submit', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ firstName: 'Livia', lastName: 'Echtzeit', email: `${RUN_ID}-live@example.com`, phone: '5550142', inquiryType: 'Sales', modelInterest: 'Taycan', message: 'E2E live notification lead.' }),
+            });
+            assert(created.status === 201, `lead: expected 201, got ${created.status}`);
+            await waitForText(page, 'New lead: Livia Echtzeit · Taycan', 5000);
+            // The recent-enquiries card refreshed by itself.
+            await waitForText(page, 'Livia Echtzeit', 5000);
             await page.close();
         });
     } finally {
