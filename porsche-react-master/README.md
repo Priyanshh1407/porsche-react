@@ -8,6 +8,7 @@ npm install
 npm start        # http://localhost:3000, proxies /api to http://localhost:5000
 npm test         # Jest + React Testing Library
 npm run build    # production build in build/
+npm run preview  # serves build/ on :3000 with /api forwarded to :5000 (like a real host)
 ```
 
 `REACT_APP_API_URL` (see `.env.example`) sets the API base URL for a deployed build; leave it unset
@@ -18,7 +19,10 @@ locally.
 - `src/pages/` routes; the five 3D showrooms are `*_3D.jsx` (lazy-loaded)
 - `src/components/*Viewer3D.jsx` the 3D scenes; each `SceneChoreography` block is **protected**
 - `src/data/models.js` the model registry (slugs, names, old URLs); `data/modelPages.js` maps them to pages
-- `src/lib/api.js` fetch wrapper (logs the admin out on 401)
+- `src/components/signatures/` the per-car signature effects (DRS wing, brake glow, energy pulse, night mode, dust, hybrid modes)
+- `src/components/configurator/` the 3D configurator (options, paint on a cloned scene, viewer)
+- `src/components/concierge/` the AI chat launcher and its lazy panel
+- `src/lib/api.js` fetch wrapper (logs the admin out on 401); `src/lib/liveEvents.js` the admin's live stream (ticket + EventSource, reconnect)
 - `public/*.glb` the 3D models (credited on `/credits` and in the root README)
 
 ## Tooling (`scripts/`)

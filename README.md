@@ -1,8 +1,9 @@
 # Porsche 3D Showroom
 
-A scroll-driven 3D car showroom built with React Three Fiber and GSAP, with a lead-capture backend
-(Express, Prisma, PostgreSQL) and an admin dashboard. Five cars have hand-choreographed 3D pages;
-six more have photo-based model pages.
+A scroll-driven 3D car showroom built with React Three Fiber and GSAP, with a 3D configurator, an
+AI concierge (Google Gemini), a lead-capture backend (Express, Prisma, PostgreSQL) and a live admin
+dashboard with AI lead triage and an audit log. Five cars have hand-choreographed 3D pages; six
+more have photo-based model pages.
 
 > Independent, non-commercial portfolio project. Not affiliated with, endorsed by or sponsored by
 > Porsche AG. 3D models are credited below; photographs are used for demonstration purposes only.
@@ -54,12 +55,19 @@ database, emails in demo mode).*
 - **Model pages (11 cars)** with carousels and spec sections, each with its own feature (the
   718 Boxster's is an animated open-top sequence), an "All models" overview, and About / Services /
   Experience pages.
+- **3D configurator.** Four cars, eight paints and gloss / satin / matte finishes; orbit the car,
+  share the build by URL, and send it to the contact form pre-filled ("Request this spec").
+- **AI concierge chat** (on the model, contact and configurator pages). Answers questions,
+  compares models and books test drives, using only the site's own model data through Gemini
+  function calling. Optional: it appears once `GEMINI_API_KEY` is set.
 - **Contact form → lead pipeline.** Server-side validation (Latin-script names, real phone
   numbers, known models), rate limiting, and emails delivered through a **transactional outbox**
   with retries.
-- **Admin dashboard.** JWT login with rate limiting and expiry, server-side search and paging,
-  a status pipeline (new → contacted → qualified → closed), analytics (30-day trend, all-time
-  model popularity and funnel), CSV export, and each lead's email delivery status.
+- **Admin dashboard.** JWT login with rate limiting and expiry, **live updates** (a toast for each
+  new lead, no refresh), server-side search and paging, a status pipeline (new → contacted →
+  qualified → closed), **AI triage** (hot / warm / cold with a summary and next step, filterable),
+  a per-lead **timeline** from the audit log, analytics (30-day trend, all-time model popularity and
+  funnel), CSV export, and each lead's email delivery status.
 
 ## Measured performance
 
@@ -83,10 +91,14 @@ visitor. Every route has a byte budget that the verification pipeline enforces (
 ```mermaid
 flowchart LR
     B["Browser<br/>React 19 · R3F · GSAP"] -->|static build + GLB models| S["Static files<br/>(CRA build)"]
-    B -->|/api/contact, /api/admin| A["Express 5 API<br/>validation · rate limits · JWT"]
-    A -->|"lead + its emails,<br/>one atomic write"| P[("PostgreSQL<br/>Prisma 7")]
-    W["Email outbox worker<br/>(same process)"] -->|"claim due emails<br/>FOR UPDATE SKIP LOCKED"| P
+    B -->|"/api/contact, /api/admin,<br/>/api/concierge"| A["Express 5 API<br/>validation · rate limits · JWT"]
+    A -->|"lead + emails + AI job + audit<br/>+ NOTIFY, one transaction"| P[("PostgreSQL<br/>Prisma 7")]
+    W["Email + AI-triage workers<br/>(same process)"] -->|"claim due jobs<br/>FOR UPDATE SKIP LOCKED"| P
     W -->|"send, retry with backoff"| M["SMTP"]
+    W -->|"structured JSON"| G["Google Gemini<br/>(optional)"]
+    A -->|"concierge: function calling"| G
+    P -->|"NOTIFY on commit"| L["Live events hub"]
+    L -->|"Server-Sent Events"| B
 ```
 
 ## Engineering decisions
@@ -142,16 +154,16 @@ test database is a real PostgreSQL started for the run (embedded, via `embedded-
 removed afterwards. If Docker happens to be running, the pipeline uses its test-db container instead.
 
 ```bash
-npm run verify        # ~1 min: trajectory guard, backend tests, frontend tests, dependency audit, E2E
-npm run verify:full   # ~20 min: + fresh build with bundle checks, page-weight budgets for 25 routes,
+npm run verify        # ~2-5 min: trajectory guard, backend tests, frontend tests, dependency audit, E2E
+npm run verify:full   # ~12-20 min: + fresh build with bundle checks, page-weight budgets for 25 routes,
                       #   49 3D stage screenshots, SIGTERM shutdown check
 ```
 
 | Gate | What it proves |
 |---|---|
 | Trajectory guard | No choreography, canvas or layout input changed (33 hashed items) |
-| Backend tests (189) | API, validation, auth, CSV safety, email outbox (incl. concurrency), audit log (same-transaction rollback, keyset paging), live events (commit-only delivery, single-use tickets), AI triage and concierge with a fake model (schema validation, retries, no double triage, tool loop, booking rules, limits), the real Gemini SDK against a fake REST server, catalogue and migration drift, UTF-8 database, migrations and UTC sessions on a real Postgres |
-| Frontend tests (175) | Routing, forms, auth flow, dashboard, charts, lead timeline, live updates (reconnect with a fresh ticket), AI triage badges, concierge widget, configurator (clone repaint, URL, contact pre-fill), error boundaries, credits, 3D signature effects |
+| Backend tests (196) | API, validation, auth, CSV safety, email outbox (incl. concurrency), audit log (same-transaction rollback, keyset paging), live events (commit-only delivery, single-use tickets), AI triage and concierge with a fake model (schema validation, retries, no double triage, tool loop, booking rules, limits), the real Gemini SDK against a fake REST server (incl. model fallbacks), catalogue and migration drift, UTF-8 database, migrations and UTC sessions on a real Postgres |
+| Frontend tests (184) | Routing, forms, auth flow, dashboard, charts, lead timeline, live updates (reconnect with a fresh ticket), AI triage badges, concierge widget, configurator (clone repaint, URL, quick clicks, contact pre-fill), configure buttons, error boundaries, credits, 3D signature effects |
 | E2E (10, Puppeteer) | Contact form → admin login → search → status change → logout, a live new-lead toast, a phone-width concierge chat that books a test drive which the AI then triages, and configurator → pre-filled contact form, against the real backend and a local fake Gemini |
 | Bundle + page weight | No admin/3D library in `main.js`; every route within its byte budget (first-party bytes) and model count |
 | Stage screenshots (49) | Every scroll stage of every showroom matches the baseline (GPU) |
@@ -203,11 +215,16 @@ database created with `prisma db push`? Follow
   hosted. Free hosting tiers would add cold starts.
 - **Heavy pages.** The GT3 RS showroom downloads ~70 MB. Some photo-based pages are 8–13 MB
   because of single oversized photos (e.g. a 9.7 MB image on `/models/macan-gts`).
-- **3D pages need a WebGL-capable GPU.** Without WebGL a fallback message is shown instead of the
-  scene.
+- **3D pages need a WebGL-capable GPU.** Without WebGL (or if a model fails to load) the car's
+  photo is shown instead of the scene; the rest of the page still works.
 - **Stage-screenshot baselines are GPU-specific.** A different machine needs its own baseline.
-- **Not everything is wired up:** the footer's newsletter box does nothing, there are no legal
-  pages, and the Configurator says it is coming soon.
+- **Not everything is wired up:** the footer's newsletter box does nothing, and there are no legal
+  pages.
+- **AI features depend on Gemini's availability.** The free tier allows about 5 requests per minute
+  per model; on overload or rate limits the app falls back to older models, and triage jobs retry.
+  There is no formal evaluation set for the AI's answers.
+- **Live updates and rate limits keep some state in memory** (stream tickets, rate-limit counters),
+  so several API instances would need sticky sessions or a shared store (see `DEPLOY.md`).
 - **Third-party runtime dependencies.** Four showrooms load their lighting (Drei `Environment`
   presets, 1.3–1.7 MB) from `raw.githack.com`; if that service is unavailable, those scenes can't
   light the car. Self-hosting the HDR files would remove the dependency. The Services page shows
@@ -218,7 +235,8 @@ database created with `prisma db push`? Follow
 
 **Frontend:** React 19, React Router 7, Three.js, React Three Fiber, Drei, React Postprocessing,
 GSAP ScrollTrigger, Tailwind CSS, Recharts. **Backend:** Node.js, Express 5, Prisma 7 with the `pg`
-adapter, PostgreSQL, express-validator, express-rate-limit, helmet, nodemailer, morgan.
+adapter, PostgreSQL (LISTEN/NOTIFY), Server-Sent Events, Google Gemini (`@google/genai`),
+express-validator, express-rate-limit, helmet, nodemailer, morgan.
 **Testing:** Jest, React Testing Library, Supertest, Puppeteer, embedded PostgreSQL (Docker optional).
 
 ## Credits and licences

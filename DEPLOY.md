@@ -7,7 +7,8 @@ step, the `/ready` health check and the CORS origin. Host dashboards change ofte
 provider's current docs for the exact screens.
 
 ```
-Browser ──> Vercel (static build + 3D models) ──/api──> Render (Express + email outbox worker) ──> Neon (Postgres)
+Browser ──> Vercel (static build + 3D models) ──/api──> Render (Express + email and AI-triage workers + live events) ──> Neon (Postgres)
+                                                                        └──> Google Gemini (optional)
 ```
 
 Deploy in this order: database, then API, then frontend, then point the API's CORS at the
@@ -19,7 +20,10 @@ frontend.
 2. Copy **two** connection strings:
    - the **direct** one (no `-pooler` in the host): used to run migrations, since Prisma's
      migration engine needs a direct session;
-   - either one for the app at runtime (the pooled one is fine).
+   - the **direct** one for the app at runtime too. The live admin dashboard keeps one `LISTEN`
+     connection open, and Neon's pooled endpoint (PgBouncer in transaction mode) does not support
+     `LISTEN`: with the pooled string everything else works, but the dashboard never receives live
+     updates.
 3. From your machine, apply the migrations once:
    ```bash
    cd porsche-backend
@@ -50,14 +54,22 @@ Environment variables (names from `porsche-backend/.env.example`):
 | `FRONTEND_URL` | the exact frontend origin, e.g. `https://your-app.vercel.app` (no trailing slash). CORS allows only this origin. |
 | `TRUST_PROXY` | `1`: Render puts one proxy in front of the app. Without it, every visitor shares one rate-limit bucket. |
 | `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASS`, `EMAIL_FROM` | optional SMTP. With `EMAIL_PASS` empty, emails are logged instead of sent. |
+| `GEMINI_API_KEY` | optional: turns on AI lead triage and the concierge chat. Without it both stay off (leads are still queued for triage). |
+| `GEMINI_MODEL`, `GEMINI_FALLBACK_MODEL` | optional: model (default `gemini-3.8-flash`) and the fallbacks tried on overload or rate limits (default `gemini-3.6-flash,gemini-3.5-flash-lite`) |
 
 `PORT` is provided by Render. The server refuses to start if a required variable is missing or the
 database doesn't answer, so a wrong value shows up as a failed deploy, not a broken site.
 
 **Free-tier behaviour:** the service sleeps when idle, and the first request after that waits for a
-cold start (tens of seconds). The email outbox worker runs inside this process, so emails for a
-lead submitted just before the service slept are sent when it next wakes. They stay in the
+cold start (tens of seconds). The email and AI-triage workers run inside this process, so work for
+a lead submitted just before the service slept is done when it next wakes. It stays in the
 database, and nothing is lost.
+
+**Live admin updates (Server-Sent Events):** the dashboard keeps a long-lived
+`/api/admin/events` stream open. The stream sends a heartbeat every 25 s, which keeps proxies from
+closing it as idle; the browser reconnects by itself if it drops. The single-use stream tickets are
+kept in the API's memory, so with **more than one API instance** enable sticky sessions (or keep
+one instance). Background jobs and events already work across instances.
 
 ## 3. Frontend: Vercel
 
@@ -102,12 +114,14 @@ node porsche-react-master/scripts/measure-page-weight.cjs --base https://<your-f
 ```
 
 Then by hand: submit the contact form, log in at `/admin/login`, and check that the lead appears
-with its email status. The 3D stage-screenshot comparison (`capture-stages.cjs`) runs against a
+with its email status, the dashboard shows the green "Live" dot, and (with `GEMINI_API_KEY` set)
+the lead gets an AI score within a minute. The 3D stage-screenshot comparison (`capture-stages.cjs`) runs against a
 local production build, not a URL. Run `npm run verify:full` before deploying instead.
 
 ## Before a live demo
 
 - Open `/ready` a minute before showing it, to wake a sleeping free-tier API.
 - The 3D pages need a WebGL-capable GPU; the GT3 RS page downloads about 70 MB.
+- The free Gemini tier allows about 5 requests per minute per model; pace the chat in a demo.
 - The site is non-commercial: two of the 3D models are CC BY-NC-SA (see `/credits`), and the
   photographs are for demonstration only.
