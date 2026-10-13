@@ -3,3 +3,15 @@
 
 # Local database backups (they contain real data; never commit them)
 porsche-backup-*.sql
+
+# Environment files with real secrets, in any folder (the .env.example templates stay tracked)
+.env
+.env.*
+!.env.example
+
+# Private working documents: audit, plan, fix log, test runbook, interview material
+/FIX_LOG.md
+/PROJECT_AUDIT_REPORT.md
+/UPGRADE_PLAN.md
+/TEST_REPORT.md
+/private/
